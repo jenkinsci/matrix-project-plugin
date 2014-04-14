@@ -37,6 +37,8 @@ import hudson.model.Fingerprint;
 import hudson.model.Queue;
 import hudson.model.Queue.Item;
 import hudson.model.Result;
+import hudson.tasks.junit.JUnitResultArchiver;
+import hudson.tasks.test.TestResultAggregator;
 import hudson.util.HttpResponses;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.Stapler;
@@ -394,6 +396,8 @@ public class MatrixBuild extends AbstractBuild<MatrixProject,MatrixBuild> {
                     MatrixAggregator a = ma.createAggregator(MatrixBuild.this, launcher, listener);
                     if(a!=null)
                         aggregators.add(a);
+                } else if (v instanceof JUnitResultArchiver) { // originally assignable to MatrixAggregatable
+                    aggregators.add(new TestResultAggregator(MatrixBuild.this, launcher, listener));
                 }
             }
         }
