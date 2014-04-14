@@ -6,22 +6,24 @@ import hudson.Extension;
 import hudson.console.ModelHyperlinkNote;
 import hudson.matrix.MatrixBuild.MatrixBuildExecution;
 import hudson.matrix.listeners.MatrixBuildListener;
+import hudson.model.Action;
 import hudson.model.BuildListener;
 import hudson.model.Cause.UpstreamCause;
+import hudson.model.ParametersAction;
 import hudson.model.Queue;
 import hudson.model.ResourceController;
 import hudson.model.Result;
 import hudson.model.Run;
-import org.kohsuke.stapler.DataBoundConstructor;
-
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.TreeSet;
+import javax.annotation.Nullable;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
  * {@link MatrixExecutionStrategy} that captures historical behavior.
@@ -237,7 +239,8 @@ public class DefaultMatrixExecutionStrategyImpl extends MatrixExecutionStrategy 
         exec.getListener().getLogger().println(Messages.MatrixBuild_Triggering(ModelHyperlinkNote.encodeTo(c)));
 
         // filter the parent actions for those that can be passed to the individual jobs.
-        List<MatrixChildAction> childActions = build.getActions(MatrixChildAction.class);
+        List<Action> childActions = new ArrayList<Action>(build.getActions(MatrixChildAction.class));
+        childActions.addAll(build.getActions(ParametersAction.class)); // used to implement MatrixChildAction
         c.scheduleBuild(childActions, new UpstreamCause((Run)build));
     }
 
