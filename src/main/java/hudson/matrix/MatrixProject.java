@@ -32,6 +32,8 @@ import hudson.CopyOnWrite;
 import hudson.Extension;
 import hudson.Util;
 import hudson.XmlFile;
+import hudson.init.InitMilestone;
+import hudson.init.Initializer;
 import hudson.matrix.MatrixBuild.MatrixBuildExecution;
 import hudson.model.AbstractProject;
 import hudson.model.Action;
@@ -50,6 +52,7 @@ import hudson.model.ParameterDefinition;
 import hudson.model.ParametersDefinitionProperty;
 import hudson.model.Queue.FlyweightTask;
 import hudson.model.Result;
+import hudson.model.Run;
 import hudson.model.SCMedItem;
 import hudson.model.Saveable;
 import hudson.model.TopLevelItem;
@@ -948,4 +951,14 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
     }
 
     private static final Logger LOGGER = Logger.getLogger(MatrixProject.class.getName());
+
+    @Initializer(before=InitMilestone.EXTENSIONS_AUGMENTED)
+    public static void alias() {
+        Items.XSTREAM.alias("matrix-project", MatrixProject.class);
+        Items.XSTREAM.alias("axis", Axis.class);
+        Items.XSTREAM.alias("matrix-config", MatrixConfiguration.class);
+        Run.XSTREAM.alias("matrix-build",MatrixBuild.class);
+        Run.XSTREAM.alias("matrix-run",MatrixRun.class);
+    }
+
 }
