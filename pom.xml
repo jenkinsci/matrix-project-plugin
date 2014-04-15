@@ -3,10 +3,10 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>1.561-SNAPSHOT</version>
+        <version>1.559</version> <!-- TODO 1.561 when released -->
     </parent>
     <artifactId>matrix-project</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0-beta-1-SNAPSHOT</version>
     <packaging>hpi</packaging>
     <name>Matrix Project Plugin</name>
     <description>Multi-configuration (matrix) project type.</description>
