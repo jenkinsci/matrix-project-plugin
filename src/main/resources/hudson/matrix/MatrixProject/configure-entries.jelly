@@ -74,7 +74,7 @@ THE SOFTWARE.
     </f:block>
 
     <f:optionalBlock name="hasCombinationFilter" title="${%Combination Filter}" checked="${!empty(it.combinationFilter)}"
-        help="/help/matrix/combinationfilter.html"> <!-- TODO cannot be found here, should be moved to a better location than src/main/webapp/ -->
+        help="/plugin/matrix-project/help/matrix/combinationfilter.html">
 	    <f:entry title="${%Filter}">
 	      <f:textbox name="combinationFilter" value="${it.combinationFilter}" />
 	    </f:entry>
