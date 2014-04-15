@@ -6,7 +6,7 @@
         <version>1.559</version> <!-- TODO 1.561 when released -->
     </parent>
     <artifactId>matrix-project</artifactId>
-    <version>1.0-beta-1</version>
+    <version>1.0-beta-2-SNAPSHOT</version>
     <packaging>hpi</packaging>
     <name>Matrix Project Plugin</name>
     <description>Multi-configuration (matrix) project type.</description>
