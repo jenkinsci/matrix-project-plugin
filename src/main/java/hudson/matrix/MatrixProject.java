@@ -151,6 +151,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
      * @deprecated as of 1.456
      *      Moved to {@link DefaultMatrixExecutionStrategyImpl}
      */
+    @Deprecated
     private transient Boolean runSequentially;
 
     /**
@@ -158,6 +159,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
      * @deprecated as of 1.456
      *      Moved to {@link DefaultMatrixExecutionStrategyImpl}
      */
+    @Deprecated
     private transient String touchStoneCombinationFilter;
 
     /**
@@ -166,12 +168,14 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
      * @deprecated as of 1.456
      *      Moved to {@link DefaultMatrixExecutionStrategyImpl}
      */
+    @Deprecated
     private transient Result touchStoneResultCondition;
 
     /**
      * @deprecated as of 1.456
      *      Moved to {@link DefaultMatrixExecutionStrategyImpl}
      */
+    @Deprecated
     private transient MatrixConfigurationSorter sorter;
 
     private MatrixExecutionStrategy executionStrategy;
@@ -254,6 +258,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
      *      This method tries to emulate the previous behavior the best it can, but will return null
      *      if the current {@link MatrixExecutionStrategy} is not the default one.
      */
+    @Deprecated
     public MatrixConfigurationSorter getSorter() {
         MatrixExecutionStrategy e = executionStrategy;
         if (e instanceof DefaultMatrixExecutionStrategyImpl) {
@@ -269,6 +274,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
      *      This method tries to emulate the previous behavior the best it can, but will fall back
      *      to no-op if the current {@link MatrixExecutionStrategy} is not the default one.
      */
+    @Deprecated
     public void setSorter(MatrixConfigurationSorter sorter) throws IOException {
         MatrixExecutionStrategy e = executionStrategy;
         if (e instanceof DefaultMatrixExecutionStrategyImpl) {
@@ -307,6 +313,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
      *      This method tries to emulate the previous behavior the best it can, but will return false
      *      if the current {@link MatrixExecutionStrategy} is not the default one.
      */
+    @Deprecated
     public boolean isRunSequentially() {
         MatrixExecutionStrategy e = executionStrategy;
         if (e instanceof DefaultMatrixExecutionStrategyImpl) {
@@ -322,6 +329,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
      *      This method tries to emulate the previous behavior the best it can, but will fall back
      *      to no-op if the current {@link MatrixExecutionStrategy} is not the default one.
      */
+    @Deprecated
     public void setRunSequentially(boolean runSequentially) throws IOException {
         MatrixExecutionStrategy e = executionStrategy;
         if (e instanceof DefaultMatrixExecutionStrategyImpl) {
@@ -367,6 +375,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
      *      This method tries to emulate the previous behavior the best it can, but will return null
      *      if the current {@link MatrixExecutionStrategy} is not the default one.
      */
+    @Deprecated
     public String getTouchStoneCombinationFilter() {
         MatrixExecutionStrategy e = executionStrategy;
         if (e instanceof DefaultMatrixExecutionStrategyImpl) {
@@ -382,6 +391,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
      *      This method tries to emulate the previous behavior the best it can, but will fall back
      *      to no-op if the current {@link MatrixExecutionStrategy} is not the default one.
      */
+    @Deprecated
     public void setTouchStoneCombinationFilter(String touchStoneCombinationFilter) throws IOException {
         MatrixExecutionStrategy e = executionStrategy;
         if (e instanceof DefaultMatrixExecutionStrategyImpl) {
@@ -398,6 +408,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
      *      This method tries to emulate the previous behavior the best it can, but will return null
      *      if the current {@link MatrixExecutionStrategy} is not the default one.
      */
+    @Deprecated
     public Result getTouchStoneResultCondition() {
         MatrixExecutionStrategy e = executionStrategy;
         if (e instanceof DefaultMatrixExecutionStrategyImpl) {
@@ -413,6 +424,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
      *      This method tries to emulate the previous behavior the best it can, but will fall back
      *      to no-op if the current {@link MatrixExecutionStrategy} is not the default one.
      */
+    @Deprecated
     public void setTouchStoneResultCondition(Result touchStoneResultCondition) throws IOException {
         MatrixExecutionStrategy e = executionStrategy;
         if (e instanceof DefaultMatrixExecutionStrategyImpl) {
@@ -437,7 +449,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
 
         return r;
     }
-    
+
     @Override
     protected void updateTransientActions(){
         super.updateTransientActions();
@@ -455,6 +467,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
      * @deprecated as of 1.373
      *      System vs user difference are generalized into extension point.
      */
+    @Deprecated
     public List<Axis> getUserAxes() {
         List<Axis> r = new ArrayList<Axis>();
         for (Axis a : axes)
@@ -465,6 +478,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
 
     public Layouter<MatrixConfiguration> getLayouter() {
         return new Layouter<MatrixConfiguration>(axes) {
+            @Override
             protected MatrixConfiguration getT(Combination c) {
                 return getItem(c);
             }
@@ -776,6 +790,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
         return publishers.toMap();
     }
 
+    @Override
     public DescribableList<Publisher,Descriptor<Publisher>> getPublishersList() {
         return publishers;
     }
@@ -796,10 +811,12 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
         return null;
     }
 
+    @Override
     protected Class<MatrixBuild> getBuildClass() {
         return MatrixBuild.class;
     }
 
+    @Override
     public boolean isFingerprintConfigured() {
         return false;
     }
@@ -937,6 +954,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
          * @deprecated as of 1.456
          *      This was only exposed for Jelly.
          */
+        @Deprecated
         public List<MatrixConfigurationSorterDescriptor> getSorterDescriptors() {
             return MatrixConfigurationSorterDescriptor.all();
         }
