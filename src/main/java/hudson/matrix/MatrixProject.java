@@ -608,7 +608,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
             activeCombinations = Iterables.transform(Sets.cartesianProduct(axesList), new Function<List<String>, Combination>() {
                 public Combination apply(@Nullable List<String> strings) {
                     assert strings != null;
-                    return new Combination(axes, (String[]) strings.toArray(new String[0]));
+                    return new Combination(axes, strings);
                 }
             });
         } else {

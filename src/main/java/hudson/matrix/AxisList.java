@@ -82,7 +82,7 @@ public class AxisList extends ArrayList<Axis> {
         return Iterables.transform(Sets.cartesianProduct(axesList), new Function<List<String>, Combination>() {
             public Combination apply(@Nullable List<String> strings) {
                 assert strings != null;
-                return new Combination(AxisList.this, (String[]) strings.toArray(new String[0]));
+                return new Combination(AxisList.this, strings);
             }
         });
     }
