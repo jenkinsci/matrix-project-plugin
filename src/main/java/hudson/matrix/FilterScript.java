@@ -100,7 +100,7 @@ class FilterScript {
         if (Util.fixEmptyAndTrim(expression)==null)
             return defaultScript;
 
-        GroovyShell shell = new GroovyShell();
+        GroovyShell shell = new GroovyShell(FilterScript.class.getClassLoader());
 
         return new FilterScript(shell.parse("use("+BooleanCategory.class.getName().replace('$','.')+") {"+expression+"}"));
     }
