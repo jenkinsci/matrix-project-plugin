@@ -66,4 +66,12 @@ public class MatrixTestResult extends AggregatedTestResultAction {
         // Prepend Configuration path
         return it.getOwner().getParent().getShortUrl() + super.getTestResultPath(it);
     }
+
+    /* We are required to override and call super since the parent class is in
+     * a different classloader, otherwise we get IllegalAccessErrors (JENKINS-22798)
+     */
+    @Override
+    protected void add(AbstractTestResultAction child) {
+        super.add(child);
+    }
 }
