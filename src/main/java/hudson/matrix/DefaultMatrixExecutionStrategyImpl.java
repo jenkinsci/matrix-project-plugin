@@ -3,6 +3,7 @@ package hudson.matrix;
 import groovy.lang.GroovyRuntimeException;
 import hudson.AbortException;
 import hudson.Extension;
+import hudson.Util;
 import hudson.console.ModelHyperlinkNote;
 import hudson.matrix.MatrixBuild.MatrixBuildExecution;
 import hudson.matrix.listeners.MatrixBuildListener;
@@ -21,6 +22,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeSet;
 import javax.annotation.Nullable;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -159,7 +161,7 @@ public class DefaultMatrixExecutionStrategyImpl extends MatrixExecutionStrategy 
             if(runSequentially)
                 scheduleConfigurationBuild(execution, c);
             MatrixRun run = waitForCompletion(execution, c);
-            notifyEndBuild(run,execution.getAggregators());
+            notifyEndBuild(run, execution.getAggregators());
             logger.println(Messages.MatrixBuild_Completed(ModelHyperlinkNote.encodeTo(c), getResult(run)));
             r = r.combine(getResult(run));
         }
@@ -171,12 +173,16 @@ public class DefaultMatrixExecutionStrategyImpl extends MatrixExecutionStrategy 
             final MatrixBuildExecution execution,
             final Collection<MatrixConfiguration> touchStoneConfigurations,
             final Collection<MatrixConfiguration> delayedConfigurations
-    ) throws AbortException {
+    ) throws AbortException, InterruptedException, IOException {
 
         final MatrixBuild build = execution.getBuild();
 
-        final FilterScript combinationFilter = FilterScript.parse(execution.getProject().getCombinationFilter(), FilterScript.ACCEPT_ALL);
-        final FilterScript touchStoneFilter = FilterScript.parse(getTouchStoneCombinationFilter(), FilterScript.REJECT_ALL);
+      // Handle the case where filters are passed as variables to the matrix job e.g. "$FILTER"
+      final Map<String, String> environment = execution.getBuild().getEnvironment(execution.getListener());
+      final String combinationFilterString = Util.replaceMacro(execution.getProject().getCombinationFilter(), environment);
+      final String touchStoneCombinationFilterString = Util.replaceMacro(getTouchStoneCombinationFilter(), environment);
+      final FilterScript combinationFilter = FilterScript.parse(combinationFilterString, FilterScript.ACCEPT_ALL);
+      final FilterScript touchStoneFilter = FilterScript.parse(touchStoneCombinationFilterString, FilterScript.REJECT_ALL);
 
         try {
 
