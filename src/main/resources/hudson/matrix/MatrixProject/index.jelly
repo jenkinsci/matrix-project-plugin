@@ -40,7 +40,7 @@ THE SOFTWARE.
       <p:projectActionFloatingBox/>
 
       <table style="margin-top: 1em; margin-left:1em;">
-        <j:set var="atr" value="${it.lastCompletedBuild.aggregatedTestResultAction}"/>
+        <j:set var="atr" value="${it.aggregatedTestResultAction}"/>
         <j:if test="${atr!=null}">
           <t:summary icon="clipboard.png">
             <a href="lastCompletedBuild/testReport/" class="model-link inside">${%Latest Test Result}</a>

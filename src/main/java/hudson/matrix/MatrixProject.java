@@ -62,6 +62,7 @@ import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrappers;
 import hudson.tasks.Builder;
 import hudson.tasks.Publisher;
+import hudson.tasks.test.AggregatedTestResultAction;
 import hudson.triggers.Trigger;
 import hudson.util.AlternativeUiTextProvider;
 import hudson.util.CopyOnWriteMap;
@@ -879,6 +880,11 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
         publishers.rebuildHetero(req, json, Publisher.all(), "publisher");
 
         rebuildConfigurations(null);
+    }
+
+    public AggregatedTestResultAction getAggregatedTestResultAction() {
+        MatrixBuild b = getLastCompletedBuild();
+        return b != null ? b.getAction(AggregatedTestResultAction.class) : null;
     }
 
     /**
