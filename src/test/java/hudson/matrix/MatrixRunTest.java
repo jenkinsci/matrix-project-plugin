@@ -29,10 +29,14 @@ import java.io.InputStream;
 import jenkins.model.CauseOfInterruption;
 import jenkins.model.InterruptedBuildAction;
 import static org.junit.Assert.*;
+import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Bug;
+import org.jvnet.hudson.test.JenkinsRule;
 
 public class MatrixRunTest {
+
+    @Rule public JenkinsRule r = new JenkinsRule();
 
     /**
      * Unmarshall a matrix build.xml result.
