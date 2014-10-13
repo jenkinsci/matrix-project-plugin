@@ -734,7 +734,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
 
     public void onDeleted(MatrixConfiguration item) throws IOException {
         if(activeConfigurations.contains(item)){
-            LOGGER.warning("Tring of delete active configuration " + item.getDisplayName() + " of job " + getDisplayName() + ". Active configurations should not be deleted.");
+            LOGGER.warning("Trying to delete active configuration " + item.getDisplayName() + " of job " + getDisplayName() + ". Active configurations should not be deleted.");
         }
         else{
             configurations.remove(item.getCombination());
