@@ -6,7 +6,7 @@
         <version>1.561</version>
     </parent>
     <artifactId>matrix-project</artifactId>
-    <version>1.4</version>
+    <version>1.5-SNAPSHOT</version>
     <packaging>hpi</packaging>
     <name>Matrix Project Plugin</name>
     <description>Multi-configuration (matrix) project type.</description>
