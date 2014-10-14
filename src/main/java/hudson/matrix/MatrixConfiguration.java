@@ -121,6 +121,14 @@ public class MatrixConfiguration extends Project<MatrixConfiguration,MatrixRun> 
     public void setConcurrentBuild(boolean b) throws IOException {
         throw new UnsupportedOperationException("The setting can be only changed at MatrixProject");
     }
+    
+    @Override
+    public void delete() throws IOException, InterruptedException{
+        //do not delete active configuration
+        if(getParent().getActiveConfigurations().contains(this))           
+            return;
+        super.delete();
+    }
 
     /**
      * Used during loading to set the combination back.
