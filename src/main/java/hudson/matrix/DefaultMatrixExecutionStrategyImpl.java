@@ -24,6 +24,11 @@ import java.util.List;
 import java.util.TreeSet;
 import javax.annotation.Nullable;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.ListUtils;
+import org.apache.commons.collections.Transformer;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.Lists;
 
 /**
  * {@link MatrixExecutionStrategy} that captures historical behavior.
@@ -131,41 +136,55 @@ public class DefaultMatrixExecutionStrategyImpl extends MatrixExecutionStrategy 
             delayedConfigurations    = createTreeSet(delayedConfigurations, sorter);
         }
 
-        if(!runSequentially)
-            for(MatrixConfiguration c : touchStoneConfigurations)
-                scheduleConfigurationBuild(execution, c);
-
+        Result result = Result.SUCCESS;
         PrintStream logger = execution.getListener().getLogger();
 
-        Result r = Result.SUCCESS;
-        for (MatrixConfiguration c : touchStoneConfigurations) {
-            if(runSequentially)
-                scheduleConfigurationBuild(execution, c);
-            MatrixRun run = waitForCompletion(execution, c);
-            notifyEndBuild(run,execution.getAggregators());
-            logger.println(Messages.MatrixBuild_Completed(ModelHyperlinkNote.encodeTo(c), getResult(run)));
-            r = r.combine(getResult(run));
+        result = runConfigurations(execution, wrap(touchStoneConfigurations, execution), result, logger);
+
+        if (touchStoneResultCondition != null && result.isWorseThan(touchStoneResultCondition)) {
+            logger.printf("Touchstone configurations resulted in %s, so aborting...%n", result);
+            return result;
         }
 
-        if (touchStoneResultCondition != null && r.isWorseThan(touchStoneResultCondition)) {
-            logger.printf("Touchstone configurations resulted in %s, so aborting...%n", r);
-            return r;
-        }
-        
-        if(!runSequentially)
-            for(MatrixConfiguration c : delayedConfigurations)
-                scheduleConfigurationBuild(execution, c);
+        return runConfigurations(execution, wrap(delayedConfigurations, execution), result, logger);
+    }
 
-        for (MatrixConfiguration c : delayedConfigurations) {
-            if(runSequentially)
-                scheduleConfigurationBuild(execution, c);
-            MatrixRun run = waitForCompletion(execution, c);
-            notifyEndBuild(run,execution.getAggregators());
-            logger.println(Messages.MatrixBuild_Completed(ModelHyperlinkNote.encodeTo(c), getResult(run)));
-            r = r.combine(getResult(run));
+    private Collection<MatrixConfigurationWrapper> wrap(Collection<MatrixConfiguration> configurations, MatrixBuildExecution execution) {
+        ArrayList<MatrixConfigurationWrapper> wrappers = Lists.newArrayList();
+        for (MatrixConfiguration c : configurations) {
+            wrappers.add(new MatrixConfigurationWrapper(c, execution));
+        }
+        return wrappers;
+    }
+
+    private Result runConfigurations(MatrixBuildExecution execution, Collection<MatrixConfigurationWrapper> configurations, Result result, PrintStream logger) throws InterruptedException, IOException {
+        for (MatrixConfigurationWrapper wrapper : configurations) {
+            wrapper.scheduleConfigurationBuild();
+            if(runSequentially) {
+                result = result.combine(wrapper.waitForCompletion());
+            }
         }
 
-        return r;
+        if(!runSequentially) {
+            while (true) {
+                boolean completed = true;
+                for(MatrixConfigurationWrapper wrapper: Lists.newArrayList(configurations)) {
+                    Result runResult;
+                    if ((runResult = wrapper.checkForCompletion()) != null) {
+                        result = result.combine(runResult);
+                        if (result.isWorseThan(Result.SUCCESS)) {
+                            execution.getBuild().setResult(result);
+                        }
+                        configurations.remove(wrapper);
+                    } else {
+                        completed = false;
+                    }
+                }
+                if (completed) break;
+                Thread.sleep(1000);
+            }
+        }
+        return result;
     }
 
     private void filterConfigurations(
@@ -202,11 +221,6 @@ public class DefaultMatrixExecutionStrategyImpl extends MatrixExecutionStrategy 
         }
     }
 
-    private Result getResult(@Nullable MatrixRun run) {
-        // null indicates that the run was cancelled before it even gets going
-        return run!=null ? run.getResult() : Result.ABORTED;
-    }
-
     private boolean notifyStartBuild(List<MatrixAggregator> aggregators) throws InterruptedException, IOException {
         for (MatrixAggregator a : aggregators)
             if(!a.startBuild())
@@ -227,43 +241,58 @@ public class DefaultMatrixExecutionStrategyImpl extends MatrixExecutionStrategy 
         return r;
     }
 
-    /** Function to start schedule a single configuration
-     *
-     * This function schedule a build of a configuration passing all of the Matrixchild actions
-     * that are present in the parent build.
-     *
-     * @param exec  Matrix build that is the parent of the configuration
-     * @param c     Configuration to schedule
-     */
-    private void scheduleConfigurationBuild(MatrixBuildExecution exec, MatrixConfiguration c) {
-        MatrixBuild build = exec.getBuild();
-        exec.getListener().getLogger().println(Messages.MatrixBuild_Triggering(ModelHyperlinkNote.encodeTo(c)));
+    private class MatrixConfigurationWrapper {
 
-        // filter the parent actions for those that can be passed to the individual jobs.
-        List<Action> childActions = new ArrayList<Action>(build.getActions(MatrixChildAction.class));
-        childActions.addAll(build.getActions(ParametersAction.class)); // used to implement MatrixChildAction
-        c.scheduleBuild(childActions, new UpstreamCause((Run)build));
-    }
+        private final MatrixConfiguration configuration;
 
-    private MatrixRun waitForCompletion(MatrixBuildExecution exec, MatrixConfiguration c) throws InterruptedException, IOException {
-        BuildListener listener = exec.getListener();
-        String whyInQueue = "";
-        long startTime = System.currentTimeMillis();
+        private final MatrixBuildExecution execution;
 
-        // wait for the completion
-        int appearsCancelledCount = 0;
-        while(true) {
-            MatrixRun b = c.getBuildByNumber(exec.getBuild().getNumber());
+        private final BuildListener listener;
 
-            // two ways to get beyond this. one is that the build starts and gets done,
-            // or the build gets cancelled before it even started.
-            if(b!=null && !b.isBuilding()) {
-                Result buildResult = b.getResult();
-                if(buildResult!=null)
-                    return b;
+        private String whyInQueue = "";
+
+        private long startTime;
+
+        private int appearsCancelledCount;
+
+        public MatrixConfigurationWrapper(MatrixConfiguration configuration, MatrixBuildExecution execution) {
+            this.configuration = configuration;
+            this.execution = execution;
+            this.listener = execution.getListener();
+        }
+
+        public MatrixConfiguration getConfiguration() {
+            return configuration;
+        }
+
+        /** Function to start schedule a single configuration
+        *
+        * This function schedule a build of a configuration passing all of the Matrixchild actions
+        * that are present in the parent build.
+        */
+        public void scheduleConfigurationBuild() {
+            MatrixBuild build = execution.getBuild();
+            execution.getListener().getLogger().println(Messages.MatrixBuild_Triggering(ModelHyperlinkNote.encodeTo(configuration)));
+
+            // filter the parent actions for those that can be passed to the individual jobs.
+            List<Action> childActions = new ArrayList<Action>(build.getActions(MatrixChildAction.class));
+            childActions.addAll(build.getActions(ParametersAction.class)); // used to implement MatrixChildAction
+            configuration.scheduleBuild(childActions, new UpstreamCause((Run)build));
+            startTime = System.currentTimeMillis();
+        }
+
+        public Result checkForCompletion() throws InterruptedException, IOException {
+            MatrixRun run = configuration.getBuildByNumber(execution.getBuild().getNumber());
+            if(run!=null && !run.isBuilding()) {
+                Result buildResult = run.getResult();
+                if(buildResult!=null) {
+                    notifyEndBuild(run, execution.getAggregators());
+                    execution.getListener().getLogger().println(Messages.MatrixBuild_Completed(ModelHyperlinkNote.encodeTo(configuration), buildResult));
+                    return buildResult;
+                }
             }
-            Queue.Item qi = c.getQueueItem();
-            if(b==null && qi==null)
+            Queue.Item qi = configuration.getQueueItem();
+            if(run==null && qi==null)
                 appearsCancelledCount++;
             else
                 appearsCancelledCount = 0;
@@ -276,21 +305,30 @@ public class DefaultMatrixExecutionStrategyImpl extends MatrixExecutionStrategy 
                 // http://www.nabble.com/Anyone-using-AccuRev-plugin--tt21634577.html#a21671389
                 // because of this, we really make sure that the build is cancelled by doing this 5
                 // times over 5 seconds
-                listener.getLogger().println(Messages.MatrixBuild_AppearsCancelled(ModelHyperlinkNote.encodeTo(c)));
-                return null;
+                listener.getLogger().println(Messages.MatrixBuild_AppearsCancelled(ModelHyperlinkNote.encodeTo(configuration)));
+                return Result.ABORTED;
             }
 
             if(qi!=null) {
                 // if the build seems to be stuck in the queue, display why
                 String why = qi.getWhy();
                 if(why != null && !why.equals(whyInQueue) && System.currentTimeMillis()-startTime>5000) {
-                    listener.getLogger().print("Configuration " + ModelHyperlinkNote.encodeTo(c)+" is still in the queue: ");
+                    listener.getLogger().print("Configuration " + ModelHyperlinkNote.encodeTo(configuration)+" is still in the queue: ");
                     qi.getCauseOfBlockage().print(listener); //this is still shown on the same line
                     whyInQueue = why;
                 }
             }
             
-            Thread.sleep(1000);
+            return null;
+        }
+
+        public Result waitForCompletion() throws InterruptedException, IOException {
+            // wait for the completion
+            Result result;
+            while((result = checkForCompletion()) != null) {
+                Thread.sleep(1000);
+            }
+            return result;
         }
     }
 
