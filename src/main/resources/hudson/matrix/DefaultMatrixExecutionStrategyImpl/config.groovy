@@ -21,8 +21,8 @@ f.optionalBlock (field:"hasTouchStoneCombinationFilter", title:_("Execute touchs
 
     f.entry(title:_("Required result"), field:"touchStoneResultCondition", description:_("required.result.description")) {
         select(name:"touchStoneResultCondition") {
-            f.option(value:"SUCCESS",  selected:my.touchStoneResultCondition==Result.SUCCESS,  _("Stable"))
-            f.option(value:"UNSTABLE", selected:my.touchStoneResultCondition==Result.UNSTABLE, _("Unstable"))
+            f.option(value:"SUCCESS",  selected:my?.touchStoneResultCondition==Result.SUCCESS,  _("Stable"))
+            f.option(value:"UNSTABLE", selected:my?.touchStoneResultCondition==Result.UNSTABLE, _("Unstable"))
         }
     }
 }
