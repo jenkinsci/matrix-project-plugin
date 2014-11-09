@@ -52,9 +52,9 @@ public class LabelExpAxisTest {
         assertEquals(FormValidation.Kind.ERROR, descriptor.doCheckLabelExpr(project, "&&!||").kind);
 
         // Use worse result - Not yet implemented
-        //assertEquals(FormValidation.Kind.WARNING, descriptor.doCheckLabelExpr(project, "aaaa\nno_such_slave").kind);
-        //assertEquals(FormValidation.Kind.ERROR, descriptor.doCheckLabelExpr(project, "aaaa\n&&").kind);
-        //assertEquals(FormValidation.Kind.ERROR, descriptor.doCheckLabelExpr(project, "no_such_slave\n&&").kind);
-        //assertEquals(FormValidation.Kind.ERROR, descriptor.doCheckLabelExpr(project, "no_such_slave\n&&\naaaa").kind);
+        assertEquals(FormValidation.Kind.WARNING, descriptor.doCheckLabelExpr(project, "aaaa\nno_such_slave").kind);
+        assertEquals(FormValidation.Kind.ERROR, descriptor.doCheckLabelExpr(project, "aaaa\n&&").kind);
+        assertEquals(FormValidation.Kind.ERROR, descriptor.doCheckLabelExpr(project, "no_such_slave\n&&").kind);
+        assertEquals(FormValidation.Kind.ERROR, descriptor.doCheckLabelExpr(project, "no_such_slave\n&&\naaaa").kind);
     }
 }

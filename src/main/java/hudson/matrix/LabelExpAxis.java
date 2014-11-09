@@ -25,9 +25,8 @@ package hudson.matrix;
 
 import hudson.Extension;
 import hudson.Util;
-import hudson.model.AutoCompletionCandidates;
-import hudson.model.TopLevelItemDescriptor;
 import hudson.model.AbstractProject;
+import hudson.model.AbstractProject.AbstractProjectDescriptor;
 import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
 
@@ -36,7 +35,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.DoNotUse;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -95,40 +93,17 @@ public class LabelExpAxis extends Axis {
 
         @Restricted(NoExternalUse.class)
         public FormValidation doCheckLabelExpr(@AncestorInPath AbstractProject<?,?> project, @QueryParameter String value) {
-            AbstractProject.AbstractProjectDescriptor desc = projectDescriptor();
 
             if (Util.fixEmptyAndTrim(value) == null) return FormValidation.error("No expressions provided");
 
             List<FormValidation> validations = new ArrayList<FormValidation>();
             for (String expr: getExprValues(value)) {
-                validations.add(
-                        desc.doCheckAssignedLabelString(project, expr)
-                );
+                final FormValidation validation = AbstractProjectDescriptor.validateLabelExpression(expr, project);
+                validations.add(validation);
             }
 
-            return aggregateValidations(validations);
+            return FormValidation.aggregate(validations);
         }
-
-        private final AbstractProject.AbstractProjectDescriptor projectDescriptor() {
-            return Jenkins.getInstance().getDescriptorByType(MatrixProject.DescriptorImpl.class);
-        }
-    }
-
-    // TODO move to hudson.util.FormValidation
-    private static FormValidation aggregateValidations(List<FormValidation> validations) {
-
-        if (validations.size() == 1) return validations.get(0);
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("<ul style='list-style-type: none'>");
-        for (FormValidation validation: validations) {
-            sb.append("<li>").append(validation.renderHtml()).append("</li>");
-        }
-        sb.append("</ul>");
-
-        // Wrap into ok instead of worst of all results as class ok result
-        // wrapped in warning or error overall result would inherit its color.
-        return FormValidation.okWithMarkup(sb.toString());
     }
 
     public static List<String> getExprValues(String valuesString){
@@ -139,6 +114,5 @@ public class LabelExpAxis extends Axis {
     	}
 		return expressions;
 	}
-
 }
 
