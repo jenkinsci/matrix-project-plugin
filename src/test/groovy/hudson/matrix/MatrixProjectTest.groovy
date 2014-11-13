@@ -67,6 +67,9 @@ import java.util.concurrent.CountDownLatch
 
 import static hudson.model.Node.Mode.EXCLUSIVE
 import static org.junit.Assert.*
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.*;
+
 import org.junit.Rule
 import org.junit.Test
 import org.jvnet.hudson.test.JenkinsRule
@@ -518,5 +521,29 @@ public class MatrixProjectTest {
             def b = j.assertBuildStatusSuccess(p.scheduleBuild2(2))
             assertSame(b.builtOn, j.jenkins)
         }
+    }
+
+    @Test
+    public void useCombinationInWorkspaceName() throws Exception {
+        MatrixProject p = j.jenkins.createProject(MatrixProject.class, "defaultName");
+        p.setAxes(new AxisList(new TextAxis("AXIS", "VALUE")));
+
+        p.scheduleBuild2(0).get();
+        def build = p.getItem("AXIS=VALUE").getLastBuild();
+
+        assertThat(build.getWorkspace().getRemote(), containsString("/workspace/defaultName/AXIS/VALUE"));
+    }
+
+    @Test
+    public void useShortWorkspaceNameGlobally() throws Exception {
+        MatrixConfiguration.useShortWorkspaceName = true;
+
+        MatrixProject p = j.jenkins.createProject(MatrixProject.class, "shortName");
+        p.setAxes(new AxisList(new TextAxis("AXIS", "VALUE")));
+
+        p.scheduleBuild2(0).get();
+        MatrixRun build = p.getItem("AXIS=VALUE").getLastBuild();
+
+        assertThat(build.getWorkspace().getRemote(), containsString("/workspace/shortName/${build.parent.digestName}"));
     }
 }
