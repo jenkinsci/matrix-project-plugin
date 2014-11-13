@@ -48,6 +48,9 @@ THE SOFTWARE.
           <f:textbox />
         </f:entry>
       </f:optionalBlock>
+      <j:if test="${!it.globalUseShortChildWorkspaceName}">
+        <f:optionalBlock field="useShortChildWorkspaceName" title="${%Use short child workspace name}" checked="${it.useShortChildWorkspaceName}"/>
+      </j:if>
 
       <f:entry title="${%Display Name}" field="displayNameOrNull">
          <f:textbox checkUrl="'${rootURL}/checkDisplayName?displayName='+encodeURIComponent(this.value)+'&amp;jobName='+encodeURIComponent('${h.jsStringEscape(it.name)}')"/>

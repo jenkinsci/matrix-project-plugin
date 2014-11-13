@@ -37,6 +37,7 @@ import org.jvnet.hudson.test.Email
 import org.jvnet.hudson.test.SingleFileSCM
 import org.jvnet.hudson.test.UnstableBuilder
 import org.jvnet.hudson.test.recipes.LocalData;
+import com.gargoylesoftware.htmlunit.html.HtmlPage
 import com.gargoylesoftware.htmlunit.html.HtmlTable
 import org.jvnet.hudson.test.Bug
 import org.jvnet.hudson.test.TestBuilder
@@ -537,12 +538,44 @@ public class MatrixProjectTest {
     @Test
     public void useShortWorkspaceNameGlobally() throws Exception {
         MatrixConfiguration.useShortWorkspaceName = true;
+        try {
+            MatrixProject p = j.jenkins.createProject(MatrixProject.class, "shortName");
+            p.setAxes(new AxisList(new TextAxis("AXIS", "VALUE")));
 
+            p.scheduleBuild2(0).get();
+            MatrixRun build = p.getItem("AXIS=VALUE").getLastBuild();
+
+            assertThat(build.getWorkspace().getRemote(), containsString("/workspace/shortName/${build.parent.digestName}"));
+
+            def wc = j.createWebClient();
+            HtmlPage page = wc.getPage(p, "configure");
+            def form = page.getFormByName("config");
+            assertTrue("Global value should not be overridable", form.getInputsByName("_.useShortChildWorkspaceName").isEmpty());
+        } finally {
+            MatrixConfiguration.useShortWorkspaceName = false;
+        }
+    }
+
+    @Test
+    public void useShortWorkspaceNameLocally() throws Exception {
         MatrixProject p = j.jenkins.createProject(MatrixProject.class, "shortName");
         p.setAxes(new AxisList(new TextAxis("AXIS", "VALUE")));
 
         p.scheduleBuild2(0).get();
         MatrixRun build = p.getItem("AXIS=VALUE").getLastBuild();
+
+        assertThat(build.getWorkspace().getRemote(), containsString("/workspace/shortName/AXIS/VALUE"));
+
+        def wc = j.createWebClient();
+        HtmlPage page = wc.getPage(p, "configure");
+        def form = page.getFormByName("config");
+        form.getButtonByCaption("Advanced...").click();
+        form.getInputByName("_.useShortChildWorkspaceName").click();
+        form.getButtonByCaption("Save").click();
+        j.submit(form);
+
+        p.scheduleBuild2(0).get();
+        build = p.getItem("AXIS=VALUE").getLastBuild();
 
         assertThat(build.getWorkspace().getRemote(), containsString("/workspace/shortName/${build.parent.digestName}"));
     }
