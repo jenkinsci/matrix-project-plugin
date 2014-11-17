@@ -1,5 +1,6 @@
 package hudson.matrix;
 
+import javax.annotation.CheckForNull;
 import groovy.lang.GroovyRuntimeException;
 import hudson.AbortException;
 import hudson.Extension;
@@ -261,16 +262,12 @@ public class DefaultMatrixExecutionStrategyImpl extends MatrixExecutionStrategy 
             this.listener = execution.getListener();
         }
 
-        public MatrixConfiguration getConfiguration() {
-            return configuration;
-        }
-
         /** Function to start schedule a single configuration
         *
         * This function schedule a build of a configuration passing all of the Matrixchild actions
         * that are present in the parent build.
         */
-        public void scheduleConfigurationBuild() {
+        private void scheduleConfigurationBuild() {
             MatrixBuild build = execution.getBuild();
             execution.getListener().getLogger().println(Messages.MatrixBuild_Triggering(ModelHyperlinkNote.encodeTo(configuration)));
 
@@ -281,7 +278,13 @@ public class DefaultMatrixExecutionStrategyImpl extends MatrixExecutionStrategy 
             startTime = System.currentTimeMillis();
         }
 
-        public Result checkForCompletion() throws InterruptedException, IOException {
+        /** Checks for the configuration completion in non-blocking maner.
+         * 
+         * If the configuration is done, notifies the end of build and returns the result
+         * 
+         * @return The result of configuration if done otherwise null
+         */
+        private @CheckForNull Result checkForCompletion() throws InterruptedException, IOException {
             MatrixRun run = configuration.getBuildByNumber(execution.getBuild().getNumber());
             if(run!=null && !run.isBuilding()) {
                 Result buildResult = run.getResult();
@@ -322,7 +325,11 @@ public class DefaultMatrixExecutionStrategyImpl extends MatrixExecutionStrategy 
             return null;
         }
 
-        public Result waitForCompletion() throws InterruptedException, IOException {
+        /** Checks for the configuration completion blocking until the result is available.
+         * 
+         * @return The result of configuration when done
+         */
+        private Result waitForCompletion() throws InterruptedException, IOException {
             // wait for the completion
             Result result;
             while((result = checkForCompletion()) != null) {
