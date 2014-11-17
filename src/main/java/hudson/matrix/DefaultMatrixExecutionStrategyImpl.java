@@ -332,7 +332,7 @@ public class DefaultMatrixExecutionStrategyImpl extends MatrixExecutionStrategy 
         private Result waitForCompletion() throws InterruptedException, IOException {
             // wait for the completion
             Result result;
-            while((result = checkForCompletion()) != null) {
+            while((result = checkForCompletion()) == null) {
                 Thread.sleep(1000);
             }
             return result;
