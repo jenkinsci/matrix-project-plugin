@@ -213,6 +213,7 @@ public class CombinationFilterUsingBuildParamsTest {
 
         PowerMockito.when(build.getParent()).thenReturn(project);
         PowerMockito.when(project.getUrl()).thenReturn("/my/project/");
+        PowerMockito.when(project.getFullDisplayName()).thenReturn("My Project");
 
         when(project.getAxes()).thenReturn(new AxisList(new Axis("RELEASE", releases)));
         when(project.getCombinationFilter()).thenReturn(filter);
