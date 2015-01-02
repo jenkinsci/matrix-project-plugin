@@ -38,7 +38,7 @@ import org.jvnet.hudson.test.SingleFileSCM
 import org.jvnet.hudson.test.UnstableBuilder
 import org.jvnet.hudson.test.recipes.LocalData;
 import com.gargoylesoftware.htmlunit.html.HtmlTable
-import org.jvnet.hudson.test.Bug
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.TestBuilder
 import hudson.model.AbstractBuild
 import hudson.Launcher
@@ -213,7 +213,7 @@ public class MatrixProjectTest {
         }
     }
 
-    @Bug(4245)
+    @Issue("JENKINS-4245")
     @Test
     void testLayout1() {
         // 5*5*5*5*5 matrix
@@ -224,7 +224,7 @@ public class MatrixProjectTest {
         assertRectangleTable(p)
     }
 
-    @Bug(4245)
+    @Issue("JENKINS-4245")
     @Test
     void testLayout2() {
         // 2*3*4*5*6 matrix
@@ -296,7 +296,7 @@ public class MatrixProjectTest {
     /**
      * Quiettng down Hudson causes a dead lock if the parent is running but children is in the queue
      */
-    @Bug(4873)
+    @Issue("JENKINS-4873")
     @Test
     void testQuietDownDeadlock() {
         def p = createMatrixProject();
@@ -332,7 +332,7 @@ public class MatrixProjectTest {
         }        
     }
 
-    @Bug(9009)
+    @Issue("JENKINS-9009")
     @Test
     void testTrickyNodeName() {
         def names = [ j.createSlave("Sean's Workstation",null), j.createSlave("John\"s Workstation",null) ]*.nodeName;
@@ -344,7 +344,7 @@ public class MatrixProjectTest {
         assertEquals(a.values as Set,names as Set);
     }
 
-    @Bug(10108)
+    @Issue("JENKINS-10108")
     @Test
     void testTwoFileParams() {
         def p = createMatrixProject();
@@ -463,7 +463,7 @@ public class MatrixProjectTest {
         //~ }
     //~ }
 
-    @Bug(15271)
+    @Issue("JENKINS-15271")
     @LocalData
     @Test
     public void testUpgrade() throws Exception {
@@ -478,7 +478,7 @@ public class MatrixProjectTest {
         assertNull(defaultExecutionStrategy.getSorter());
     }
 
-    @Bug(17337)
+    @Issue("JENKINS-17337")
     @Test public void reload() throws Exception {
         MatrixProject p = j.createMatrixProject();
         AxisList axes = new AxisList();
@@ -501,7 +501,7 @@ public class MatrixProjectTest {
      * Since there's a chance that the fair scheduling just so happens to pick up the master by chance,
      * we try multiple jobs to reduce the chance of that happening.
      */
-    @Bug(5076)
+    @Issue("JENKINS-5076")
     @Test
     public void dontRunOnExclusiveSlave() {
         def projects = (0..10).collect {

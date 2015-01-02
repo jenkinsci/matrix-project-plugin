@@ -56,7 +56,7 @@ import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.jvnet.hudson.test.Bug;
+import org.jvnet.hudson.test.Issue;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.verification.VerificationMode;
@@ -189,7 +189,7 @@ public class CombinationFilterUsingBuildParamsTest {
     }
 
     @Test
-    @Bug(7285)
+    @Issue("JENKINS-7285")
     public void reproduceTouchstoneRegression () throws InterruptedException, IOException {
 
         givenTheVersionIs("3");

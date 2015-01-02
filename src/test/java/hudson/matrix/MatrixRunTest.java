@@ -25,13 +25,16 @@
 package hudson.matrix;
 
 import hudson.model.Run;
+
 import java.io.InputStream;
+
 import jenkins.model.CauseOfInterruption;
 import jenkins.model.InterruptedBuildAction;
 import static org.junit.Assert.*;
+
 import org.junit.Rule;
 import org.junit.Test;
-import org.jvnet.hudson.test.Bug;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
 public class MatrixRunTest {
@@ -41,7 +44,7 @@ public class MatrixRunTest {
     /**
      * Unmarshall a matrix build.xml result.
      */
-    @Bug(10903)
+    @Issue("JENKINS-10903")
     @Test public void unmarshalRunMatrix() {
         InputStream is = MatrixRunTest.class.getResourceAsStream("runMatrix.xml");
         MatrixRun result = (MatrixRun) Run.XSTREAM.fromXML(is);

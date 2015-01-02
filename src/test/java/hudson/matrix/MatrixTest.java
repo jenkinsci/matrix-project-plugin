@@ -26,11 +26,15 @@ package hudson.matrix;
 import hudson.model.Item;
 import hudson.security.AuthorizationMatrixProperty;
 import hudson.security.ProjectMatrixAuthorizationStrategy;
+
 import java.util.Collections;
+
 import org.acegisecurity.context.SecurityContextHolder;
+
 import com.gargoylesoftware.htmlunit.xml.XmlPage;
+
 import org.jvnet.hudson.test.HudsonTestCase;
-import org.jvnet.hudson.test.Bug;
+import org.jvnet.hudson.test.Issue;
 
 /**
  * @author Alan Harder
@@ -50,7 +54,7 @@ public class MatrixTest extends HudsonTestCase {
     /**
      * Test that project level permissions apply to child configurations as well.
      */
-    @Bug(9293)
+    @Issue("JENKINS-9293")
     public void testConfigurationACL() throws Exception {
         jenkins.setAuthorizationStrategy(new ProjectMatrixAuthorizationStrategy());
         MatrixProject mp = createMatrixProject();
