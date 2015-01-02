@@ -23,6 +23,8 @@
  */
 package hudson.matrix
 
+import hudson.cli.CLICommandInvoker;
+import hudson.cli.DeleteBuildsCommand
 import hudson.model.Cause
 import hudson.model.Result
 import hudson.slaves.DumbSlave
@@ -30,23 +32,31 @@ import hudson.slaves.RetentionStrategy
 import hudson.tasks.Ant
 import hudson.tasks.ArtifactArchiver
 import hudson.tasks.Fingerprinter
+import hudson.tasks.LogRotator
 import hudson.tasks.Maven
 import hudson.tasks.Shell
 import hudson.tasks.BatchFile
+
 import org.jvnet.hudson.test.Email
 import org.jvnet.hudson.test.SingleFileSCM
 import org.jvnet.hudson.test.UnstableBuilder
 import org.jvnet.hudson.test.recipes.LocalData;
+
 import com.gargoylesoftware.htmlunit.html.HtmlTable
+
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.TestBuilder
+
 import hudson.model.AbstractBuild
 import hudson.Launcher
 import hudson.model.BuildListener
 import hudson.util.OneShotEvent
+
+import java.io.IOException;
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
+
 import hudson.model.JDK
 import hudson.model.Slave
 import hudson.Functions
@@ -59,8 +69,10 @@ import hudson.model.StringParameterDefinition
 import hudson.model.StringParameterValue
 import hudson.scm.SubversionSCM.SvnInfo;
 import hudson.scm.RevisionParameterAction;
+
 import java.util.List;
 import java.util.ArrayList;
+
 import hudson.model.Action;
 
 import java.util.concurrent.CountDownLatch
@@ -545,5 +557,60 @@ public class MatrixProjectTest {
         MatrixRun build = p.getItem("AXIS=VALUE").getLastBuild();
 
         assertThat(build.getWorkspace().getRemote(), containsString("/workspace/shortName/${build.parent.digestName}"));
+    }
+
+    @Test
+    public void discardBuilds() {
+        MatrixProject p = j.jenkins.createProject(MatrixProject.class, "discarder");
+        p.setAxes(new AxisList(new TextAxis("AXIS", "VALUE")));
+
+        // Only last build
+        p.buildDiscarder = new LogRotator("", "1", "", "");
+
+        p.scheduleBuild2(0).get();
+        p.scheduleBuild2(0).get();
+
+        def c = p.getItem("AXIS=VALUE");
+
+        assertEquals("parent builds are discarded", 1, p.builds.size());
+        assertEquals("child builds are discarded", 1, c.builds.size());
+    }
+
+    @Test
+    public void discardArtifacts() {
+        MatrixProject p = j.jenkins.createProject(MatrixProject.class, "discarder");
+        p.setAxes(new AxisList(new TextAxis("AXIS", "VALUE")));
+
+        // Only last artifacts
+        p.buildDiscarder = new LogRotator("", "", "", "1");
+
+        p.buildersList.add([
+            perform: { AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener ->
+                build.getWorkspace().child("artifact.zip").write("content", "UTF-8")
+            }
+        ] as TestBuilder);
+        p.publishersList.add(new ArtifactArchiver("artifact.zip", "", false));
+
+        p.scheduleBuild2(0).get();
+        def rotated = p.getItem("AXIS=VALUE").lastBuild;
+        p.scheduleBuild2(0).get();
+        def last = p.getItem("AXIS=VALUE").lastBuild;
+
+        assertTrue("Artifacts are discarded", rotated.artifacts.empty);
+        assertEquals(1, last.artifacts.size());
+    }
+
+    @Test
+    public void deleteBuildWithChildrenOverCLI() {
+        MatrixProject p = j.jenkins.createProject(MatrixProject.class, "project");
+        p.setAxes(new AxisList(new TextAxis("AXIS", "VALUE")));
+        p.scheduleBuild2(0).get();
+
+        def invoker = new CLICommandInvoker(j, new DeleteBuildsCommand());
+        def result = invoker.invokeWithArgs("project", "1");
+
+        assertThat(result, CLICommandInvoker.Matcher.succeeded());
+        assertEquals(0, p.builds.size());
+        assertEquals(0, p.getItem("AXIS=VALUE").builds.size());
     }
 }
