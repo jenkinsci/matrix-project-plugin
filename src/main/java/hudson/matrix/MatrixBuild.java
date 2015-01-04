@@ -93,8 +93,6 @@ public class MatrixBuild extends AbstractBuild<MatrixProject,MatrixBuild> {
     /**
      * Delete build and its child builds.
      *
-     * Child builds can be skipped if they have to be kept.
-     *
      * @since TODO
      */
     @Override
@@ -102,7 +100,6 @@ public class MatrixBuild extends AbstractBuild<MatrixProject,MatrixBuild> {
         super.delete();
 
         for(MatrixRun run : getExactRuns()) {
-            if (run.getWhyKeepLog() != null) continue;
             run.delete();
         }
     }

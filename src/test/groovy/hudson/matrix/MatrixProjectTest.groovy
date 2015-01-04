@@ -559,7 +559,40 @@ public class MatrixProjectTest {
         assertThat(build.getWorkspace().getRemote(), containsString("/workspace/shortName/${build.parent.digestName}"));
     }
 
-    @Test
+    @Test @Issue("JENKINS-13554")
+    public void deletedLockedParentBuild() {
+        MatrixProject p = j.jenkins.createProject(MatrixProject.class, "project");
+        p.setAxes(new AxisList(new TextAxis("AXIS", "VALUE")));
+        def build = p.scheduleBuild2(0).get();
+        def c = p.getItem("AXIS=VALUE");
+
+        build.keepLog();
+
+        build.delete();
+
+        assertEquals("parent build is deleted", 0, p.builds.size());
+        assertEquals("child build is deleted", 0, c.builds.size());
+    }
+
+    @Test @Issue("JENKINS-13554")
+    public void deletedParentBuildWithLockedChildren() {
+        MatrixProject p = j.jenkins.createProject(MatrixProject.class, "project");
+        p.setAxes(new AxisList(new TextAxis("AXIS", "VALUE")));
+        def build = p.scheduleBuild2(0).get();
+        p.scheduleBuild2(0).get();
+
+        def c = p.getItem("AXIS=VALUE");
+
+        c.getBuildByNumber(2).delete(); // delete newest run
+        assertNotNull(c.getBuildByNumber(1).getWhyKeepLog());
+
+        build.delete();
+
+        assertEquals("last parent build should be kept", 1, p.builds.size());
+        assertEquals("child builds are deleted", 0, c.builds.size());
+    }
+
+    @Test @Issue("JENKINS-13554")
     public void discardBuilds() {
         MatrixProject p = j.jenkins.createProject(MatrixProject.class, "discarder");
         p.setAxes(new AxisList(new TextAxis("AXIS", "VALUE")));
@@ -600,7 +633,7 @@ public class MatrixProjectTest {
         assertEquals(1, last.artifacts.size());
     }
 
-    @Test
+    @Test @Issue("JENKINS-13554")
     public void deleteBuildWithChildrenOverCLI() {
         MatrixProject p = j.jenkins.createProject(MatrixProject.class, "project");
         p.setAxes(new AxisList(new TextAxis("AXIS", "VALUE")));
