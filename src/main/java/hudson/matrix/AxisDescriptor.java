@@ -26,8 +26,10 @@ package hudson.matrix;
 import hudson.Util;
 import hudson.model.Descriptor;
 import hudson.model.Failure;
+import hudson.model.Messages;
 import jenkins.model.Jenkins;
 import hudson.util.FormValidation;
+
 import org.kohsuke.stapler.QueryParameter;
 
 /**
@@ -52,10 +54,47 @@ public abstract class AxisDescriptor extends Descriptor<Axis> {
 
     /**
      * Makes sure that the given name is good as a axis name.
+     *
+     * Aside from {@link Jenkins#checkGoodName()} this disallows ',' and
+     * '=' as special characters used in Combination presentation.
      */
     public FormValidation doCheckName(@QueryParameter String value) {
         if(Util.fixEmpty(value)==null)
             return FormValidation.ok();
+
+        if (value.contains(",")) return FormValidation.error(
+                Messages.Hudson_UnsafeChar(',')
+        );
+
+        if (value.contains("=")) return FormValidation.error(
+                Messages.Hudson_UnsafeChar('=')
+        );
+
+        try {
+            Jenkins.checkGoodName(value);
+            return FormValidation.ok();
+        } catch (Failure e) {
+            return FormValidation.error(e.getMessage());
+        }
+    }
+
+    /**
+     * Makes sure that the given name is good as a axis name.
+     *
+     * Aside from {@link Jenkins#checkGoodName()} this disallows ',' as
+     * special character used in Combination presentation. Note it is not
+     * necessary to disallow '=' in value as everything after the first
+     * occurrence is considered to be a value.
+     *
+     * Subclasses are expected to expose own <tt>doCheck</tt> method possibly delegating to this one.
+     */
+    public FormValidation checkValue(@QueryParameter String value) {
+        if(Util.fixEmpty(value)==null)
+            return FormValidation.ok();
+
+        if (value.contains(",")) return FormValidation.error(
+                Messages.Hudson_UnsafeChar(',')
+        );
 
         try {
             Jenkins.checkGoodName(value);
