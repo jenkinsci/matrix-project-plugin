@@ -25,9 +25,11 @@ package hudson.matrix;
 
 import hudson.Extension;
 import jenkins.model.Jenkins;
+
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -46,7 +48,7 @@ public class JDKAxis extends Axis {
 
     @DataBoundConstructor
     public JDKAxis(String[] values) {
-        super("jdk", Arrays.asList(values));
+        super("jdk", values == null ? Collections.<String>emptyList() : Arrays.asList(values));
     }
 
     @Override

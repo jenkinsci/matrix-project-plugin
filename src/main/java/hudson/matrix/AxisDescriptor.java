@@ -26,7 +26,6 @@ package hudson.matrix;
 import hudson.Util;
 import hudson.model.Descriptor;
 import hudson.model.Failure;
-import hudson.model.Messages;
 import jenkins.model.Jenkins;
 import hudson.util.FormValidation;
 
@@ -60,15 +59,10 @@ public abstract class AxisDescriptor extends Descriptor<Axis> {
      */
     public FormValidation doCheckName(@QueryParameter String value) {
         if(Util.fixEmpty(value)==null)
-            return FormValidation.ok();
+            return FormValidation.error(Messages.AxisDescriptor_EmptyAxisName());
 
-        if (value.contains(",")) return FormValidation.error(
-                Messages.Hudson_UnsafeChar(',')
-        );
-
-        if (value.contains("=")) return FormValidation.error(
-                Messages.Hudson_UnsafeChar('=')
-        );
+        if (value.contains(",")) return unsafeChar(',');
+        if (value.contains("=")) return unsafeChar('=');
 
         try {
             Jenkins.checkGoodName(value);
@@ -90,11 +84,9 @@ public abstract class AxisDescriptor extends Descriptor<Axis> {
      */
     public FormValidation checkValue(@QueryParameter String value) {
         if(Util.fixEmpty(value)==null)
-            return FormValidation.ok();
+            return FormValidation.error(Messages.AxisDescriptor_EmptyAxisName());
 
-        if (value.contains(",")) return FormValidation.error(
-                Messages.Hudson_UnsafeChar(',')
-        );
+        if (value.contains(",")) return unsafeChar(',');
 
         try {
             Jenkins.checkGoodName(value);
@@ -102,5 +94,9 @@ public abstract class AxisDescriptor extends Descriptor<Axis> {
         } catch (Failure e) {
             return FormValidation.error(e.getMessage());
         }
+    }
+
+    private FormValidation unsafeChar(char chr) {
+        return FormValidation.error(hudson.model.Messages.Hudson_UnsafeChar(chr));
     }
 }
