@@ -61,17 +61,39 @@ public class AxisTest {
         wc.setThrowExceptionOnFailingStatusCode(false);
 
         final String expectedMsg = "Matrix axis name '' is invalid: Axis name can not be empty";
-        assertFailedWith(emptyName("User-defined Axis"), expectedMsg);
-        assertFailedWith(emptyName("Slaves"), expectedMsg);
-        assertFailedWith(emptyName("Label expression"), expectedMsg);
-        //assertFailedWith(emptyName("JDK"), expectedMsg); // No "name" attribute
+        assertFailedWith(expectedMsg, withName("", "User-defined Axis"));
+        assertFailedWith(expectedMsg, withName("", "Slaves"));
+        assertFailedWith(expectedMsg, withName("", "Label expression"));
     }
 
-    private HtmlPage emptyName(String axis) throws Exception {
-        HtmlForm form = addAxis(axis);
-        form.getInputByName("_.name").setValueAttribute("");
-        HtmlPage ret = j.submit(form);
-        return ret;
+    @Test
+    public void submitInvalidAxisName() throws Exception {
+        wc.setThrowExceptionOnFailingStatusCode(false);
+
+        String expectedMsg = "Matrix axis name 'a,b' is invalid: ‘,’ is an unsafe character";
+        assertFailedWith(expectedMsg, withName("a,b", "User-defined Axis"));
+        assertFailedWith(expectedMsg, withName("a,b", "Slaves"));
+        assertFailedWith(expectedMsg, withName("a,b", "Label expression"));
+
+        expectedMsg = "Matrix axis name 'a=b' is invalid: ‘=’ is an unsafe character";
+        assertFailedWith(expectedMsg, withName("a=b", "User-defined Axis"));
+        assertFailedWith(expectedMsg, withName("a=b", "Slaves"));
+        assertFailedWith(expectedMsg, withName("a=b", "Label expression"));
+    }
+
+    @Test
+    public void submitInvalidAxisValue() throws Exception {
+        wc.setThrowExceptionOnFailingStatusCode(false);
+
+        HtmlForm form = addAxis("User-defined Axis");
+        form.getInputByName("_.name").setValueAttribute("a_name");
+        form.getInputByName("_.valueString").setValueAttribute("a,b");
+        assertFailedWith("Matrix axis value 'a,b' is invalid: ‘,’ is an unsafe character", j.submit(form));
+
+        form = addAxis("Label expression");
+        form.getInputByName("_.name").setValueAttribute("a_name");
+        form.getElementsByAttribute("textarea", "name", "values").get(0).setTextContent("a,b");
+        assertFailedWith("Matrix axis value 'a,b' is invalid: ‘,’ is an unsafe character", j.submit(form));
     }
 
     @Test
@@ -86,6 +108,13 @@ public class AxisTest {
         assertThat(p.getItems(), new IsEmptyCollection<MatrixConfiguration>());
     }
 
+    private HtmlPage withName(String value, String axis) throws Exception {
+        HtmlForm form = addAxis(axis);
+        form.getInputByName("_.name").setValueAttribute(value);
+        HtmlPage ret = j.submit(form);
+        return ret;
+    }
+
     private HtmlPage emptyValue(String axis) throws Exception {
         HtmlForm form = addAxis(axis);
         if (!"JDK".equals(axis)) { // No "name" attribute
@@ -96,7 +125,7 @@ public class AxisTest {
         return ret;
     }
 
-    private void assertFailedWith(HtmlPage res, String expected) {
+    private void assertFailedWith(String expected, HtmlPage res) {
         String actual = res.getWebResponse().getContentAsString();
 
         assertThat(actual, res.getWebResponse().getStatusCode(), equalTo(400));
