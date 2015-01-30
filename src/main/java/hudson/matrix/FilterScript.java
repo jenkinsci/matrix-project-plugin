@@ -39,7 +39,7 @@ class FilterScript {
      * @param context
      *      Variables the script will see.
      */
-    boolean evaluate(Binding context) {
+    private boolean evaluate(Binding context) {
         script.setBinding(context);
         try {
             return TRUE.equals(GroovySandbox.run(script, Whitelist.all()));
@@ -71,7 +71,7 @@ class FilterScript {
     /**
      * Applies the filter to the specified combination in the context of {@code context}.
      */
-    public boolean apply(MatrixBuildExecution context, Combination combination) {
+    public final boolean apply(MatrixBuildExecution context, Combination combination) {
         return apply(context.getProject().getAxes(), combination, getConfiguredBinding(context));
     }
 
@@ -117,20 +117,13 @@ class FilterScript {
         return new FilterScript(shell.parse(expression));
     }
 
-    private static final Script EMPTY = new Script() {
-        @Override
-        public Object run() {
-            return true;
-        }
-    };
-
     /**
      * Constant that always applies to any combination.
      * @since 1.541
      */
-    /*package*/ static final FilterScript ACCEPT_ALL = new FilterScript(EMPTY) {
+    /*package*/ static final FilterScript ACCEPT_ALL = new FilterScript(null) {
         @Override
-        public boolean apply(MatrixBuildExecution context, Combination combination) {
+        public boolean apply(AxisList axes, Combination combination, Binding binding) {
             return true;
         }
     };
@@ -139,9 +132,9 @@ class FilterScript {
      * Constant that does not apply to any combination.
      * @since 1.541
      */
-    /*package*/ static final FilterScript REJECT_ALL = new FilterScript(EMPTY) {
+    /*package*/ static final FilterScript REJECT_ALL = new FilterScript(null) {
         @Override
-        public boolean apply(MatrixBuildExecution context, Combination combination) {
+        public boolean apply(AxisList axes, Combination combination, Binding binding) {
             return false;
         }
     };
