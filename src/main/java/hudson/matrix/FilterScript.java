@@ -12,6 +12,11 @@ import hudson.model.ParametersAction;
 import java.util.Map;
 
 import static java.lang.Boolean.*;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.RejectedAccessException;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.Whitelist;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.GroovySandbox;
+import org.jenkinsci.plugins.scriptsecurity.scripts.ApprovalContext;
+import org.jenkinsci.plugins.scriptsecurity.scripts.ScriptApproval;
 
 /**
  * Groovy filter script that accepts or rejects matrix {@link Combination}.
@@ -33,7 +38,11 @@ class FilterScript {
      */
     boolean evaluate(Binding context) {
         script.setBinding(context);
-        return TRUE.equals(script.run());
+        try {
+            return TRUE.equals(GroovySandbox.run(script, Whitelist.all()));
+        } catch (RejectedAccessException x) {
+            throw ScriptApproval.get().accessRejected(x, ApprovalContext.create());
+        }
     }
 
     /**
@@ -100,9 +109,9 @@ class FilterScript {
         if (Util.fixEmptyAndTrim(expression)==null)
             return defaultScript;
 
-        GroovyShell shell = new GroovyShell(FilterScript.class.getClassLoader());
+        GroovyShell shell = new GroovyShell(GroovySandbox.createSecureClassLoader(FilterScript.class.getClassLoader()), new Binding(), GroovySandbox.createSecureCompilerConfiguration());
 
-        return new FilterScript(shell.parse("use("+BooleanCategory.class.getName().replace('$','.')+") {"+expression+"}"));
+        return new FilterScript(shell.parse(expression));//"use("+BooleanCategory.class.getName().replace('$','.')+") {"+expression+"}"));
     }
 
     private static final Script EMPTY = new Script() {
