@@ -3,11 +3,12 @@ package hudson.matrix;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
+import hudson.Extension;
 import hudson.Util;
-import hudson.matrix.Combination.BooleanCategory;
 import hudson.matrix.MatrixBuild.MatrixBuildExecution;
 import hudson.model.ParameterValue;
 import hudson.model.ParametersAction;
+import java.io.IOException;
 
 import java.util.Map;
 
@@ -15,6 +16,8 @@ import static java.lang.Boolean.*;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.RejectedAccessException;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.Whitelist;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.GroovySandbox;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.ProxyWhitelist;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.StaticWhitelist;
 import org.jenkinsci.plugins.scriptsecurity.scripts.ApprovalContext;
 import org.jenkinsci.plugins.scriptsecurity.scripts.ScriptApproval;
 
@@ -111,7 +114,7 @@ class FilterScript {
 
         GroovyShell shell = new GroovyShell(GroovySandbox.createSecureClassLoader(FilterScript.class.getClassLoader()), new Binding(), GroovySandbox.createSecureCompilerConfiguration());
 
-        return new FilterScript(shell.parse(expression));//"use("+BooleanCategory.class.getName().replace('$','.')+") {"+expression+"}"));
+        return new FilterScript(shell.parse(expression));
     }
 
     private static final Script EMPTY = new Script() {
@@ -142,4 +145,12 @@ class FilterScript {
             return false;
         }
     };
+
+    // TODO JENKINS-25804: harmless generic methods like this should be whitelisted in script-security
+    @Extension public static class ImpliesWhitelist extends ProxyWhitelist {
+        public ImpliesWhitelist() throws IOException {
+            super(new StaticWhitelist("staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods implies java.lang.Boolean java.lang.Boolean"));
+        }
+    }
+
 }
