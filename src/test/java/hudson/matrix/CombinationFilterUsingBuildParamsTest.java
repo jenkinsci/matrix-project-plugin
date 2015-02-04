@@ -72,7 +72,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
  * @author ogondza
  */
 @RunWith(PowerMockRunner.class)
-@PrepareForTest( {Jenkins.class, MatrixBuildListener.class, MatrixProject.class, AbstractItem.class, Whitelist.class})
+@PrepareForTest({Jenkins.class, MatrixBuildListener.class, MatrixProject.class, AbstractItem.class, Whitelist.class})
 public class CombinationFilterUsingBuildParamsTest {
 
     /**
