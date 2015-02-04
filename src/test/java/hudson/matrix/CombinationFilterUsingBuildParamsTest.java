@@ -53,6 +53,8 @@ import java.util.Map;
 import jenkins.model.Jenkins;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.Whitelist;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.BlanketWhitelist;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -70,7 +72,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
  * @author ogondza
  */
 @RunWith(PowerMockRunner.class)
-@PrepareForTest( {Jenkins.class, MatrixBuildListener.class, MatrixProject.class, AbstractItem.class})
+@PrepareForTest({Jenkins.class, MatrixBuildListener.class, MatrixProject.class, AbstractItem.class, Whitelist.class})
 public class CombinationFilterUsingBuildParamsTest {
 
     /**
@@ -239,6 +241,8 @@ public class CombinationFilterUsingBuildParamsTest {
         PowerMockito.mockStatic(Jenkins.class);
         when(Jenkins.getInstance()).thenReturn(jenkins);
         when(jenkins.getNodes()).thenReturn(new ArrayList<Node>());
+        PowerMockito.mockStatic(Whitelist.class);
+        when(Whitelist.all()).thenReturn(new BlanketWhitelist());
     }
 
     private void usingNoListeners() {

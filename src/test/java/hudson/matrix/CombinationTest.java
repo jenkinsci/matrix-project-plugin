@@ -23,15 +23,14 @@
  */
 package hudson.matrix;
 
-import junit.framework.TestCase;
-
 import java.util.Map;
 import java.util.HashMap;
+import org.jvnet.hudson.test.HudsonTestCase;
 
 /**
  * @author Kohsuke Kawaguchi
  */
-public class CombinationTest extends TestCase {
+public class CombinationTest extends HudsonTestCase {
     AxisList axes = new AxisList(
             new Axis("a","X","x"),
             new Axis("b","Y","y"));
