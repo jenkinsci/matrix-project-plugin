@@ -249,17 +249,4 @@ public final class Combination extends TreeMap<String,String> implements Compara
         throw new UnsupportedOperationException();
     }
 
-    /**
-     * Duck-typing for boolean expressions.
-     *
-     * @see Combination#evalGroovyExpression(AxisList,String)
-     */
-    public static final class BooleanCategory {
-        /**
-         * x -> y
-         */
-        public static Boolean implies(Boolean lhs, Boolean rhs) {
-            return !lhs || rhs;
-        }
-    }
 }
