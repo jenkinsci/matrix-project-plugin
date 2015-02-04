@@ -83,7 +83,7 @@ public class MatrixTest extends HudsonTestCase {
         assertEquals(4, xml.getByXPath("//matrixProject/activeConfiguration").size());
     }
 
-    //@Issue("SECURITY-125")
+    @Issue("SECURITY-125")
     public void testCombinationFilterSecurity() throws Exception {
         MatrixProject project = createMatrixProject();
         String combinationFilter = "jenkins.model.Jenkins.getInstance().setSystemMessage('hacked')";
