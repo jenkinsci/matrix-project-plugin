@@ -339,6 +339,14 @@ public class MatrixBuild extends AbstractBuild<MatrixProject,MatrixBuild> {
             return aggregators;
         }
 
+        // TODO only necessary against 1.554- core, not 1.555+, for no apparent reason (no relevant code changes in core); javac bug?
+        @Override public MatrixBuild getBuild() {
+            return _this();
+        }
+        @Override public MatrixProject getProject() {
+            return _this().getParent();
+        }
+
         protected Result doRun(BuildListener listener) throws Exception {
             MatrixProject p = getProject();
             PrintStream logger = listener.getLogger();

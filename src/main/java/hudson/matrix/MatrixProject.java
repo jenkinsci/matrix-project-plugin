@@ -822,7 +822,6 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
     }
 
     @Override protected void buildDependencyGraph(DependencyGraph graph) {
-        super.buildDependencyGraph(graph);
         publishers.buildDependencyGraph(this,graph);
         builders.buildDependencyGraph(this,graph);
         buildWrappers.buildDependencyGraph(this,graph);
