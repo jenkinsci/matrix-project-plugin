@@ -402,10 +402,10 @@ public class MatrixBuild extends AbstractBuild<MatrixProject,MatrixBuild> {
                 // all aggregations will be performed even any of them failed.
                 try {
                     if (!a.endBuild()) {
-                        listener.error("Aggregation failed for {0}", a.toString());
+                        listener.error(String.format("Aggregation failed for %s", a.toString()));
                     }
                 } catch (Exception e) {
-                    e.printStackTrace(listener.error("Aggregation failed for {0}", a.toString()));
+                    e.printStackTrace(listener.error(String.format("Aggregation failed for %s", a.toString())));
                     setResult(Result.FAILURE);
                 }
         }
