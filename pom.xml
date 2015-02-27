@@ -6,7 +6,7 @@
         <version>1.554</version>
     </parent>
     <artifactId>matrix-project</artifactId>
-    <version>1.2.1</version>
+    <version>1.2.2-SNAPSHOT</version>
     <packaging>hpi</packaging>
     <name>Matrix Project Plugin</name>
     <description>Multi-configuration (matrix) project type.</description>
@@ -21,7 +21,7 @@
         <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
         <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
         <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
-      <tag>matrix-project-1.2.1</tag>
+      <tag>HEAD</tag>
   </scm>
     <repositories>
         <repository>
