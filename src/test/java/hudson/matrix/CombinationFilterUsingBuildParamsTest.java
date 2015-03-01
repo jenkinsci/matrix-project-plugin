@@ -53,10 +53,12 @@ import java.util.Map;
 import jenkins.model.Jenkins;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.Whitelist;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.BlanketWhitelist;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.jvnet.hudson.test.Bug;
+import org.jvnet.hudson.test.Issue;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.verification.VerificationMode;
@@ -70,7 +72,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
  * @author ogondza
  */
 @RunWith(PowerMockRunner.class)
-@PrepareForTest( {Jenkins.class, MatrixBuildListener.class, MatrixProject.class, AbstractItem.class})
+@PrepareForTest({Jenkins.class, MatrixBuildListener.class, MatrixProject.class, AbstractItem.class, Whitelist.class})
 public class CombinationFilterUsingBuildParamsTest {
 
     /**
@@ -189,7 +191,7 @@ public class CombinationFilterUsingBuildParamsTest {
     }
 
     @Test
-    @Bug(7285)
+    @Issue("JENKINS-7285")
     public void reproduceTouchstoneRegression () throws InterruptedException, IOException {
 
         givenTheVersionIs("3");
@@ -213,6 +215,7 @@ public class CombinationFilterUsingBuildParamsTest {
 
         PowerMockito.when(build.getParent()).thenReturn(project);
         PowerMockito.when(project.getUrl()).thenReturn("/my/project/");
+        PowerMockito.when(project.getFullDisplayName()).thenReturn("My Project");
 
         when(project.getAxes()).thenReturn(new AxisList(new Axis("RELEASE", releases)));
         when(project.getCombinationFilter()).thenReturn(filter);
@@ -239,6 +242,8 @@ public class CombinationFilterUsingBuildParamsTest {
         PowerMockito.mockStatic(Jenkins.class);
         when(Jenkins.getInstance()).thenReturn(jenkins);
         when(jenkins.getNodes()).thenReturn(new ArrayList<Node>());
+        PowerMockito.mockStatic(Whitelist.class);
+        when(Whitelist.all()).thenReturn(new BlanketWhitelist());
     }
 
     private void usingNoListeners() {

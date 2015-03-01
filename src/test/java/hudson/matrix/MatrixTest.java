@@ -26,11 +26,20 @@ package hudson.matrix;
 import hudson.model.Item;
 import hudson.security.AuthorizationMatrixProperty;
 import hudson.security.ProjectMatrixAuthorizationStrategy;
+
 import java.util.Collections;
+
 import org.acegisecurity.context.SecurityContextHolder;
+
 import com.gargoylesoftware.htmlunit.xml.XmlPage;
+
+import hudson.Functions;
+import java.io.IOException;
+import java.util.Set;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.RejectedAccessException;
+import org.jenkinsci.plugins.scriptsecurity.scripts.ScriptApproval;
 import org.jvnet.hudson.test.HudsonTestCase;
-import org.jvnet.hudson.test.Bug;
+import org.jvnet.hudson.test.Issue;
 
 /**
  * @author Alan Harder
@@ -50,7 +59,7 @@ public class MatrixTest extends HudsonTestCase {
     /**
      * Test that project level permissions apply to child configurations as well.
      */
-    @Bug(9293)
+    @Issue("JENKINS-9293")
     public void testConfigurationACL() throws Exception {
         jenkins.setAuthorizationStrategy(new ProjectMatrixAuthorizationStrategy());
         MatrixProject mp = createMatrixProject();
@@ -73,4 +82,31 @@ public class MatrixTest extends HudsonTestCase {
         XmlPage xml = new WebClient().goToXml(project.getUrl() + "api/xml");
         assertEquals(4, xml.getByXPath("//matrixProject/activeConfiguration").size());
     }
+
+    @Issue("SECURITY-125")
+    public void testCombinationFilterSecurity() throws Exception {
+        MatrixProject project = createMatrixProject();
+        String combinationFilter = "jenkins.model.Jenkins.getInstance().setSystemMessage('hacked')";
+        expectRejection(project, combinationFilter, "staticMethod jenkins.model.Jenkins getInstance");
+        assertNull(jenkins.getSystemMessage());
+        expectRejection(project, combinationFilter, "method jenkins.model.Jenkins setSystemMessage java.lang.String");
+        assertNull(jenkins.getSystemMessage());
+        project.setCombinationFilter(combinationFilter);
+        assertEquals("you asked for it", "hacked", jenkins.getSystemMessage());
+    }
+    private static void expectRejection(MatrixProject project, String combinationFilter, String signature) throws IOException {
+        ScriptApproval scriptApproval = ScriptApproval.get();
+        assertEquals(Collections.emptySet(), scriptApproval.getPendingSignatures());
+        try {
+            project.setCombinationFilter(combinationFilter);
+        } catch (RejectedAccessException x) {
+            assertEquals(Functions.printThrowable(x), signature, x.getSignature());
+        }
+        Set<ScriptApproval.PendingSignature> pendingSignatures = scriptApproval.getPendingSignatures();
+        assertEquals(1, pendingSignatures.size());
+        assertEquals(signature, pendingSignatures.iterator().next().signature);
+        scriptApproval.approveSignature(signature);
+        assertEquals(Collections.emptySet(), scriptApproval.getPendingSignatures());
+    }
+
 }

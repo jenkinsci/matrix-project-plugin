@@ -23,6 +23,8 @@
  */
 package hudson.matrix
 
+import hudson.cli.CLICommandInvoker;
+import hudson.cli.DeleteBuildsCommand
 import hudson.model.Cause
 import hudson.model.Result
 import hudson.slaves.DumbSlave
@@ -30,23 +32,31 @@ import hudson.slaves.RetentionStrategy
 import hudson.tasks.Ant
 import hudson.tasks.ArtifactArchiver
 import hudson.tasks.Fingerprinter
+import hudson.tasks.LogRotator
 import hudson.tasks.Maven
 import hudson.tasks.Shell
 import hudson.tasks.BatchFile
+
 import org.jvnet.hudson.test.Email
 import org.jvnet.hudson.test.SingleFileSCM
 import org.jvnet.hudson.test.UnstableBuilder
 import org.jvnet.hudson.test.recipes.LocalData;
+
 import com.gargoylesoftware.htmlunit.html.HtmlTable
-import org.jvnet.hudson.test.Bug
+
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.TestBuilder
+
 import hudson.model.AbstractBuild
 import hudson.Launcher
 import hudson.model.BuildListener
 import hudson.util.OneShotEvent
+
+import java.io.IOException;
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
+
 import hudson.model.JDK
 import hudson.model.Slave
 import hudson.Functions
@@ -59,14 +69,19 @@ import hudson.model.StringParameterDefinition
 import hudson.model.StringParameterValue
 import hudson.scm.SubversionSCM.SvnInfo;
 import hudson.scm.RevisionParameterAction;
+
 import java.util.List;
 import java.util.ArrayList;
+
 import hudson.model.Action;
 
 import java.util.concurrent.CountDownLatch
 
 import static hudson.model.Node.Mode.EXCLUSIVE
 import static org.junit.Assert.*
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.*;
+
 import org.junit.Rule
 import org.junit.Test
 import org.jvnet.hudson.test.JenkinsRule
@@ -210,7 +225,7 @@ public class MatrixProjectTest {
         }
     }
 
-    @Bug(4245)
+    @Issue("JENKINS-4245")
     @Test
     void testLayout1() {
         // 5*5*5*5*5 matrix
@@ -221,7 +236,7 @@ public class MatrixProjectTest {
         assertRectangleTable(p)
     }
 
-    @Bug(4245)
+    @Issue("JENKINS-4245")
     @Test
     void testLayout2() {
         // 2*3*4*5*6 matrix
@@ -293,7 +308,7 @@ public class MatrixProjectTest {
     /**
      * Quiettng down Hudson causes a dead lock if the parent is running but children is in the queue
      */
-    @Bug(4873)
+    @Issue("JENKINS-4873")
     @Test
     void testQuietDownDeadlock() {
         def p = createMatrixProject();
@@ -329,7 +344,7 @@ public class MatrixProjectTest {
         }        
     }
 
-    @Bug(9009)
+    @Issue("JENKINS-9009")
     @Test
     void testTrickyNodeName() {
         def names = [ j.createSlave("Sean's Workstation",null), j.createSlave("John\"s Workstation",null) ]*.nodeName;
@@ -341,7 +356,7 @@ public class MatrixProjectTest {
         assertEquals(a.values as Set,names as Set);
     }
 
-    @Bug(10108)
+    @Issue("JENKINS-10108")
     @Test
     void testTwoFileParams() {
         def p = createMatrixProject();
@@ -460,7 +475,7 @@ public class MatrixProjectTest {
         //~ }
     //~ }
 
-    @Bug(15271)
+    @Issue("JENKINS-15271")
     @LocalData
     @Test
     public void testUpgrade() throws Exception {
@@ -475,7 +490,7 @@ public class MatrixProjectTest {
         assertNull(defaultExecutionStrategy.getSorter());
     }
 
-    @Bug(17337)
+    @Issue("JENKINS-17337")
     @Test public void reload() throws Exception {
         MatrixProject p = j.createMatrixProject();
         AxisList axes = new AxisList();
@@ -498,7 +513,7 @@ public class MatrixProjectTest {
      * Since there's a chance that the fair scheduling just so happens to pick up the master by chance,
      * we try multiple jobs to reduce the chance of that happening.
      */
-    @Bug(5076)
+    @Issue("JENKINS-5076")
     @Test
     public void dontRunOnExclusiveSlave() {
         def projects = (0..10).collect {
@@ -518,5 +533,117 @@ public class MatrixProjectTest {
             def b = j.assertBuildStatusSuccess(p.scheduleBuild2(2))
             assertSame(b.builtOn, j.jenkins)
         }
+    }
+
+    @Test
+    public void useCombinationInWorkspaceName() throws Exception {
+        MatrixProject p = j.jenkins.createProject(MatrixProject.class, "defaultName");
+        p.setAxes(new AxisList(new TextAxis("AXIS", "VALUE")));
+
+        p.scheduleBuild2(0).get();
+        def build = p.getItem("AXIS=VALUE").getLastBuild();
+
+        assertThat(build.getWorkspace().getRemote(), containsString("/workspace/defaultName/AXIS/VALUE"));
+    }
+
+    @Test
+    public void useShortWorkspaceNameGlobally() throws Exception {
+        MatrixConfiguration.useShortWorkspaceName = true;
+
+        MatrixProject p = j.jenkins.createProject(MatrixProject.class, "shortName");
+        p.setAxes(new AxisList(new TextAxis("AXIS", "VALUE")));
+
+        p.scheduleBuild2(0).get();
+        MatrixRun build = p.getItem("AXIS=VALUE").getLastBuild();
+
+        assertThat(build.getWorkspace().getRemote(), containsString("/workspace/shortName/${build.parent.digestName}"));
+    }
+
+    @Test @Issue("JENKINS-13554")
+    public void deletedLockedParentBuild() {
+        MatrixProject p = j.jenkins.createProject(MatrixProject.class, "project");
+        p.setAxes(new AxisList(new TextAxis("AXIS", "VALUE")));
+        def build = p.scheduleBuild2(0).get();
+        def c = p.getItem("AXIS=VALUE");
+
+        build.keepLog();
+
+        build.delete();
+
+        assertEquals("parent build is deleted", 0, p.builds.size());
+        assertEquals("child build is deleted", 0, c.builds.size());
+    }
+
+    @Test @Issue("JENKINS-13554")
+    public void deletedParentBuildWithLockedChildren() {
+        MatrixProject p = j.jenkins.createProject(MatrixProject.class, "project");
+        p.setAxes(new AxisList(new TextAxis("AXIS", "VALUE")));
+        def build = p.scheduleBuild2(0).get();
+        p.scheduleBuild2(0).get();
+
+        def c = p.getItem("AXIS=VALUE");
+
+        c.getBuildByNumber(2).delete(); // delete newest run
+        assertNotNull(c.getBuildByNumber(1).getWhyKeepLog());
+
+        build.delete();
+
+        assertEquals("last parent build should be kept", 1, p.builds.size());
+        assertEquals("child builds are deleted", 0, c.builds.size());
+    }
+
+    @Test @Issue("JENKINS-13554")
+    public void discardBuilds() {
+        MatrixProject p = j.jenkins.createProject(MatrixProject.class, "discarder");
+        p.setAxes(new AxisList(new TextAxis("AXIS", "VALUE")));
+
+        // Only last build
+        p.buildDiscarder = new LogRotator("", "1", "", "");
+
+        p.scheduleBuild2(0).get();
+        p.scheduleBuild2(0).get();
+
+        def c = p.getItem("AXIS=VALUE");
+
+        assertEquals("parent builds are discarded", 1, p.builds.size());
+        assertEquals("child builds are discarded", 1, c.builds.size());
+    }
+
+    @Test
+    public void discardArtifacts() {
+        MatrixProject p = j.jenkins.createProject(MatrixProject.class, "discarder");
+        p.setAxes(new AxisList(new TextAxis("AXIS", "VALUE")));
+
+        // Only last artifacts
+        p.buildDiscarder = new LogRotator("", "", "", "1");
+
+        p.buildersList.add([
+            perform: { AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener ->
+                build.getWorkspace().child("artifact.zip").write("content", "UTF-8")
+            }
+        ] as TestBuilder);
+        p.publishersList.add(new ArtifactArchiver("artifact.zip", "", false));
+
+        p.scheduleBuild2(0).get();
+        def rotated = p.getItem("AXIS=VALUE").lastBuild;
+        p.scheduleBuild2(0).get();
+        def last = p.getItem("AXIS=VALUE").lastBuild;
+
+        assertTrue("Artifacts are discarded", rotated.artifacts.empty);
+        assertEquals(1, last.artifacts.size());
+    }
+
+    @Test @Issue("JENKINS-13554")
+    public void deleteBuildWithChildrenOverCLI() {
+        MatrixProject p = j.jenkins.createProject(MatrixProject.class, "project");
+        p.setAxes(new AxisList(new TextAxis("AXIS", "VALUE")));
+        p.scheduleBuild2(0).get();
+
+        def invoker = new CLICommandInvoker(j, new DeleteBuildsCommand());
+        def result = invoker.invokeWithArgs("project", "1");
+
+        assertThat(result, CLICommandInvoker.Matcher.succeeded());
+        assertEquals(0, p.builds.size());
+        assertEquals(0, p.getItem("AXIS=VALUE").builds.size());
     }
 }

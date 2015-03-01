@@ -862,8 +862,8 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
             this.combinationFilter = null;
         }
 
-        if(req.hasParameter("customWorkspace")) {
-            setChildCustomWorkspace(Util.fixEmptyAndTrim(req.getParameter("childCustomWorkspace.directory")));
+        if(json.optBoolean("hasChildCustomWorkspace", json.has("childCustomWorkspace"))) {
+          setChildCustomWorkspace(Util.fixEmptyAndTrim(json.optString("childCustomWorkspace")));
         } else {
             setChildCustomWorkspace(null);
         }

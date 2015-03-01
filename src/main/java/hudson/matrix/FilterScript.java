@@ -3,15 +3,23 @@ package hudson.matrix;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
+import hudson.Extension;
 import hudson.Util;
-import hudson.matrix.Combination.BooleanCategory;
 import hudson.matrix.MatrixBuild.MatrixBuildExecution;
 import hudson.model.ParameterValue;
 import hudson.model.ParametersAction;
+import java.io.IOException;
 
 import java.util.Map;
 
 import static java.lang.Boolean.*;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.RejectedAccessException;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.Whitelist;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.GroovySandbox;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.ProxyWhitelist;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.StaticWhitelist;
+import org.jenkinsci.plugins.scriptsecurity.scripts.ApprovalContext;
+import org.jenkinsci.plugins.scriptsecurity.scripts.ScriptApproval;
 
 /**
  * Groovy filter script that accepts or rejects matrix {@link Combination}.
@@ -31,9 +39,13 @@ class FilterScript {
      * @param context
      *      Variables the script will see.
      */
-    boolean evaluate(Binding context) {
+    private boolean evaluate(Binding context) {
         script.setBinding(context);
-        return TRUE.equals(script.run());
+        try {
+            return TRUE.equals(GroovySandbox.run(script, Whitelist.all()));
+        } catch (RejectedAccessException x) {
+            throw ScriptApproval.get().accessRejected(x, ApprovalContext.create());
+        }
     }
 
     /**
@@ -59,7 +71,7 @@ class FilterScript {
     /**
      * Applies the filter to the specified combination in the context of {@code context}.
      */
-    public boolean apply(MatrixBuildExecution context, Combination combination) {
+    public final boolean apply(MatrixBuildExecution context, Combination combination) {
         return apply(context.getProject().getAxes(), combination, getConfiguredBinding(context));
     }
 
@@ -100,25 +112,18 @@ class FilterScript {
         if (Util.fixEmptyAndTrim(expression)==null)
             return defaultScript;
 
-        GroovyShell shell = new GroovyShell(FilterScript.class.getClassLoader());
+        GroovyShell shell = new GroovyShell(GroovySandbox.createSecureClassLoader(FilterScript.class.getClassLoader()), new Binding(), GroovySandbox.createSecureCompilerConfiguration());
 
-        return new FilterScript(shell.parse("use("+BooleanCategory.class.getName().replace('$','.')+") {"+expression+"}"));
+        return new FilterScript(shell.parse(expression));
     }
-
-    private static final Script EMPTY = new Script() {
-        @Override
-        public Object run() {
-            return true;
-        }
-    };
 
     /**
      * Constant that always applies to any combination.
      * @since 1.541
      */
-    /*package*/ static final FilterScript ACCEPT_ALL = new FilterScript(EMPTY) {
+    /*package*/ static final FilterScript ACCEPT_ALL = new FilterScript(null) {
         @Override
-        public boolean apply(MatrixBuildExecution context, Combination combination) {
+        public boolean apply(AxisList axes, Combination combination, Binding binding) {
             return true;
         }
     };
@@ -127,10 +132,18 @@ class FilterScript {
      * Constant that does not apply to any combination.
      * @since 1.541
      */
-    /*package*/ static final FilterScript REJECT_ALL = new FilterScript(EMPTY) {
+    /*package*/ static final FilterScript REJECT_ALL = new FilterScript(null) {
         @Override
-        public boolean apply(MatrixBuildExecution context, Combination combination) {
+        public boolean apply(AxisList axes, Combination combination, Binding binding) {
             return false;
         }
     };
+
+    // TODO JENKINS-25804: harmless generic methods like this should be whitelisted in script-security
+    @Extension public static class ImpliesWhitelist extends ProxyWhitelist {
+        public ImpliesWhitelist() throws IOException {
+            super(new StaticWhitelist("staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods implies java.lang.Boolean java.lang.Boolean"));
+        }
+    }
+
 }

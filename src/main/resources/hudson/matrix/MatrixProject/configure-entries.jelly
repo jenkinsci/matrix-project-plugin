@@ -39,14 +39,13 @@ THE SOFTWARE.
       <p:config-retryCount />
       <p:config-blockWhenUpstreamBuilding />
       <p:config-blockWhenDownstreamBuilding />
-      <f:optionalBlock name="customWorkspace" title="${%Use custom workspace}"
-                       checked="${instance.customWorkspace!=null or instance.hasChildCustomWorkspace()}"
-                       help="/help/project-config/custom-workspace.html">
-        <f:entry title="${%Directory}">
-          <f:textbox name="customWorkspace.directory" field="customWorkspace" />
-        </f:entry>
-        <f:entry title="${%Directory for sub-builds}">
-          <f:textbox name="childCustomWorkspace.directory" field="childCustomWorkspace"  value="${instance.hasChildCustomWorkspace()?instance.childCustomWorkspace:''}" />
+
+      <p:config-customWorkspace />
+      <f:optionalBlock name="hasChildCustomWorkspace" title="${%Use custom child workspace}"
+                       checked="${instance.hasChildCustomWorkspace()}"
+                       help="/help/project-config/custom-workspace.html" inline="true">
+        <f:entry title="${%Child Directory}" field="childCustomWorkspace">
+          <f:textbox />
         </f:entry>
       </f:optionalBlock>
 
