@@ -23,14 +23,11 @@
  */
 package hudson.matrix;
 
-import java.io.IOException;
 import java.util.Collection;
 import static org.junit.Assert.*;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
-
-
 
 /**
  *
