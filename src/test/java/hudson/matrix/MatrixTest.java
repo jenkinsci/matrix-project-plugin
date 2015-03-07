@@ -83,6 +83,21 @@ public class MatrixTest extends HudsonTestCase {
         assertEquals(4, xml.getByXPath("//matrixProject/activeConfiguration").size());
     }
 
+    @Issue("JENKINS-27162")
+    public void testCompletedLogging() throws Exception {
+        MatrixProject project = createMatrixProject();
+        project.setAxes(new AxisList(
+                new Axis("axis", "a", "b")
+        ));
+        ((DefaultMatrixExecutionStrategyImpl) project.getExecutionStrategy())
+                .setTouchStoneCombinationFilter("axis == 'a'")
+        ;
+
+        MatrixBuild build = project.scheduleBuild2(0).get();
+        assertLogContains("test0 » a completed with result SUCCESS", build);
+        assertLogContains("test0 » b completed with result SUCCESS", build);
+    }
+
     @Issue("SECURITY-125")
     public void testCombinationFilterSecurity() throws Exception {
         MatrixProject project = createMatrixProject();
