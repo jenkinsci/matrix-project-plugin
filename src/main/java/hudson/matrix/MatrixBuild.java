@@ -91,34 +91,29 @@ public class MatrixBuild extends AbstractBuild<MatrixProject,MatrixBuild> {
     }
 
     /**
-     * Deletes the build and all matrix configurations in this build when the button is pressed.
+     * Delete build and its child builds.
+     *
+     * @since TODO
      */
-    @RequirePOST
-    public void doDoDeleteAll( StaplerRequest req, StaplerResponse rsp ) throws IOException, ServletException {
-        checkPermission(DELETE);
+    @Override
+    public void delete() throws IOException {
+        super.delete();
 
-        // We should not simply delete the build if it has been explicitly
-        // marked to be preserved, or if the build should not be deleted
-        // due to dependencies!
-        String why = getWhyKeepLog();
-        if (why!=null) {
-            sendError(hudson.model.Messages.Run_UnableToDelete(getFullDisplayName(), why), req, rsp);
-            return;
+        for(MatrixRun run : getExactRuns()) {
+            run.delete();
         }
-        
-        List<MatrixRun> runs = getExactRuns();
-        for(MatrixRun run : runs){
-        	why = run.getWhyKeepLog();
-            if (why!=null) {
-                sendError(hudson.model.Messages.Run_UnableToDelete(getFullDisplayName(), why), req, rsp);
-                return;
-            }
-        	run.delete();
-        }
-        delete();
-        rsp.sendRedirect2(req.getContextPath()+'/' + getParent().getUrl());
     }
 
+    /**
+     * Deletes the build and all matrix configurations in this build when the button is pressed.
+     *
+     * @deprecated since TODO, kept not to break REST clients.
+     */
+    @RequirePOST
+    @Deprecated
+    public void doDoDeleteAll( StaplerRequest req, StaplerResponse rsp ) throws IOException, ServletException {
+        doDoDelete(req, rsp);
+    }
     
     /**
      * Used by view to render a ball for {@link MatrixRun}.

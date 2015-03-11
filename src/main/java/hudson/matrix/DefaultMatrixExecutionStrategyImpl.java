@@ -135,16 +135,17 @@ public class DefaultMatrixExecutionStrategyImpl extends MatrixExecutionStrategy 
             for(MatrixConfiguration c : touchStoneConfigurations)
                 scheduleConfigurationBuild(execution, c);
 
+        PrintStream logger = execution.getListener().getLogger();
+
         Result r = Result.SUCCESS;
         for (MatrixConfiguration c : touchStoneConfigurations) {
             if(runSequentially)
                 scheduleConfigurationBuild(execution, c);
             MatrixRun run = waitForCompletion(execution, c);
             notifyEndBuild(run,execution.getAggregators());
+            logger.println(Messages.MatrixBuild_Completed(ModelHyperlinkNote.encodeTo(c), getResult(run)));
             r = r.combine(getResult(run));
         }
-
-        PrintStream logger = execution.getListener().getLogger();
 
         if (touchStoneResultCondition != null && r.isWorseThan(touchStoneResultCondition)) {
             logger.printf("Touchstone configurations resulted in %s, so aborting...%n", r);

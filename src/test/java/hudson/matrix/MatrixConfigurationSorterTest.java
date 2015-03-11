@@ -1,28 +1,39 @@
 package hudson.matrix;
 
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertNotSame;
 import hudson.model.Item;
 import hudson.util.FormValidation;
 
-import org.jvnet.hudson.test.HudsonTestCase;
+import org.junit.Rule;
+import org.junit.Test;
+import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
  * @author Kohsuke Kawaguchi
  */
-public class MatrixConfigurationSorterTest extends HudsonTestCase {
-    public void testConfigRoundtrip() throws Exception {
-        MatrixProject p = createMatrixProject();
-        configRoundtrip((Item)p);
-        assertEqualDataBoundBeans(new NoopMatrixConfigurationSorter(),p.getSorter());
+public class MatrixConfigurationSorterTest {
+
+    @Rule public JenkinsRule j = new JenkinsRule();
+
+    @Test public void testConfigRoundtrip() throws Exception {
+        MatrixProject p = j.createMatrixProject();
+        j.configRoundtrip((Item)p);
+        j.assertEqualDataBoundBeans(new NoopMatrixConfigurationSorter(),strategy(p).getSorter());
 
         SorterImpl before = new SorterImpl();
-        p.setSorter(before);
-        p.setRunSequentially(true);
-        configRoundtrip((Item)p);
-        Object after = p.getSorter();
+        strategy(p).setSorter(before);
+        strategy(p).setRunSequentially(true);
+        j.configRoundtrip((Item)p);
+        MatrixConfigurationSorter after = strategy(p).getSorter();
         assertNotSame(before,after);
         assertSame(before.getClass(),after.getClass());
+    }
+
+    private DefaultMatrixExecutionStrategyImpl strategy(MatrixProject p) {
+        return (DefaultMatrixExecutionStrategyImpl) p.getExecutionStrategy();
     }
 
     public static class SorterImpl extends MatrixConfigurationSorter {

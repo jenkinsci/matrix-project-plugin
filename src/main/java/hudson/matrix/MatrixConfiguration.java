@@ -49,7 +49,6 @@ import hudson.model.Project;
 import hudson.model.SCMedItem;
 import hudson.model.Queue.NonBlockingTask;
 import hudson.model.Cause.LegacyCodeCause;
-import hudson.model.Failure;
 import hudson.scm.SCM;
 import jenkins.scm.SCMCheckoutStrategy;
 import hudson.tasks.BuildWrapper;
@@ -182,19 +181,15 @@ public class MatrixConfiguration extends Project<MatrixConfiguration,MatrixRun> 
      */
     @Override
     public int getNextBuildNumber() {
-        AbstractBuild<?,?> lb = getParent().getLastBuild();
-
-        while (lb!=null && lb.isBuilding()) {
-            lb = lb.getPreviousBuild();
+        MatrixBuild lcb = getParent().getLastCompletedBuild();
+        if (lcb == null) {
+            return 0;
         }
-        if(lb==null)    return 0;
-
-        int n=lb.getNumber()+1;
-
-        lb = getLastBuild();
-        if(lb!=null)
-            n = Math.max(n,lb.getNumber()+1);
-
+        int n = lcb.getNumber() + 1;
+        MatrixRun lb = getLastBuild();
+        if (lb != null) {
+            n = Math.max(n, lb.getNumber() + 1);
+        }
         return n;
     }
 

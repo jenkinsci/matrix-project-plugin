@@ -25,12 +25,20 @@ package hudson.matrix;
 
 import hudson.Extension;
 import hudson.Util;
+import hudson.model.AbstractProject;
+import hudson.model.AbstractProject.AbstractProjectDescriptor;
+import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 
 /**
  * {@link Axis} that selects label expressions.
@@ -82,8 +90,22 @@ public class LabelExpAxis extends Axis {
             Jenkins h = Jenkins.getInstance();
             return !h.getNodes().isEmpty() || !h.clouds.isEmpty();
         }
+
+        @Restricted(NoExternalUse.class)
+        public FormValidation doCheckLabelExpr(@AncestorInPath AbstractProject<?,?> project, @QueryParameter String value) {
+
+            if (Util.fixEmptyAndTrim(value) == null) return FormValidation.error("No expressions provided");
+
+            List<FormValidation> validations = new ArrayList<FormValidation>();
+            for (String expr: getExprValues(value)) {
+                final FormValidation validation = AbstractProjectDescriptor.validateLabelExpression(expr, project);
+                validations.add(validation);
+            }
+
+            return FormValidation.aggregate(validations);
+        }
     }
-    
+
     public static List<String> getExprValues(String valuesString){
 		List<String> expressions = new LinkedList<String>();
 		String[] exprs = valuesString.split("\n");
@@ -92,6 +114,5 @@ public class LabelExpAxis extends Axis {
     	}
 		return expressions;
 	}
-
 }
 
