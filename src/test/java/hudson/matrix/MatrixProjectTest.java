@@ -24,6 +24,7 @@
 package hudson.matrix;
 
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+
 import hudson.cli.CLICommandInvoker;
 import hudson.cli.DeleteBuildsCommand;
 import hudson.model.Cause;
@@ -39,13 +40,16 @@ import hudson.tasks.Shell;
 import hudson.tasks.BatchFile;
 
 import org.jvnet.hudson.test.Email;
+import org.jvnet.hudson.test.JenkinsRule.WebClient;
 import org.jvnet.hudson.test.SingleFileSCM;
 import org.jvnet.hudson.test.UnstableBuilder;
 import org.jvnet.hudson.test.recipes.LocalData;
 
+import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlTable;
 import com.gargoylesoftware.htmlunit.html.HtmlTableCell;
 import com.gargoylesoftware.htmlunit.html.HtmlTableRow;
+
 import hudson.FilePath;
 
 import org.jvnet.hudson.test.Issue;
@@ -73,14 +77,13 @@ import hudson.model.StringParameterDefinition;
 
 import java.util.List;
 import java.util.ArrayList;
-
-
 import java.util.concurrent.CountDownLatch;
 
 import static hudson.model.Node.Mode.EXCLUSIVE;
 import hudson.model.ParameterDefinition;
 import hudson.model.ParameterValue;
 import hudson.model.queue.QueueTaskFuture;
+
 import java.io.File;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -89,11 +92,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
 import jenkins.model.Jenkins;
 import static org.junit.Assert.*;
 import static org.hamcrest.CoreMatchers.*;
-import org.junit.Ignore;
 
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -601,6 +605,36 @@ public class MatrixProjectTest {
 
         p.scheduleBuild2(0).get();
         MatrixRun build = p.getItem("AXIS=VALUE").getLastBuild();
+
+        assertThat(build.getWorkspace().getRemote(), containsString("/workspace/shortName/" + build.getParent().getDigestName()));
+
+        WebClient wc = j.createWebClient();
+        HtmlPage page = wc.getPage(p, "configure");
+        HtmlForm form = page.getFormByName("config");
+        form.getButtonByCaption("Advanced...").click();
+        assertTrue("not configurable", form.getInputsByName("_.useShortChildWorkspaceName").isEmpty());
+    }
+
+    @Test
+    public void useShortWorkspaceNameLocally() throws Exception {
+        MatrixProject p = j.jenkins.createProject(MatrixProject.class, "shortName");
+        p.setAxes(new AxisList(new TextAxis("AXIS", "VALUE")));
+
+        p.scheduleBuild2(0).get();
+        MatrixRun build = p.getItem("AXIS=VALUE").getLastBuild();
+
+        assertThat(build.getWorkspace().getRemote(), containsString("/workspace/shortName/AXIS/VALUE"));
+
+        WebClient wc = j.createWebClient();
+        HtmlPage page = wc.getPage(p, "configure");
+        HtmlForm form = page.getFormByName("config");
+        form.getButtonByCaption("Advanced...").click();
+        form.getInputByName("_.useShortChildWorkspaceName").click();
+        form.getButtonByCaption("Save").click();
+        j.submit(form);
+
+        p.scheduleBuild2(0).get();
+        build = p.getItem("AXIS=VALUE").getLastBuild();
 
         assertThat(build.getWorkspace().getRemote(), containsString("/workspace/shortName/" + build.getParent().getDigestName()));
     }

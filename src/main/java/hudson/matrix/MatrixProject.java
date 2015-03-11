@@ -28,6 +28,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+
 import hudson.CopyOnWrite;
 import hudson.Extension;
 import hudson.Util;
@@ -69,6 +70,7 @@ import hudson.util.CopyOnWriteMap;
 import hudson.util.DescribableList;
 import hudson.util.FormValidation;
 import hudson.util.FormValidation.Kind;
+
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
@@ -86,12 +88,16 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import javax.annotation.Nullable;
 import javax.servlet.ServletException;
+
 import jenkins.model.Jenkins;
 import jenkins.scm.SCMCheckoutStrategyDescriptor;
 import net.sf.json.JSONObject;
+
 import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.DoNotUse;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.StaplerRequest;
@@ -195,6 +201,13 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
      */
     private String childCustomWorkspace;
 
+    /**
+     * Set true if hash of the combination name should be used instead of full
+     * combination name. This can be configured on per project basis. Globally
+     * can be configured via {@link MatrixConfiguration} useShortWorkspaceName.
+     */
+    private boolean useShortChildWorkspaceName;
+
     public MatrixProject(String name) {
         this(Jenkins.getInstance(), name);
     }
@@ -224,7 +237,8 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
     public String getChildCustomWorkspace() {
         String ws = childCustomWorkspace;
         if (ws==null) {
-            ws = MatrixConfiguration.useShortWorkspaceName?"${SHORT_COMBINATION}":"${COMBINATION}";
+            boolean useShort = MatrixConfiguration.useShortWorkspaceName || useShortChildWorkspaceName;
+            ws = useShort?"${SHORT_COMBINATION}":"${COMBINATION}";
         }
         return ws;
     }
@@ -433,6 +447,16 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
             dm.setTouchStoneResultCondition(touchStoneResultCondition);
             save();
         }
+    }
+
+    @Restricted(DoNotUse.class) // jelly only
+    public boolean isUseShortChildWorkspaceName() {
+        return useShortChildWorkspaceName;
+    }
+
+    @Restricted(DoNotUse.class) // JENKINS-26579 - jelly only
+    public boolean isGlobalUseShortChildWorkspaceName() {
+        return MatrixConfiguration.useShortWorkspaceName;
     }
 
     @Override
@@ -873,6 +897,10 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
             executionStrategy = req.bindJSON(MatrixExecutionStrategy.class,json.getJSONObject("executionStrategy"));
         else
             executionStrategy = req.bindJSON(esd.get(0).clazz,json.getJSONObject("executionStrategy"));
+
+        if (!MatrixConfiguration.useShortWorkspaceName) {
+            this.useShortChildWorkspaceName = json.has("useShortChildWorkspaceName");
+        }
 
         // parse system axes
         DescribableList<Axis,AxisDescriptor> newAxes = new DescribableList<Axis,AxisDescriptor>(this);
