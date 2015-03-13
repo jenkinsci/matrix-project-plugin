@@ -1,7 +1,12 @@
 package hudson.matrix;
 
 import hudson.Extension;
+import hudson.util.FormValidation;
+
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 
 import java.util.List;
 
@@ -29,6 +34,12 @@ public class TextAxis extends Axis {
         @Override
         public String getDisplayName() {
             return Messages.TextArea_DisplayName();
+        }
+
+        @Restricted(NoExternalUse.class)
+        // TODO: expandableTextbox does not support form validation
+        public FormValidation doCheckValueString(@QueryParameter String value) {
+            return super.checkValue(value);
         }
     }
 }

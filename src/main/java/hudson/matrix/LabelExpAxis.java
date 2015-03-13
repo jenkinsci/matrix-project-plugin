@@ -112,6 +112,7 @@ public class LabelExpAxis extends Axis {
 		for(String expr: exprs){
     		expressions.add(Util.fixEmptyAndTrim(expr));
     	}
+		expressions.remove(null); // Empty / whitespace-only lines
 		return expressions;
 	}
 }

@@ -28,6 +28,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+
 import hudson.CopyOnWrite;
 import hudson.Extension;
 import hudson.Util;
@@ -69,6 +70,7 @@ import hudson.util.CopyOnWriteMap;
 import hudson.util.DescribableList;
 import hudson.util.FormValidation;
 import hudson.util.FormValidation.Kind;
+
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
@@ -86,11 +88,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import javax.annotation.Nullable;
 import javax.servlet.ServletException;
+
 import jenkins.model.Jenkins;
 import jenkins.scm.SCMCheckoutStrategyDescriptor;
 import net.sf.json.JSONObject;
+
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.HttpResponse;
@@ -874,10 +879,9 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
         else
             executionStrategy = req.bindJSON(esd.get(0).clazz,json.getJSONObject("executionStrategy"));
 
-        // parse system axes
         DescribableList<Axis,AxisDescriptor> newAxes = new DescribableList<Axis,AxisDescriptor>(this);
         newAxes.rebuildHetero(req, json, Axis.all(),"axis");
-        checkAxisNames(newAxes);
+        checkAxes(newAxes);
         this.axes = new AxisList(newAxes.toList());
 
         buildWrappers.rebuild(req, json, BuildWrappers.getFor(this));
@@ -895,12 +899,25 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
     /**
      * Verifies that Axis names are valid and unique.
      */
-    private void checkAxisNames(Iterable<Axis> newAxes) throws FormException {
+    private void checkAxes(Iterable<Axis> newAxes) throws FormException {
         HashSet<String> axisNames = new HashSet<String>();
         for (Axis a : newAxes) {
-            FormValidation fv = a.getDescriptor().doCheckName(a.getName());
-            if (fv.kind!=Kind.OK)
-                throw new FormException(Messages.MatrixProject_DuplicateAxisName(),fv,"axis.name");
+            final AxisDescriptor desc = a.getDescriptor();
+            FormValidation fv = desc.doCheckName(a.getName());
+            if (fv.kind!=Kind.OK) {
+                final String msg = Messages.MatrixProject_InvalidAxisName(a.getName(), fv.getMessage());
+                throw new FormException(msg,fv,"axis.name");
+            }
+
+            for (String value: a.getValues()) {
+                fv = desc.checkValue(value);
+                if (fv.kind!=Kind.OK) {
+                    final String msg = Messages.MatrixProject_InvalidAxisValue(value, fv.getMessage());
+                    // This is done on wrong place, MatrixProject is not supposed
+                    // to know field names of arbitrary axis implementations
+                    throw new FormException(msg,fv,"axis.value");
+                }
+            }
 
             if (axisNames.contains(a.getName()))
                 throw new FormException(Messages.MatrixProject_DuplicateAxisName(),"axis.name");
