@@ -603,6 +603,31 @@ public class MatrixProjectTest {
         MatrixRun build = p.getItem("AXIS=VALUE").getLastBuild();
 
         assertThat(build.getWorkspace().getRemote(), containsString("/workspace/shortName/" + build.getParent().getDigestName()));
+
+        p.setChildCustomWorkspace("${COMBINATION}"); // Override global value
+
+        p.scheduleBuild2(0).get();
+        build = p.getItem("AXIS=VALUE").getLastBuild();
+
+        assertThat(build.getWorkspace().getRemote(), containsString("/workspace/shortName/AXIS/VALUE"));
+    }
+
+    @Test
+    public void useShortWorkspaceNamePerProject() throws Exception {
+        MatrixProject p = j.jenkins.createProject(MatrixProject.class, "shortName");
+        p.setAxes(new AxisList(new TextAxis("AXIS", "VALUE")));
+
+        p.scheduleBuild2(0).get();
+        MatrixRun build = p.getItem("AXIS=VALUE").getLastBuild();
+
+        assertThat(build.getWorkspace().getRemote(), containsString("/workspace/shortName/AXIS/VALUE"));
+
+        p.setChildCustomWorkspace("${SHORT_COMBINATION}");
+
+        p.scheduleBuild2(0).get();
+        build = p.getItem("AXIS=VALUE").getLastBuild();
+
+        assertThat(build.getWorkspace().getRemote(), containsString("/workspace/shortName/" + build.getParent().getDigestName()));
     }
 
     @Test @Issue("JENKINS-13554")
