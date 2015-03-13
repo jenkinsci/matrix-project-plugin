@@ -1,19 +1,29 @@
 package hudson.matrix;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import hudson.FilePath;
+
 import java.util.concurrent.CountDownLatch;
+
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestBuilder;
+
 import hudson.model.AbstractBuild;
 import hudson.Launcher;
 import hudson.model.BuildListener;
 import hudson.model.queue.QueueTaskFuture;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+
 import jenkins.model.Jenkins;
-import org.jvnet.hudson.test.HudsonTestCase;
 
 /**
  * Tests the custom workspace support in {@link MatrixProject}.
@@ -23,17 +33,19 @@ import org.jvnet.hudson.test.HudsonTestCase;
  *
  * @author Kohsuke Kawaguchi
  */
-public class MatrixProjectCustomWorkspaceTest extends HudsonTestCase {
-    /**
-     * Test the case where both the parent and the child has custom workspace specified.
-     */
-    public void testCustomWorkspace1() throws Exception {
-        MatrixProject p = createMatrixProject();
-        File dir = env.temporaryDirectoryAllocator.allocate();
+public class MatrixProjectCustomWorkspaceTest {
+
+    @Rule public JenkinsRule j = new JenkinsRule();
+    @Rule public TemporaryFolder tmp = new TemporaryFolder();
+
+    @Test
+    public void customWorkspaceForParentAndChild() throws Exception {
+        MatrixProject p = j.createMatrixProject();
+        File dir = tmp.newFolder();
         p.setCustomWorkspace(dir.getPath());
         p.setChildCustomWorkspace("xyz");
 
-        configRoundtrip(p);
+        j.configRoundtrip(p);
         configureCustomWorkspaceConcurrentBuild(p);
 
         // all concurrent builds should build on the same one workspace
@@ -45,16 +57,14 @@ public class MatrixProjectCustomWorkspaceTest extends HudsonTestCase {
         }
     }
 
-    /**
-     * Test the case where only the parent has a custom workspace.
-     */
-    public void testCustomWorkspace2() throws Exception {
-        MatrixProject p = createMatrixProject();
-        File dir = env.temporaryDirectoryAllocator.allocate();
+    @Test
+    public void customWorkspaceForParent() throws Exception {
+        MatrixProject p = j.createMatrixProject();
+        File dir = tmp.newFolder();
         p.setCustomWorkspace(dir.getPath());
         p.setChildCustomWorkspace(null);
 
-        configRoundtrip(p);
+        j.configRoundtrip(p);
         configureCustomWorkspaceConcurrentBuild(p);
 
         List<MatrixBuild> bs = runTwoConcurrentBuilds(p);
@@ -73,15 +83,13 @@ public class MatrixProjectCustomWorkspaceTest extends HudsonTestCase {
         }
     }
 
-    /**
-     * Test the case where only the child has a custom workspace.
-     */
-    public void testCustomWorkspace3() throws Exception {
-        MatrixProject p = createMatrixProject();
+    @Test
+    public void customWorkspaceForChild() throws Exception {
+        MatrixProject p = j.createMatrixProject();
         p.setCustomWorkspace(null);
         p.setChildCustomWorkspace(".");
 
-        configRoundtrip(p);
+        j.configRoundtrip(p);
         configureCustomWorkspaceConcurrentBuild(p);
 
         List<MatrixBuild> bs = runTwoConcurrentBuilds(p);
@@ -99,12 +107,13 @@ public class MatrixProjectCustomWorkspaceTest extends HudsonTestCase {
     /**
      * Test the case where neither has custom workspace
      */
-    public void testCustomWorkspace4() throws Exception {
-        MatrixProject p = createMatrixProject();
+    @Test
+    public void noCustomWorkspace() throws Exception {
+        MatrixProject p = j.createMatrixProject();
         p.setCustomWorkspace(null);
         p.setChildCustomWorkspace(null);
 
-        configRoundtrip(p);
+        j.configRoundtrip(p);
         configureCustomWorkspaceConcurrentBuild(p);
 
         List<MatrixBuild> bs = runTwoConcurrentBuilds(p);
@@ -128,10 +137,10 @@ public class MatrixProjectCustomWorkspaceTest extends HudsonTestCase {
      */
     private void configureCustomWorkspaceConcurrentBuild(MatrixProject p) throws Exception {
         // needs sufficient parallel execution capability
-        jenkins.setNumExecutors(10);
+        j.jenkins.setNumExecutors(10);
         Method m = Jenkins.class.getDeclaredMethod("updateComputerList"); // TODO is this really necessary?
         m.setAccessible(true);
-        m.invoke(jenkins);
+        m.invoke(j.jenkins);
 
         p.setAxes(new AxisList(new TextAxis("foo", "1", "2")));
         p.setConcurrentBuild(true);
@@ -140,7 +149,10 @@ public class MatrixProjectCustomWorkspaceTest extends HudsonTestCase {
         p.getBuildersList().add(new TestBuilder() {
             @Override public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
                 latch.countDown();
-                latch.await();
+                try {
+                    latch.await();
+                } catch (InterruptedException ignoreOnTeardown) {
+                }
                 return true;
             }
         });
@@ -156,8 +168,8 @@ public class MatrixProjectCustomWorkspaceTest extends HudsonTestCase {
         QueueTaskFuture<MatrixBuild> f2 = p.scheduleBuild2(0);
 
         List<MatrixBuild> bs = new ArrayList<MatrixBuild>();
-        bs.add(assertBuildStatusSuccess(f1.get()));
-        bs.add(assertBuildStatusSuccess(f2.get()));
+        bs.add(j.assertBuildStatusSuccess(f1.get()));
+        bs.add(j.assertBuildStatusSuccess(f2.get()));
         return bs;
     }
 }
