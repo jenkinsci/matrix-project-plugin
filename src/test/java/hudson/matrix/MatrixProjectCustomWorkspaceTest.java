@@ -1,7 +1,9 @@
 package hudson.matrix;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 import hudson.FilePath;
 
 import java.util.concurrent.CountDownLatch;
@@ -171,5 +173,54 @@ public class MatrixProjectCustomWorkspaceTest {
         bs.add(j.assertBuildStatusSuccess(f1.get()));
         bs.add(j.assertBuildStatusSuccess(f2.get()));
         return bs;
+    }
+
+    @Test
+    public void useCombinationInWorkspaceName() throws Exception {
+        MatrixProject p = j.jenkins.createProject(MatrixProject.class, "defaultName");
+        p.setAxes(new AxisList(new TextAxis("AXIS", "VALUE")));
+
+        p.scheduleBuild2(0).get();
+        MatrixRun build = p.getItem("AXIS=VALUE").getLastBuild();
+
+        assertThat(build.getWorkspace().getRemote(), containsString("/workspace/defaultName/AXIS/VALUE"));
+    }
+
+    @Test
+    public void useShortWorkspaceNameGlobally() throws Exception {
+        MatrixConfiguration.useShortWorkspaceName = true;
+
+        MatrixProject p = j.jenkins.createProject(MatrixProject.class, "shortName");
+        p.setAxes(new AxisList(new TextAxis("AXIS", "VALUE")));
+
+        p.scheduleBuild2(0).get();
+        MatrixRun build = p.getItem("AXIS=VALUE").getLastBuild();
+
+        assertThat(build.getWorkspace().getRemote(), containsString("/workspace/shortName/" + build.getParent().getDigestName()));
+
+        p.setChildCustomWorkspace("${COMBINATION}"); // Override global value
+
+        p.scheduleBuild2(0).get();
+        build = p.getItem("AXIS=VALUE").getLastBuild();
+
+        assertThat(build.getWorkspace().getRemote(), containsString("/workspace/shortName/AXIS/VALUE"));
+    }
+
+    @Test
+    public void useShortWorkspaceNamePerProject() throws Exception {
+        MatrixProject p = j.jenkins.createProject(MatrixProject.class, "shortName");
+        p.setAxes(new AxisList(new TextAxis("AXIS", "VALUE")));
+
+        p.scheduleBuild2(0).get();
+        MatrixRun build = p.getItem("AXIS=VALUE").getLastBuild();
+
+        assertThat(build.getWorkspace().getRemote(), containsString("/workspace/shortName/AXIS/VALUE"));
+
+        p.setChildCustomWorkspace("${SHORT_COMBINATION}");
+
+        p.scheduleBuild2(0).get();
+        build = p.getItem("AXIS=VALUE").getLastBuild();
+
+        assertThat(build.getWorkspace().getRemote(), containsString("/workspace/shortName/" + build.getParent().getDigestName()));
     }
 }
