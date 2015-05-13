@@ -62,6 +62,8 @@ import java.util.Collections;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import org.kohsuke.stapler.HttpResponse;
 
@@ -71,6 +73,9 @@ import org.kohsuke.stapler.HttpResponse;
  * @author Kohsuke Kawaguchi
  */
 public class MatrixConfiguration extends Project<MatrixConfiguration,MatrixRun> implements SCMedItem, NonBlockingTask {
+
+    private static final Logger LOGGER = Logger.getLogger(MatrixConfiguration.class.getName());
+
     /**
      * The actual value combination.
      */
@@ -257,19 +262,31 @@ public class MatrixConfiguration extends Project<MatrixConfiguration,MatrixRun> 
     @Override
     protected MatrixRun newBuild() throws IOException {
         List<Action> actions = Executor.currentExecutor().getCurrentWorkUnit().context.actions;
-        MatrixBuild lb = getParent().getLastBuild();
-        for (Action a : actions) {
-            if (a instanceof ParentBuildAction) {
-                MatrixBuild _lb = ((ParentBuildAction) a).parent;
-                if (_lb != null) {
-                    lb = _lb;
-                }
+        ParentBuildAction a = null;
+        for (Action _a : actions) {
+            if (_a instanceof ParentBuildAction) {
+                a = (ParentBuildAction) _a;
+                break;
             }
         }
-
-        if (lb == null) {
-            throw new IOException("cannot start a build of " + getFullName() + " since its parent has no builds at all");
+        if (a == null) {
+            LOGGER.log(Level.WARNING, "JENKINS-26582: ignoring apparent attempt to trigger {0} without its parent", getFullName());
+            return null;
         }
+        MatrixBuild lb = a.parent;
+        if (lb == null) {
+            // Could happen if the parent started but Jenkins was restarted while the children were still in the queue.
+            // In this case we simply guess that the last build of the parent is what triggered this configuration.
+            // If MatrixProject.concurrentBuild, that is not necessarily correct.
+            // TODO would be better to have ParentBuildAction record a nontransient MatrixBuild.id so we could reliably recover it.
+            lb = getParent().getLastBuild();
+            if (lb == null) {
+                LOGGER.log(Level.WARNING, "cannot start a build of {0} since its parent has no builds at all", getFullName());
+                return null;
+            }
+            LOGGER.log(Level.WARNING, "guessing that the correct build of {0} is #{1}", new Object[] {getFullName(), lb.getNumber()});
+        }
+
 
         // for every MatrixRun there should be a parent MatrixBuild
         MatrixRun lastBuild = new MatrixRun(this, lb.getTimestamp());
