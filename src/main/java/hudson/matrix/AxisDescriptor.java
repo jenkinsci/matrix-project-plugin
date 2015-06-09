@@ -54,7 +54,7 @@ public abstract class AxisDescriptor extends Descriptor<Axis> {
     /**
      * Makes sure that the given name is good as a axis name.
      *
-     * Aside from {@link Jenkins#checkGoodName()} this disallows ',' and
+     * Aside from {@link Jenkins#checkGoodName} this disallows ',' and
      * '=' as special characters used in Combination presentation.
      */
     public FormValidation doCheckName(@QueryParameter String value) {
@@ -75,7 +75,7 @@ public abstract class AxisDescriptor extends Descriptor<Axis> {
     /**
      * Makes sure that the given name is good as a axis name.
      *
-     * Aside from {@link Jenkins#checkGoodName()} this disallows ',' as
+     * Aside from {@link Jenkins#checkGoodName} this disallows ',' as
      * special character used in Combination presentation. Note it is not
      * necessary to disallow '=' in value as everything after the first
      * occurrence is considered to be a value.

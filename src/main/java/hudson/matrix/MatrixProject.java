@@ -48,7 +48,6 @@ import hudson.model.Items;
 import hudson.model.JDK;
 import hudson.model.Job;
 import hudson.model.Label;
-import hudson.model.Node;
 import hudson.model.ParameterDefinition;
 import hudson.model.ParametersDefinitionProperty;
 import hudson.model.Queue.FlyweightTask;
@@ -57,7 +56,6 @@ import hudson.model.Run;
 import hudson.model.SCMedItem;
 import hudson.model.Saveable;
 import hudson.model.TopLevelItem;
-import hudson.slaves.WorkspaceList;
 import hudson.tasks.BuildStep;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrappers;
@@ -216,7 +214,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
     /**
      * Gets the workspace location that {@link MatrixConfiguration} uses.
      *
-     * @see MatrixRun.MatrixRunExecution#decideWorkspace(Node, WorkspaceList)
+     * Used from {@code MatrixRun.MatrixRunExecution.decideWorkspace}.
      *
      * @return never null
      *      even when {@link MatrixProject} uses no custom workspace, this method still
