@@ -100,7 +100,7 @@ public class Axis extends AbstractDescribableImpl<Axis> implements Comparable<Ax
 
     /**
      * Returns true if this axis is a system-reserved axis
-     * that <strike>has</strike> used to have af special treatment.
+     * that used to have special treatment.
      *
      * @deprecated as of 1.373
      *      System vs user difference are generalized into extension point.
