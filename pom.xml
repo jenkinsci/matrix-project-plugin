@@ -100,6 +100,12 @@
                     </dependency>
                 </dependencies>
             </plugin>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>-XX:MaxPermSize=128m</argLine>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>
