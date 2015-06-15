@@ -88,12 +88,7 @@ public abstract class AxisDescriptor extends Descriptor<Axis> {
 
         if (value.contains(",")) return unsafeChar(',');
 
-        try {
-            Jenkins.checkGoodName(value);
-            return FormValidation.ok();
-        } catch (Failure e) {
-            return FormValidation.error(e.getMessage());
-        }
+        return FormValidation.ok();
     }
 
     private FormValidation unsafeChar(char chr) {

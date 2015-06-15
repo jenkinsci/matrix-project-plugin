@@ -63,8 +63,8 @@ public class AxisDescriptorTest {
         );
 
         assertEquals(
-                FormValidation.Kind.ERROR,
-                descriptor.checkValue("a/b").kind
+                FormValidation.Kind.OK,
+                descriptor.checkValue("!a&&(b||c)").kind
         );
     }
 }
