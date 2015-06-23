@@ -37,7 +37,7 @@ import java.util.List;
  *
  * @author Kohsuke Kawaguchi
  */
-public class LabelAxis extends Axis {
+public class LabelAxis extends Axis implements LabelAwareAxis {
     @DataBoundConstructor
     public LabelAxis(String name, List<String> values) {
         super(name, values);
