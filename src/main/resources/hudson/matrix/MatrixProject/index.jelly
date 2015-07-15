@@ -56,6 +56,8 @@ THE SOFTWARE.
         <st:include page="jobMain.jelly" it="${a}" optional="true" />
       </j:forEach>
 
+      <st:include page="permalinks.jelly" />
+
       <p:upstream-downstream />
     </l:main-panel>
   </l:layout>
