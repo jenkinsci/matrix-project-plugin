@@ -310,7 +310,7 @@ public class MatrixConfiguration extends Project<MatrixConfiguration,MatrixRun> 
     public Label getAssignedLabel() {
         // combine all the label axes by &&.
     	String expr;
-        String exprSlave = Util.join(combination.values(getParent().getAxes().subList(LabelAxis.class)), "&&");
+        String exprSlave = Util.join(combination.values(getParent().getAxes().subList(LabelAxis.class)), "&&"); // TODO
         String exprLabel = Util.join(combination.values(getParent().getAxes().subList(LabelExpAxis.class)), "&&");
         if(!exprSlave.equals("") && !exprLabel.equals("")){
         	expr = exprSlave + "&&" + exprLabel;

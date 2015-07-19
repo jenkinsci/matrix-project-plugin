@@ -45,7 +45,7 @@ import org.kohsuke.stapler.QueryParameter;
  *
  * @since 1.403
  */
-public class LabelExpAxis extends Axis {
+public class LabelExpAxis extends Axis implements LabelAwareAxis {
 	
     @DataBoundConstructor
     public LabelExpAxis(String name, String values) {
