@@ -55,6 +55,7 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import javax.annotation.CheckForNull;
 
 import javax.servlet.ServletException;
 
@@ -147,10 +148,21 @@ public class MatrixBuild extends AbstractBuild<MatrixProject,MatrixBuild> {
             return Util.rawEncode(combination.toString());
         }
 
-        public String getTooltip() {
+        /**
+         * Gets a tooltip from the item.
+         * @return Tooltip or null if it cannot be retrieved.
+         */
+        public @CheckForNull String getTooltip() {
             MatrixRun r = getRun();
-            if(r!=null) return r.getIconColor().getDescription();
-            Queue.Item item = Jenkins.getInstance().getQueue().getItem(getParent().getItem(combination));
+            if (r!=null) {
+                return r.getIconColor().getDescription();
+            }
+            
+            final Jenkins jenkins = Jenkins.getInstance();
+            if (jenkins == null) {
+                return null;
+            }
+            Queue.Item item = jenkins.getQueue().getItem(getParent().getItem(combination));
             if(item!=null)
                 return item.getWhy();
             return null;    // fall back
@@ -353,6 +365,9 @@ public class MatrixBuild extends AbstractBuild<MatrixProject,MatrixBuild> {
             } catch( InterruptedException e ) {
                 logger.println("Aborted");
                 Executor x = Executor.currentExecutor();
+                if (x == null) {
+                    throw new IOException("The build has been aborted, but its executor is not available");
+                }
                 x.recordCauseOfInterruption(MatrixBuild.this, listener);
                 return x.abortResult();
             } catch (AbortException e) {
@@ -360,23 +375,28 @@ public class MatrixBuild extends AbstractBuild<MatrixProject,MatrixBuild> {
                 return Result.FAILURE;
             } finally {
                 // if the build was aborted in the middle. Cancel all the configuration builds.
-                Queue q = Jenkins.getInstance().getQueue();
-                synchronized(q) {// avoid micro-locking in q.cancel.
-                    final int n = getNumber();
-                    for (MatrixConfiguration c : activeConfigurations) {
-                        for (Item i : q.getItems(c)) {
-                            ParentBuildAction a = i.getAction(ParentBuildAction.class);
-                            if (a!=null && a.parent==getBuild()) {
-                                q.cancel(i);
-                                logger.println(Messages.MatrixBuild_Cancelled(ModelHyperlinkNote.encodeTo(c)));
+                final Jenkins jenkins = Jenkins.getInstance();
+                if (jenkins == null) {
+                     logger.println("Jenkins instance is not ready. Cannot interrupt configurations");
+                } else {
+                    Queue q = jenkins.getQueue();
+                    synchronized(q) {// avoid micro-locking in q.cancel.
+                        final int n = getNumber();
+                        for (MatrixConfiguration c : activeConfigurations) {
+                            for (Item i : q.getItems(c)) {
+                                ParentBuildAction a = i.getAction(ParentBuildAction.class);
+                                if (a!=null && a.parent==getBuild()) {
+                                    q.cancel(i);
+                                    logger.println(Messages.MatrixBuild_Cancelled(ModelHyperlinkNote.encodeTo(c)));
+                                }
                             }
-                        }
-                        MatrixRun b = c.getBuildByNumber(n);
-                        if(b!=null && b.isBuilding()) {// executor can spend some time in post production state, so only cancel in-progress builds.
-                            Executor exe = b.getExecutor();
-                            if(exe!=null) {
-                                logger.println(Messages.MatrixBuild_Interrupting(ModelHyperlinkNote.encodeTo(b)));
-                                exe.interrupt();
+                            MatrixRun b = c.getBuildByNumber(n);
+                            if(b!=null && b.isBuilding()) {// executor can spend some time in post production state, so only cancel in-progress builds.
+                                Executor exe = b.getExecutor();
+                                if(exe!=null) {
+                                    logger.println(Messages.MatrixBuild_Interrupting(ModelHyperlinkNote.encodeTo(b)));
+                                    exe.interrupt();
+                                }
                             }
                         }
                     }

@@ -62,11 +62,12 @@ public class LabelAxis extends Axis {
 
         /**
          * If there's no distributed build set up, it's pointless to provide this axis.
+         * @throws IllegalStateException {@link Jenkins} instance is not ready
          */
         @Override
         public boolean isInstantiable() {
-            Jenkins h = Jenkins.getInstance();
-            return !h.getNodes().isEmpty() || !h.clouds.isEmpty();
+            final Jenkins j = Jenkins.getActiveInstance();
+            return !j.getNodes().isEmpty() || !j.clouds.isEmpty();
         }
 
         private String jsstr(String body, Object... args) {

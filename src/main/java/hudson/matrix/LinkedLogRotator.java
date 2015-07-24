@@ -25,8 +25,10 @@ package hudson.matrix;
 
 import hudson.model.Job;
 import hudson.tasks.LogRotator;
+import hudson.util.RunList;
 
 import java.io.IOException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -57,18 +59,22 @@ final class LinkedLogRotator extends LogRotator {
     public void perform(Job _job) throws IOException, InterruptedException {
         // Let superclass handle clearing artifacts, if configured:
         super.perform(_job);
+        if (!(_job instanceof MatrixConfiguration)) {
+            LOGGER.log(Level.SEVERE, "Log rotator got a job with a wrong type. {0} of {1}", 
+                    new Object[] {_job.getFullName(), _job.getClass()});
+        }
         MatrixConfiguration job = (MatrixConfiguration) _job;
 
         // copy it to the array because we'll be deleting builds as we go.
-        for( MatrixRun r : job.getBuilds().toArray(new MatrixRun[0]) ) {
+        for( MatrixRun r : job.getBuilds() ) {
             if(job.getParent().getBuildByNumber(r.getNumber())==null) {
-                LOGGER.fine("Deleting "+r.getFullDisplayName());
+                LOGGER.log(Level.FINE, "Deleting {0}", r.getFullDisplayName());
                 r.delete();
             }
         }
 
         if(!job.isActiveConfiguration() && job.getLastBuild()==null) {
-            LOGGER.fine("Deleting "+job.getFullDisplayName()+" because the configuration is inactive and there's no builds");
+            LOGGER.log(Level.FINE, "Deleting {0} because the configuration is inactive and there''s no builds", job.getFullDisplayName());
             job.delete();
         }
     }

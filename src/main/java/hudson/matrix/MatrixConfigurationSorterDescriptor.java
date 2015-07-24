@@ -2,6 +2,7 @@ package hudson.matrix;
 
 import hudson.DescriptorExtensionList;
 import hudson.model.Descriptor;
+import javax.annotation.Nonnull;
 import jenkins.model.Jenkins;
 
 /**
@@ -21,7 +22,13 @@ public abstract class MatrixConfigurationSorterDescriptor extends Descriptor<Mat
     /**
      * Returns all the registered {@link MatrixConfigurationSorterDescriptor}s.
      */
+    @Nonnull
     public static DescriptorExtensionList<MatrixConfigurationSorter,MatrixConfigurationSorterDescriptor> all() {
-        return Jenkins.getInstance().<MatrixConfigurationSorter,MatrixConfigurationSorterDescriptor>getDescriptorList(MatrixConfigurationSorter.class);
-    }    
+        final Jenkins jenkins = Jenkins.getInstance();
+        if (jenkins != null) {
+            return jenkins.<MatrixConfigurationSorter,MatrixConfigurationSorterDescriptor>getDescriptorList(MatrixConfigurationSorter.class);
+        } else {
+            return DescriptorExtensionList.createDescriptorList((Jenkins)null, MatrixConfigurationSorter.class);
+        }    
+    }
 }

@@ -43,6 +43,11 @@ public abstract class MatrixExecutionStrategyDescriptor extends Descriptor<Matri
      * Returns all the registered {@link MatrixExecutionStrategyDescriptor}s.
      */
     public static DescriptorExtensionList<MatrixExecutionStrategy,MatrixExecutionStrategyDescriptor> all() {
-        return Jenkins.getInstance().<MatrixExecutionStrategy,MatrixExecutionStrategyDescriptor>getDescriptorList(MatrixExecutionStrategy.class);
+        final Jenkins jenkins = Jenkins.getInstance();
+        if (jenkins != null) {
+            return jenkins.<MatrixExecutionStrategy,MatrixExecutionStrategyDescriptor>getDescriptorList(MatrixExecutionStrategy.class);
+        } else {
+            return DescriptorExtensionList.createDescriptorList((Jenkins)null, MatrixExecutionStrategy.class);
+        }
     }
 }

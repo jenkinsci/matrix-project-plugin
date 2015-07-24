@@ -65,10 +65,12 @@ public class JDKAxis extends Axis {
 
         /**
          * If there's no JDK configured, there's no point in this axis.
+         * @throws IllegalStateException {@link Jenkins} instance is not ready
          */
         @Override
         public boolean isInstantiable() {
-            return !Jenkins.getInstance().getJDKs().isEmpty();
+            final Jenkins jenkins = Jenkins.getActiveInstance();
+            return !jenkins.getJDKs().isEmpty();
         }
     }
 }

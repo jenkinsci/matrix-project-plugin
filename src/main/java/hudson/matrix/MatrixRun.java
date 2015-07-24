@@ -152,10 +152,21 @@ public class MatrixRun extends Build<MatrixConfiguration,MatrixRun> {
 
             String customWorkspace = mp.getCustomWorkspace();
             if (customWorkspace != null) {
+                final FilePath nodeRoot = n.getRootPath();
+                if (nodeRoot == null) {
+                    throw new IOException("Cannot retrieve the node's root. Most probably it's offline");
+                }
+                
                 // we allow custom workspaces to be concurrently used between jobs.
-                return Lease.createDummyLease(n.getRootPath().child(getEnvironment(listener).expand(customWorkspace)));
+                return Lease.createDummyLease(nodeRoot.child(getEnvironment(listener).expand(customWorkspace)));
             }
-            return wsl.allocate(n.getWorkspaceFor(mp), getParentBuild());
+            
+            final FilePath workspace = n.getWorkspaceFor(mp);
+            if (workspace == null) {
+                    throw new IOException("Cannot retrieve the node's workspace for " + mp + ". Most probably the node is offline");
+                }
+            
+            return wsl.allocate(workspace, getParentBuild());
         }
 
         @Override
