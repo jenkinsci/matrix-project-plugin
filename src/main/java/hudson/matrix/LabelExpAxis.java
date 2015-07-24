@@ -63,7 +63,7 @@ public class LabelExpAxis extends Axis {
 
     @Override
     public DescriptorImpl getDescriptor() {
-        return (DescriptorImpl) Jenkins.getInstance().getDescriptorOrDie(getClass());
+        return (DescriptorImpl) Jenkins.getActiveInstance().getDescriptorOrDie(getClass());
     }
 
     public String getValuesString(){
@@ -87,8 +87,8 @@ public class LabelExpAxis extends Axis {
          */
         @Override
         public boolean isInstantiable() {
-            Jenkins h = Jenkins.getInstance();
-            return !h.getNodes().isEmpty() || !h.clouds.isEmpty();
+            final Jenkins j = Jenkins.getActiveInstance();
+            return !j.getNodes().isEmpty() || !j.clouds.isEmpty();
         }
 
         @Restricted(NoExternalUse.class)

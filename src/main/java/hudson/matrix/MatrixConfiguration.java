@@ -23,6 +23,7 @@
  */
 package hudson.matrix;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.EnvVars;
 import hudson.Util;
 import hudson.model.Action;
@@ -261,7 +262,12 @@ public class MatrixConfiguration extends Project<MatrixConfiguration,MatrixRun> 
 
     @Override
     protected MatrixRun newBuild() throws IOException {
-        List<Action> actions = Executor.currentExecutor().getCurrentWorkUnit().context.actions;
+        final Executor executor = Executor.currentExecutor();
+        if (executor == null) {
+            LOGGER.log(Level.WARNING, "New build of {0} has been started outside the executor", this);
+            return null;
+        }
+        List<Action> actions = executor.getCurrentWorkUnit().context.actions;
         ParentBuildAction a = null;
         for (Action _a : actions) {
             if (_a instanceof ParentBuildAction) {
@@ -317,7 +323,8 @@ public class MatrixConfiguration extends Project<MatrixConfiguration,MatrixRun> 
         } else{
         	expr = (exprSlave.equals("")) ? exprLabel : exprSlave;
         }
-        return Jenkins.getInstance().getLabel(Util.fixEmpty(expr));
+        final Jenkins jenkins = Jenkins.getInstance();
+        return jenkins != null ? jenkins.getLabel(Util.fixEmpty(expr)) : null;
     }
 
     @Override
@@ -327,7 +334,8 @@ public class MatrixConfiguration extends Project<MatrixConfiguration,MatrixRun> 
 
     @Override
     public JDK getJDK() {
-        return Jenkins.getInstance().getJDK(combination.get("jdk"));
+        final Jenkins jenkins = Jenkins.getInstance(); 
+        return jenkins != null ? jenkins.getJDK(combination.get("jdk")) : null;
     }
 
 //
@@ -427,6 +435,8 @@ public class MatrixConfiguration extends Project<MatrixConfiguration,MatrixRun> 
      * cause Jenkins to use cryptic but short path name, giving more room for
      * jobs to use longer path names.
      */
+    @SuppressFBWarnings(value = "MS_SHOULD_BE_FINAL", 
+            justification = "Can be changed in the runtime by plugins and Groovy scripts")
     public static boolean useShortWorkspaceName = Boolean.getBoolean(MatrixConfiguration.class.getName()+".useShortWorkspaceName");
 
 	/**
@@ -452,24 +462,38 @@ public class MatrixConfiguration extends Project<MatrixConfiguration,MatrixRun> 
      *
      * @param actions   Can be null.
      * @param c     Reason for starting the build
+     * @return true if the build has been scheduled
      */
     public boolean scheduleBuild(List<? extends Action> actions, Cause c) {
+        final Jenkins jenkins = Jenkins.getInstance();
+        if (jenkins == null) {
+            LOGGER.log(Level.WARNING, "Cannot schedule the build {0}. Jenkins is not ready", this);
+            return false;
+        }
+        
         List<Action> allActions = new ArrayList<Action>();
-
-        if(actions != null)
+        if(actions != null) {
             allActions.addAll(actions);
-
+        }
         allActions.add(new ParentBuildAction());
         allActions.add(new CauseAction(c));
 
-        return Jenkins.getInstance().getQueue().schedule2(this, getQuietPeriod(), allActions ).isAccepted();
+        return jenkins.getQueue().schedule2(this, getQuietPeriod(), allActions ).isAccepted();
     }
 
     /**
      *
      */
     public static class ParentBuildAction extends InvisibleAction implements QueueAction {
-        public transient MatrixBuild parent = (MatrixBuild)Executor.currentExecutor().getCurrentExecutable();
+        
+        public transient MatrixBuild parent;
+
+        public ParentBuildAction() {
+            final Executor currentExecutor = Executor.currentExecutor();
+            this.parent = currentExecutor != null 
+                    ? (MatrixBuild)currentExecutor.getCurrentExecutable() : null;
+        }
+        
         public boolean shouldSchedule(List<Action> actions) {
             return true;
         }

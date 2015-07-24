@@ -45,7 +45,7 @@ public abstract class AxisDescriptor extends Descriptor<Axis> {
     }
 
     /**
-     * Return false if the user shouldn't be able to create thie axis from the UI.
+     * Return false if the user shouldn't be able to create this axis from the UI.
      */
     public boolean isInstantiable() {
         return true;

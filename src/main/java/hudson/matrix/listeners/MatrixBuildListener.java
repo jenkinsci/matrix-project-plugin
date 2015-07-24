@@ -23,10 +23,13 @@
  */
 package hudson.matrix.listeners;
 
+import hudson.DescriptorExtensionList;
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
 import hudson.matrix.MatrixConfiguration;
 import hudson.matrix.MatrixBuild;
+import hudson.matrix.MatrixExecutionStrategy;
+import hudson.matrix.MatrixExecutionStrategyDescriptor;
 import hudson.matrix.MatrixRun;
 import hudson.model.Action;
 import jenkins.model.Jenkins;
@@ -34,6 +37,7 @@ import hudson.model.Queue;
 import hudson.model.Queue.Task;
 
 import java.util.List;
+import javax.annotation.Nonnull;
 
 /**
  * Controls which subset of {@link MatrixRun}s to rebuild.
@@ -78,7 +82,8 @@ public abstract class MatrixBuildListener implements ExtensionPoint {
 	/**
 	 * Returns all the registered {@link MatrixBuildListener} descriptors.
 	 */
+        @Nonnull
 	public static ExtensionList<MatrixBuildListener> all() {
-		return Jenkins.getInstance().getExtensionList(MatrixBuildListener.class);
+            return ExtensionList.lookup(MatrixBuildListener.class);
 	}
 }

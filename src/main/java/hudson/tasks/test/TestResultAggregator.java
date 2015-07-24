@@ -53,8 +53,13 @@ public class TestResultAggregator extends MatrixAggregator {
 
     @Override
     public boolean endRun(MatrixRun run) throws InterruptedException, IOException {
-        AbstractTestResultAction atr = run.getAction(AbstractTestResultAction.class);
-        if(atr!=null)   result.add(atr);
+        final AbstractTestResultAction atr = run.getAction(AbstractTestResultAction.class);
+        if (result == null) {
+            throw new IOException("The buid has not been started yet.");
+        }
+        if (atr != null) {
+            result.add(atr);
+        }
         return true;
     }
 }

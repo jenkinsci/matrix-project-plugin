@@ -86,6 +86,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.annotation.Nonnull;
 
 import javax.annotation.Nullable;
 import javax.servlet.ServletException;
@@ -604,7 +605,11 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
                 for (File dir : oldDirs) {
                     try {
                         Combination c = Combination.fromString(dir.getName());
-                        dir.renameTo(getRootDirFor(c));
+                        //TODO: bad logic in the legacy code, creating a directory and then replacing it
+                        final File target = getRootDirFor(c);
+                        if (!dir.renameTo(target)) {
+                            LOGGER.log(Level.WARNING, "Cannot rename directory {0} to {1}", new Object[]{dir, target});
+                        } 
                     } catch (IllegalArgumentException e) {
                         // it's not a configuration dir. Just ignore.
                     }
@@ -727,7 +732,14 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
         return configurations.get(c);
     }
 
-    public File getRootDirFor(MatrixConfiguration child) {
+    /**
+     * Gets a root directory of the specified {@link MatrixConfiguration}.
+     * Creates the whole directory hierarchy on-demand.
+     * @param child child {@link MatrixConfiguration}
+     * @return Root directory for the combination
+     */
+    @Nonnull
+    public File getRootDirFor(@Nonnull MatrixConfiguration child) {
         return getRootDirFor(child.getCombination());
     }
 
@@ -744,11 +756,20 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
         }
     }
 
-    public File getRootDirFor(Combination combination) {
+    /**
+     * Gets a root directory for the specified {@link Combination}.
+     * Creates the whole directory hierarchy on-demand.
+     * @param combination Combination to be checked
+     * @return Root directory for the combination
+     */
+    @Nonnull
+    public File getRootDirFor(@Nonnull Combination combination) {
         File f = getConfigurationsDir();
         for (Entry<String, String> e : combination.entrySet())
             f = new File(f,"axis-"+e.getKey()+'/'+Util.rawEncode(e.getValue()));
-        f.getParentFile().mkdirs();
+        if (!f.getParentFile().mkdirs()) {
+            LOGGER.log(Level.WARNING, "Cannot create directory {0} for the combination {1}", new Object[]{f, combination});
+        }
         return f;
     }
 
@@ -764,12 +785,18 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
      * Gets the {@link JDK}s where the builds will be run.
      * @return never null but can be empty
      */
-    public Set<JDK> getJDKs() {
+    public @Nonnull Set<JDK> getJDKs() {
+        final Jenkins jenkins = Jenkins.getInstance();
+        if (jenkins == null) {
+            return Collections.emptySet();
+        }
+        
         Axis a = axes.find("jdk");
         if(a==null)  return Collections.emptySet();
         Set<JDK> r = new HashSet<JDK>();
+        
         for (String j : a) {
-            JDK jdk = Jenkins.getInstance().getJDK(j);
+            JDK jdk = jenkins.getJDK(j);
             if(jdk!=null)
                 r.add(jdk);
         }
@@ -780,10 +807,15 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
      * Gets the {@link Label}s where the builds will be run.
      * @return never null
      */
-    public Set<Label> getLabels() {
+    public @Nonnull Set<Label> getLabels() {    
+        final Jenkins jenkins = Jenkins.getInstance();
+        if (jenkins == null) {
+            return Collections.emptySet();
+        }
+        
         Set<Label> r = new HashSet<Label>();
         for (Combination c : axes.subList(LabelAxis.class).list())
-            r.add(Jenkins.getInstance().getLabel(Util.join(c.values(),"&&")));
+            r.add(jenkins.getLabel(Util.join(c.values(),"&&")));
         return r;
     }
 
@@ -943,8 +975,11 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
         return menu;
     }
 
+    /**
+     * @throws IllegalStateException Jenkins is not ready
+     */
     public DescriptorImpl getDescriptor() {
-        return (DescriptorImpl)Jenkins.getInstance().getDescriptorOrDie(getClass());
+        return (DescriptorImpl)Jenkins.getActiveInstance().getDescriptorOrDie(getClass());
     }
 
     /**

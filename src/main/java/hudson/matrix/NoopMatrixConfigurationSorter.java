@@ -2,6 +2,7 @@ package hudson.matrix;
 
 import hudson.Extension;
 import hudson.util.FormValidation;
+import java.io.Serializable;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -9,7 +10,10 @@ import org.kohsuke.stapler.DataBoundConstructor;
  *
  * @author Kohsuke Kawaguchi
  */
-public class NoopMatrixConfigurationSorter extends MatrixConfigurationSorter {
+public class NoopMatrixConfigurationSorter extends MatrixConfigurationSorter implements Serializable {
+    
+    private static final long serialVersionUID = 1L;
+    
     @DataBoundConstructor
     public NoopMatrixConfigurationSorter() {
     }
