@@ -66,7 +66,13 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletResponse;
+
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.DoNotUse;
 import org.kohsuke.stapler.HttpResponse;
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerResponse;
 
 /**
  * One configuration of {@link MatrixProject}.
@@ -497,5 +503,11 @@ public class MatrixConfiguration extends Project<MatrixConfiguration,MatrixRun> 
         public boolean shouldSchedule(List<Action> actions) {
             return true;
         }
+    }
+
+    // Hide /configure view inherited from Job
+    @Restricted(DoNotUse.class)
+    public void doConfigure(StaplerResponse rsp) throws IOException {
+        rsp.sendError(HttpServletResponse.SC_NOT_FOUND);
     }
 }
