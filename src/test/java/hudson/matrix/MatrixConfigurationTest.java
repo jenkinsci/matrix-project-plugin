@@ -23,16 +23,17 @@
  */
 package hudson.matrix;
 
-import java.util.Collection;
 import static org.junit.Assert.*;
+
+import java.util.Collection;
 import org.junit.Rule;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.JenkinsRule.WebClient;
 
-/**
- *
- * @author Lucie Votypkova
- */
+import com.gargoylesoftware.htmlunit.html.HtmlPage;
+
 public class MatrixConfigurationTest {
     
     @Rule public JenkinsRule r = new JenkinsRule();
@@ -56,4 +57,16 @@ public class MatrixConfigurationTest {
         assertFalse("Active configuration should not be disabled,", notDelete.isDisabled());
     }
     
+    @Test @Issue("JENKINS-32423")
+    public void doNotServeConfigurePage() throws Exception {
+        MatrixProject p = r.createMatrixProject();
+        p.setAxes(new AxisList(new Axis("a", "b")));
+
+        WebClient wc = r.createWebClient();
+        wc.setThrowExceptionOnFailingStatusCode(false);
+        wc.setPrintContentOnFailingStatusCode(false);
+
+        HtmlPage page = wc.getPage(p.getItem("a=b"), "configure");
+        assertEquals("Page should not exist", 404, page.getWebResponse().getStatusCode());
+    }
 }
