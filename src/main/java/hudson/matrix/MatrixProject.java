@@ -997,9 +997,9 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
         }
 
         /**
-         * Needed if it wants Maven projects are categorized in Jenkins 2.x.
+         * Needed if it wants Matrix projects are categorized in Jenkins 2.x.
          *
-         * TODO: Override when the baseline is upgraded to 2.x
+         * TODO: After Jenkins 2.0 this should be an @Override
          *
          * @return A string it represents a ItemCategory identifier.
          */
@@ -1010,7 +1010,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
         /**
          * Needed if it wants Matrix projects are categorized in Jenkins 2.x.
          *
-         * TODO: Override when the baseline is upgraded to 2.x
+         * TODO: After Jenkins 2.0 this should be an @Override
          *
          * @return A string with the Item description.
          */
@@ -1021,7 +1021,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
         /**
          * Needed if it wants Matrix projects are categorized in Jenkins 2.x.
          *
-         * TODO: Override when the baseline is upgraded to 2.x
+         * TODO: After Jenkins 2.0 this should be an @Override
          *
          * @return A string it represents a URL pattern to get the Item icon in different sizes.
          */
