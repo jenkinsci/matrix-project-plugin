@@ -991,8 +991,42 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
     public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
 
     public static final class DescriptorImpl extends AbstractProjectDescriptor {
+
         public String getDisplayName() {
             return Messages.MatrixProject_DisplayName();
+        }
+
+        /**
+         * Needed if it wants Matrix projects are categorized in Jenkins 2.x.
+         *
+         * TODO: After Jenkins 2.0 this should be an @Override
+         *
+         * @return A string it represents a ItemCategory identifier.
+         */
+        public String getCategoryId() {
+            return "standaloneprojects";
+        }
+
+        /**
+         * Needed if it wants Matrix projects are categorized in Jenkins 2.x.
+         *
+         * TODO: After Jenkins 2.0 this should be an @Override
+         *
+         * @return A string with the Item description.
+         */
+        public String getDescription() {
+            return Messages.MatrixProject_Description();
+        }
+
+        /**
+         * Needed if it wants Matrix projects are categorized in Jenkins 2.x.
+         *
+         * TODO: After Jenkins 2.0 this should be an @Override
+         *
+         * @return A string it represents a URL pattern to get the Item icon in different sizes.
+         */
+        public String getIconFilePathPattern() {
+            return "plugin/matrix-project/images/:size/matrixproject.png";
         }
 
         public MatrixProject newInstance(ItemGroup parent, String name) {
