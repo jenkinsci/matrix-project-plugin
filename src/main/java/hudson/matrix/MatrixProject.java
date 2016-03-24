@@ -767,7 +767,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
         File f = getConfigurationsDir();
         for (Entry<String, String> e : combination.entrySet())
             f = new File(f,"axis-"+e.getKey()+'/'+Util.rawEncode(e.getValue()));
-        if (!f.getParentFile().mkdirs()) {
+        if (!f.getParentFile().exists() && !f.getParentFile().mkdirs()) {
             LOGGER.log(Level.WARNING, "Cannot create directory {0} for the combination {1}", new Object[]{f, combination});
         }
         return f;
