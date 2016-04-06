@@ -1004,7 +1004,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
          * @return A string it represents a ItemCategory identifier.
          */
         public String getCategoryId() {
-            return "standaloneprojects";
+            return "standalone-projects";
         }
 
         /**
