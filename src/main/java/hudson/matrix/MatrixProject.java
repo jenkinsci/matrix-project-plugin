@@ -82,6 +82,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -199,6 +201,11 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
      */
     private String childCustomWorkspace;
 
+    /**
+     * Lock to prevent project changes on different build at the same time
+     */
+    private ReadWriteLock buildLock;
+
     public MatrixProject(String name) {
         this(Jenkins.getInstance(), name);
     }
@@ -206,6 +213,24 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
     public MatrixProject(ItemGroup parent, String name) {
         super(parent, name);
     }
+
+    /**
+     * Lock the project
+     */
+    public void buildLock(){
+        // create lock instance if not exist
+        if (buildLock == null) {
+            buildLock = new ReentrantReadWriteLock();
+        }
+        buildLock.writeLock().lock();
+    }
+    /**
+     * Unlock the project
+     */
+    public void buildUnlock() {
+        buildLock.writeLock().unlock();
+    }
+
 
     @Override
     public String getPronoun() {
