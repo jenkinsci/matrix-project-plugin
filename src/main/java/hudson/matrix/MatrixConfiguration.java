@@ -476,19 +476,18 @@ public class MatrixConfiguration extends Project<MatrixConfiguration,MatrixRun> 
             LOGGER.log(Level.WARNING, "Cannot schedule the build {0}. Jenkins is not ready", this);
             return false;
         }
-        
+
         List<Action> allActions = new ArrayList<Action>();
         if(actions != null) {
             allActions.addAll(actions);
+            for (Action a : actions) { // SECURITY-170
+                if (a instanceof ParametersAction) {
+                    allActions.add(MatrixChildParametersAction.create((ParametersAction) a));
+                }
+            }
         }
         allActions.add(new ParentBuildAction());
         allActions.add(new CauseAction(c));
-
-        for (Action a : actions) { // SECURITY-170
-            if (a instanceof ParametersAction) {
-                allActions.add(MatrixChildParametersAction.create((ParametersAction) a));
-            }
-        }
 
         return jenkins.getQueue().schedule2(this, getQuietPeriod(), allActions ).isAccepted();
     }
