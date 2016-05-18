@@ -484,6 +484,12 @@ public class MatrixConfiguration extends Project<MatrixConfiguration,MatrixRun> 
         allActions.add(new ParentBuildAction());
         allActions.add(new CauseAction(c));
 
+        for (Action a : actions) { // SECURITY-170
+            if (a instanceof ParametersAction) {
+                allActions.add(MatrixChildParametersAction.create((ParametersAction) a));
+            }
+        }
+
         return jenkins.getQueue().schedule2(this, getQuietPeriod(), allActions ).isAccepted();
     }
 
