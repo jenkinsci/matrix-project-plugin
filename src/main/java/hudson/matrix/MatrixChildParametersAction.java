@@ -29,6 +29,9 @@ import java.util.List;
 
 import javax.annotation.Nonnull;
 
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
+
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.model.EnvironmentContributor;
@@ -45,6 +48,7 @@ import hudson.model.TaskListener;
  * It's intended for internal use only, that's why constructor and methods are packaged visible.
  * The class itself is public to be visible to core so it can pick up the {@link MatrixChildParametersActionEnvironmentContributor}.
  */
+@Restricted(NoExternalUse.class)
 public class MatrixChildParametersAction extends InvisibleAction implements MatrixChildAction {
 
     private final List<ParameterValue> parameters;
