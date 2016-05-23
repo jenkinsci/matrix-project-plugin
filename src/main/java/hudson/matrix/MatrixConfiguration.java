@@ -479,10 +479,11 @@ public class MatrixConfiguration extends Project<MatrixConfiguration,MatrixRun> 
 
         List<Action> allActions = new ArrayList<Action>();
         if(actions != null) {
-            allActions.addAll(actions);
             for (Action a : actions) { // SECURITY-170
                 if (a instanceof ParametersAction) {
                     allActions.add(MatrixChildParametersAction.create((ParametersAction) a));
+                } else {
+                    allActions.add(a);
                 }
             }
         }

@@ -35,7 +35,6 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.model.EnvironmentContributor;
-import hudson.model.InvisibleAction;
 import hudson.model.ParameterValue;
 import hudson.model.ParametersAction;
 import hudson.model.Run;
@@ -49,7 +48,7 @@ import hudson.model.TaskListener;
  * The class itself is public to be visible to core so it can pick up the {@link MatrixChildParametersActionEnvironmentContributor}.
  */
 @Restricted(NoExternalUse.class)
-public class MatrixChildParametersAction extends InvisibleAction implements MatrixChildAction {
+public class MatrixChildParametersAction extends ParametersAction implements MatrixChildAction {
 
     private final List<ParameterValue> parameters;
 
@@ -57,8 +56,19 @@ public class MatrixChildParametersAction extends InvisibleAction implements Matr
         this.parameters = parameters;
     }
 
-    List<ParameterValue> getParameters() {
+    @Override
+    public List<ParameterValue> getParameters() {
         return parameters;
+    }
+
+    @Override
+    public ParameterValue getParameter(String name) {
+        for (ParameterValue p : parameters) {
+            if (p != null && p.getName().equals(name)) {
+                return p;
+            }
+        }
+        return null;
     }
 
     static MatrixChildParametersAction create(ParametersAction action) {
