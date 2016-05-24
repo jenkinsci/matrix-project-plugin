@@ -93,6 +93,7 @@ import java.util.Set;
 import jenkins.model.Jenkins;
 import static org.junit.Assert.*;
 
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -134,7 +135,6 @@ public class MatrixProjectTest {
     /**
      * Tests that axes are available as build variables in the Maven builds.
      */
-    @RandomlyFails("Not a v4.0.0 POM. for project org.jvnet.maven-antrun-extended-plugin:maven-antrun-extended-plugin at /home/jenkins/.m2/repository/org/jvnet/maven-antrun-extended-plugin/maven-antrun-extended-plugin/1.40/maven-antrun-extended-plugin-1.40.pom")
     @Test
     public void testBuildAxisInMaven() throws Exception {
         MatrixProject p = createMatrixProject();
