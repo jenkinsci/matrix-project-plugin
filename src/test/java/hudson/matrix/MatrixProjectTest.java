@@ -70,6 +70,7 @@ import hudson.model.Cause.LegacyCodeCause;
 import hudson.model.ParametersAction;
 import hudson.model.FileParameterValue;
 import hudson.model.StringParameterDefinition;
+import hudson.model.StringParameterValue;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -133,7 +134,6 @@ public class MatrixProjectTest {
     /**
      * Tests that axes are available as build variables in the Maven builds.
      */
-    @RandomlyFails("Not a v4.0.0 POM. for project org.jvnet.maven-antrun-extended-plugin:maven-antrun-extended-plugin at /home/jenkins/.m2/repository/org/jvnet/maven-antrun-extended-plugin/maven-antrun-extended-plugin/1.40/maven-antrun-extended-plugin-1.40.pom")
     @Test
     public void testBuildAxisInMaven() throws Exception {
         MatrixProject p = createMatrixProject();
@@ -410,6 +410,24 @@ public class MatrixProjectTest {
         QueueTaskFuture<MatrixBuild> f = p.scheduleBuild2(0,new LegacyCodeCause(),new ParametersAction(params));
         
         j.assertBuildStatusSuccess(f.get(10,TimeUnit.SECONDS));
+    }
+
+    @Issue("JENKINS-34758")
+    @Test
+    public void testParametersAsEnvOnChildren() throws Exception {
+        MatrixProject p = createMatrixProject();
+        p.setAxes(new AxisList(new TextAxis("foo","1")));
+        p.addProperty(new ParametersDefinitionProperty(
+            new StringParameterDefinition("MY_PARAM","")
+        ));
+        // must fail if $MY_PARAM or $foo are not defined in children
+        p.getBuildersList().add(new Shell("set -eux; echo $MY_PARAM; echo $foo"));
+
+        List<ParameterValue> params = new ArrayList<ParameterValue>();
+        params.add(new StringParameterValue("MY_PARAM", "value1"));
+
+        QueueTaskFuture<MatrixBuild> f = p.scheduleBuild2(0, new LegacyCodeCause(), new ParametersAction(params));
+        j.assertBuildStatusSuccess(f.get());
     }
 
     /**
