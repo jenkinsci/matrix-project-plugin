@@ -612,7 +612,7 @@ public class MatrixProjectTest {
     }
 
     @Test @Issue("JENKINS-13554")
-    public void deletedParentBuildWithLockedChildren() throws Exception {
+    public void deletedParentBuildWithLatestChildrenResult() throws Exception {
         MatrixProject p = j.jenkins.createProject(MatrixProject.class, "project");
         p.setAxes(new AxisList(new TextAxis("AXIS", "VALUE")));
         MatrixBuild build = p.scheduleBuild2(0).get();
@@ -621,7 +621,11 @@ public class MatrixProjectTest {
         MatrixConfiguration c = p.getItem("AXIS=VALUE");
 
         c.getBuildByNumber(2).delete(); // delete newest run
-        assertNotNull(c.getBuildByNumber(1).getWhyKeepLog());
+        assertNull("build #1 should not be locked", p.getBuildByNumber(1).getWhyKeepLog());
+        assertNotNull("build #1 should have delete message", p.getBuildByNumber(1).getDeleteMessage());
+
+        assertNull("configuration run #1 should not be locked", c.getBuildByNumber(1).getWhyKeepLog());
+        assertNotNull("configuration run #1 should have delete message", c.getBuildByNumber(1).getDeleteMessage());
 
         build.delete();
 
