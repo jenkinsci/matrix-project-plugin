@@ -14,6 +14,8 @@ import hudson.model.Queue;
 import hudson.model.ResourceController;
 import hudson.model.Result;
 import hudson.model.Run;
+import hudson.model.queue.CauseOfBlockage;
+
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -151,7 +153,7 @@ public class DefaultMatrixExecutionStrategyImpl extends MatrixExecutionStrategy 
             logger.printf("Touchstone configurations resulted in %s, so aborting...%n", r);
             return r;
         }
-        
+
         if(!runSequentially)
             for(MatrixConfiguration c : delayedConfigurations)
                 scheduleConfigurationBuild(execution, c);
@@ -220,7 +222,7 @@ public class DefaultMatrixExecutionStrategyImpl extends MatrixExecutionStrategy 
             if(!a.endRun(b))
                 throw new AbortException();
     }
-    
+
     private <T> TreeSet<T> createTreeSet(Collection<T> items, Comparator<T> sorter) {
         TreeSet<T> r = new TreeSet<T>(sorter);
         r.addAll(items);
@@ -284,12 +286,16 @@ public class DefaultMatrixExecutionStrategyImpl extends MatrixExecutionStrategy 
                 // if the build seems to be stuck in the queue, display why
                 String why = qi.getWhy();
                 if(why != null && !why.equals(whyInQueue) && System.currentTimeMillis()-startTime>5000) {
-                    listener.getLogger().print("Configuration " + ModelHyperlinkNote.encodeTo(c)+" is still in the queue: ");
-                    qi.getCauseOfBlockage().print(listener); //this is still shown on the same line
-                    whyInQueue = why;
+                    // fix race condition and prevent NPE when resource gets out of the queue between getWhy() and causeOfBlockage()
+                    CauseOfBlockage cause = qi.getCauseOfBlockage();
+                    if (cause != null) {
+                        listener.getLogger().print("Configuration " + ModelHyperlinkNote.encodeTo(c)+" is still in the queue: ");
+                        cause.print(listener); //this is still shown on the same line
+                        whyInQueue = why;
+                    }
                 }
             }
-            
+
             Thread.sleep(1000);
         }
     }
