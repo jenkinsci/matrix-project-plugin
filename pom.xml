@@ -10,7 +10,7 @@
     <packaging>hpi</packaging>
     <name>Matrix Project Plugin</name>
     <description>Multi-configuration (matrix) project type.</description>
-    <url>https://wiki.jenkins-ci.org/display/JENKINS/Matrix+Project+Plugin</url>  
+    <url>https://wiki.jenkins-ci.org/display/JENKINS/Matrix+Project+Plugin</url>
     <properties>
       <findbugs-maven-plugin.version>3.0.1</findbugs-maven-plugin.version>
       <findbugs.failOnError>true</findbugs.failOnError>
@@ -127,13 +127,25 @@
                 <executions>
                   <execution>
                     <id>run-findbugs</id>
-                    <phase>verify</phase> 
+                    <phase>verify</phase>
                     <goals>
-                      <goal>check</goal> 
+                      <goal>check</goal>
                     </goals>
                   </execution>
                 </executions>
             </plugin>
         </plugins>
     </build>
+
+    <!-- Can be removed once moved to 2.6 parent pom -->
+    <distributionManagement>
+        <repository>
+            <id>maven.jenkins-ci.org</id>
+            <url>https://repo.jenkins-ci.org/releases/</url>
+        </repository>
+        <snapshotRepository>
+            <id>maven.jenkins-ci.org</id>
+            <url>https://repo.jenkins-ci.org/snapshots/</url>
+        </snapshotRepository>
+   </distributionManagement>
 </project>
