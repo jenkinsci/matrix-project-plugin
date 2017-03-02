@@ -285,7 +285,7 @@ public class MatrixConfiguration extends Project<MatrixConfiguration,MatrixRun> 
             LOGGER.log(Level.WARNING, "JENKINS-26582: ignoring apparent attempt to trigger {0} without its parent", getFullName());
             return null;
         }
-        MatrixBuild lb = a.parent;
+        MatrixBuild lb = a.resolve(getParent());
         if (lb == null) {
             // Could happen if the parent started but Jenkins was restarted while the children were still in the queue.
             // In this case we simply guess that the last build of the parent is what triggered this configuration.
@@ -497,17 +497,28 @@ public class MatrixConfiguration extends Project<MatrixConfiguration,MatrixRun> 
      *
      */
     public static class ParentBuildAction extends InvisibleAction implements QueueAction {
-        
+
+        private final Integer number;
         public transient MatrixBuild parent;
 
         public ParentBuildAction() {
             final Executor currentExecutor = Executor.currentExecutor();
-            this.parent = currentExecutor != null 
-                    ? (MatrixBuild)currentExecutor.getCurrentExecutable() : null;
+            if (currentExecutor != null) {
+                parent = (MatrixBuild) currentExecutor.getCurrentExecutable();
+                number = parent.getNumber();
+            } else {
+                number = null;
+            }
         }
-        
+
         public boolean shouldSchedule(List<Action> actions) {
             return true;
+        }
+
+        public MatrixBuild resolve(MatrixProject p) {
+            if (parent != null) return parent;
+            if (number != null) return p.getBuildByNumber(number);
+            return null;
         }
     }
 
