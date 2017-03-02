@@ -290,7 +290,6 @@ public class MatrixConfiguration extends Project<MatrixConfiguration,MatrixRun> 
             // Could happen if the parent started but Jenkins was restarted while the children were still in the queue.
             // In this case we simply guess that the last build of the parent is what triggered this configuration.
             // If MatrixProject.concurrentBuild, that is not necessarily correct.
-            // TODO would be better to have ParentBuildAction record a nontransient MatrixBuild.id so we could reliably recover it.
             lb = getParent().getLastBuild();
             if (lb == null) {
                 LOGGER.log(Level.WARNING, "cannot start a build of {0} since its parent has no builds at all", getFullName());
