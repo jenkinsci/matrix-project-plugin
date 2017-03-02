@@ -879,7 +879,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
             MatrixConfiguration item = getItem(token);
             if(item!=null)
             return item;
-        } catch (IllegalArgumentException _) {
+        } catch (IllegalArgumentException ex) {
             // failed to parse the token as Combination. Must be something else
         }
         return super.getDynamic(token,req,rsp);

@@ -302,7 +302,7 @@ public class MatrixBuild extends AbstractBuild<MatrixProject,MatrixBuild> {
                     throw HttpResponses.redirectViaContextPath(url);
                 }
             }
-        } catch (IllegalArgumentException _) {
+        } catch (IllegalArgumentException ex) {
             // failed to parse the token as Combination. Must be something else
         }
         return super.getDynamic(token,req,rsp);
