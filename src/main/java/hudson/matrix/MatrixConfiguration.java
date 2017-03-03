@@ -30,11 +30,11 @@ import hudson.model.Action;
 import hudson.model.Executor;
 import hudson.model.InvisibleAction;
 import hudson.model.Node;
+import hudson.model.Queue;
 import hudson.model.Queue.QueueAction;
 import hudson.model.TaskListener;
 import hudson.util.AlternativeUiTextProvider;
 import hudson.util.DescribableList;
-import hudson.model.AbstractBuild;
 import hudson.model.Cause;
 import hudson.model.CauseAction;
 import hudson.model.DependencyGraph;
@@ -65,13 +65,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.DoNotUse;
 import org.kohsuke.stapler.HttpResponse;
-import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
 /**
@@ -285,7 +286,7 @@ public class MatrixConfiguration extends Project<MatrixConfiguration,MatrixRun> 
             LOGGER.log(Level.WARNING, "JENKINS-26582: ignoring apparent attempt to trigger {0} without its parent", getFullName());
             return null;
         }
-        MatrixBuild lb = a.resolve(getParent());
+        MatrixBuild lb = a.getParentBuild(getParent());
         if (lb == null) {
             // Could happen if the parent started but Jenkins was restarted while the children were still in the queue.
             // In this case we simply guess that the last build of the parent is what triggered this configuration.
@@ -503,7 +504,10 @@ public class MatrixConfiguration extends Project<MatrixConfiguration,MatrixRun> 
         public ParentBuildAction() {
             final Executor currentExecutor = Executor.currentExecutor();
             if (currentExecutor != null) {
-                parent = (MatrixBuild) currentExecutor.getCurrentExecutable();
+                Queue.Executable executable = currentExecutor.getCurrentExecutable();
+                if (executable instanceof  MatrixBuild) {
+                    parent = (MatrixBuild) executable;
+                }
             }
             number = parent == null ? null : parent.getNumber();
         }
@@ -512,9 +516,14 @@ public class MatrixConfiguration extends Project<MatrixConfiguration,MatrixRun> 
             return true;
         }
 
-        public MatrixBuild resolve(MatrixProject p) {
+        /**
+         * Get the parent build object represented by this action for provided {@link MatrixProject}.
+         */
+        /*package*/ @CheckForNull MatrixBuild getParentBuild(@Nonnull MatrixProject p) {
             if (parent != null) return parent;
-            if (number != null) return p.getBuildByNumber(number);
+            if (number != null) {
+                return parent = p.getBuildByNumber(number);
+            }
             return null;
         }
     }
