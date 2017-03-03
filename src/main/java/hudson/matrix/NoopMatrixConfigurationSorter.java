@@ -31,7 +31,7 @@ public class NoopMatrixConfigurationSorter extends MatrixConfigurationSorter imp
     public static class DescriptorImpl extends MatrixConfigurationSorterDescriptor {
         @Override
         public String getDisplayName() {
-            return "Doesn't care";
+            return "Does not matter";
         }
     }
 }
