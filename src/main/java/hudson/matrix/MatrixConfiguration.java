@@ -504,10 +504,8 @@ public class MatrixConfiguration extends Project<MatrixConfiguration,MatrixRun> 
             final Executor currentExecutor = Executor.currentExecutor();
             if (currentExecutor != null) {
                 parent = (MatrixBuild) currentExecutor.getCurrentExecutable();
-                number = parent.getNumber();
-            } else {
-                number = null;
             }
+            number = parent == null ? null : parent.getNumber();
         }
 
         public boolean shouldSchedule(List<Action> actions) {
