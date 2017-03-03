@@ -302,7 +302,7 @@ public class MatrixBuild extends AbstractBuild<MatrixProject,MatrixBuild> {
                     throw HttpResponses.redirectViaContextPath(url);
                 }
             }
-        } catch (IllegalArgumentException _) {
+        } catch (IllegalArgumentException ex) {
             // failed to parse the token as Combination. Must be something else
         }
         return super.getDynamic(token,req,rsp);
@@ -385,7 +385,7 @@ public class MatrixBuild extends AbstractBuild<MatrixProject,MatrixBuild> {
                         for (MatrixConfiguration c : activeConfigurations) {
                             for (Item i : q.getItems(c)) {
                                 ParentBuildAction a = i.getAction(ParentBuildAction.class);
-                                if (a!=null && a.parent==getBuild()) {
+                                if (a!=null && a.getParentBuild(getProject())==getBuild()) {
                                     q.cancel(i);
                                     logger.println(Messages.MatrixBuild_Cancelled(ModelHyperlinkNote.encodeTo(c)));
                                 }
