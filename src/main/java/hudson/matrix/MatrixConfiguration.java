@@ -34,7 +34,6 @@ import hudson.model.Queue.QueueAction;
 import hudson.model.TaskListener;
 import hudson.util.AlternativeUiTextProvider;
 import hudson.util.DescribableList;
-import hudson.model.AbstractBuild;
 import hudson.model.Cause;
 import hudson.model.CauseAction;
 import hudson.model.DependencyGraph;
@@ -50,6 +49,7 @@ import hudson.model.Project;
 import hudson.model.SCMedItem;
 import hudson.model.Queue.NonBlockingTask;
 import hudson.model.Cause.LegacyCodeCause;
+import hudson.model.Run;
 import hudson.scm.SCM;
 import jenkins.scm.SCMCheckoutStrategy;
 import hudson.tasks.BuildWrapper;
@@ -285,12 +285,11 @@ public class MatrixConfiguration extends Project<MatrixConfiguration,MatrixRun> 
             LOGGER.log(Level.WARNING, "JENKINS-26582: ignoring apparent attempt to trigger {0} without its parent", getFullName());
             return null;
         }
-        MatrixBuild lb = a.parent;
+        MatrixBuild lb = a.getMatrixBuild();
         if (lb == null) {
             // Could happen if the parent started but Jenkins was restarted while the children were still in the queue.
             // In this case we simply guess that the last build of the parent is what triggered this configuration.
             // If MatrixProject.concurrentBuild, that is not necessarily correct.
-            // TODO would be better to have ParentBuildAction record a nontransient MatrixBuild.id so we could reliably recover it.
             lb = getParent().getLastBuild();
             if (lb == null) {
                 LOGGER.log(Level.WARNING, "cannot start a build of {0} since its parent has no builds at all", getFullName());
@@ -498,16 +497,33 @@ public class MatrixConfiguration extends Project<MatrixConfiguration,MatrixRun> 
      */
     public static class ParentBuildAction extends InvisibleAction implements QueueAction {
         
+        /**
+         * @deprecated use {@link #getMatrixBuild()} instead.  
+         */
+        @Deprecated
         public transient MatrixBuild parent;
+        private String parentId;
 
         public ParentBuildAction() {
             final Executor currentExecutor = Executor.currentExecutor();
             this.parent = currentExecutor != null 
                     ? (MatrixBuild)currentExecutor.getCurrentExecutable() : null;
+            parentId = parent != null ? parent.getExternalizableId() : null;
         }
         
         public boolean shouldSchedule(List<Action> actions) {
             return true;
+        }
+        
+        public MatrixBuild getMatrixBuild() {
+            if (parent == null && parentId != null) {
+                try {
+                    parent = (MatrixBuild)Run.fromExternalizableId(parentId);
+                } catch (Exception e) {
+                    parent = null;
+                }
+            }
+            return parent;
         }
     }
 
