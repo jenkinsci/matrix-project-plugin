@@ -520,6 +520,7 @@ public class MatrixConfiguration extends Project<MatrixConfiguration,MatrixRun> 
                 try {
                     parent = (MatrixBuild)Run.fromExternalizableId(parentId);
                 } catch (Exception e) {
+                    LOGGER.log(Level.WARNING, "Unable to retrieve parent reference", e);
                     parent = null;
                 }
             }
