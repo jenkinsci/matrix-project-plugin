@@ -23,15 +23,19 @@
  */
 package hudson.matrix;
 
-import com.google.inject.Inject;
 import hudson.matrix.MatrixConfiguration.ParentBuildAction;
-import jenkins.model.Jenkins;
+import hudson.model.Label;
+import hudson.model.Queue;
+import hudson.model.Result;
 import static org.junit.Assert.*;
 
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runners.model.Statement;
 import org.jvnet.hudson.test.RestartableJenkinsRule;
+
+import java.util.Arrays;
 
 /**
  *
@@ -39,7 +43,6 @@ import org.jvnet.hudson.test.RestartableJenkinsRule;
 public class RestartingRestoreTest {
 
     @Rule public RestartableJenkinsRule r = new RestartableJenkinsRule();
-    @Inject private Jenkins jenkins;
 
     private String matrixBuildId;
     
@@ -62,13 +65,53 @@ public class RestartingRestoreTest {
         });
         r.addStep(new Statement() {
             @Override public void evaluate() throws Throwable {
-                MatrixProject p = jenkins.getItemByFullName("project", MatrixProject.class);
+                MatrixProject p = r.j.jenkins.getItemByFullName("project", MatrixProject.class);
 
                 MatrixRun run = p.getItem("AXIS=VALUE").getLastBuild();
                 ParentBuildAction a = run.getAction(ParentBuildAction.class);
                 String restoredBuildId = a.getMatrixBuild().getExternalizableId();
                 
                 assertEquals(matrixBuildId, restoredBuildId);
+            }
+        });
+    }
+
+    @Test public void resumeAllCombinations() throws Exception {
+        r.addStep(new Statement() {
+            @Override public void evaluate() throws Throwable {
+                MatrixProject project = r.j.createMatrixProject("p");
+                project.setConcurrentBuild(true);
+                project.setAxes(new AxisList(new LabelAxis("labels", Arrays.asList("foo", "bar"))));
+
+                MatrixBuild parent = project.scheduleBuild2(0).waitForStart();
+                assertTrue(parent.isBuilding());
+                parent = project.scheduleBuild2(0).waitForStart();
+                assertTrue(parent.isBuilding());
+                Thread.sleep(1000);
+
+                assertThat(r.j.jenkins.getQueue().getItems(), Matchers.<Queue.Item>arrayWithSize(4));
+            }
+        });
+        r.addStep(new Statement() {
+            @Override public void evaluate() throws Throwable {
+                MatrixProject project = r.j.jenkins.getItemByFullName("p", MatrixProject.class);
+                MatrixBuild p1 = project.getBuildByNumber(1);
+                r.j.assertBuildStatus(Result.FAILURE, p1);
+                MatrixBuild p2 = project.getBuildByNumber(1);
+                r.j.assertBuildStatus(Result.FAILURE, p2);
+
+                r.j.createOnlineSlave(Label.get("foo"));
+                r.j.createOnlineSlave(Label.get("bar"));
+                r.j.waitUntilNoActivity();
+
+                assertThat(p1.getExactRuns(), Matchers.<MatrixRun>iterableWithSize(2));
+                for (MatrixRun run : p1.getExactRuns()) {
+                    r.j.assertBuildStatus(Result.SUCCESS, run);
+                }
+                assertThat(p2.getExactRuns(), Matchers.<MatrixRun>iterableWithSize(2));
+                for (MatrixRun run : p2.getExactRuns()) {
+                    r.j.assertBuildStatus(Result.SUCCESS, run);
+                }
             }
         });
     }
