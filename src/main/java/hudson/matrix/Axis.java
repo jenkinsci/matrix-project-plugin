@@ -231,9 +231,11 @@ public class Axis extends AbstractDescribableImpl<Axis> implements Comparable<Ax
         char delim = len>30 ? '\n' : ' ';
         // Build string connected with delimiter, quoting as needed
         StringBuilder buf = new StringBuilder(len+values.size()*3);
-        for (String value : values)
-            buf.append(delim).append(QuotedStringTokenizer.quote(value,""));
-        return buf.substring(1);
+        for (String value : values) {
+            if (buf.length() != 0) buf.append(delim);
+            buf.append(QuotedStringTokenizer.quote(value, ""));
+        }
+        return buf.toString();
     }
 
     /**

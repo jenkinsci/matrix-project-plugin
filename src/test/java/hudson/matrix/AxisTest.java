@@ -26,6 +26,7 @@ package hudson.matrix;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assert.assertEquals;
 
 import hudson.model.JDK;
 
@@ -106,6 +107,10 @@ public class AxisTest {
         MatrixBuild build = j.buildAndAssertSuccess(p);
         assertThat(build.getRuns(), new IsEmptyCollection<MatrixRun>());
         assertThat(p.getItems(), new IsEmptyCollection<MatrixConfiguration>());
+
+        for (Axis axis : p.getAxes()) {
+            assertEquals("", axis.getValueString());
+        }
     }
 
     private HtmlPage withName(String value, String axis) throws Exception {
