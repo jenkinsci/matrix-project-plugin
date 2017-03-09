@@ -23,6 +23,8 @@
  */
 package hudson.matrix;
 
+import com.github.olivergondza.dumpling.factory.JvmRuntimeFactory;
+import com.github.olivergondza.dumpling.model.jvm.JvmRuntime;
 import hudson.matrix.MatrixConfiguration.ParentBuildAction;
 import hudson.model.Label;
 import hudson.model.Queue;
@@ -45,11 +47,11 @@ public class RestartingRestoreTest {
     @Rule public RestartableJenkinsRule r = new RestartableJenkinsRule();
 
     private String matrixBuildId;
-    
+
     /**
      * Makes sure that the parent of a MatrixRun survives a restart.
      */
-    @Test public void persistenceOfParentInMatrixRun() {     
+    @Test public void persistenceOfParentInMatrixRun() {
         r.addStep(new Statement() {
             @Override public void evaluate() throws Throwable {
                 MatrixProject p = r.j.createMatrixProject("project");
@@ -70,48 +72,8 @@ public class RestartingRestoreTest {
                 MatrixRun run = p.getItem("AXIS=VALUE").getLastBuild();
                 ParentBuildAction a = run.getAction(ParentBuildAction.class);
                 String restoredBuildId = a.getMatrixBuild().getExternalizableId();
-                
+
                 assertEquals(matrixBuildId, restoredBuildId);
-            }
-        });
-    }
-
-    @Test public void resumeAllCombinations() throws Exception {
-        r.addStep(new Statement() {
-            @Override public void evaluate() throws Throwable {
-                MatrixProject project = r.j.createMatrixProject("p");
-                project.setConcurrentBuild(true);
-                project.setAxes(new AxisList(new LabelAxis("labels", Arrays.asList("foo", "bar"))));
-
-                MatrixBuild parent = project.scheduleBuild2(0).waitForStart();
-                assertTrue(parent.isBuilding());
-                parent = project.scheduleBuild2(0).waitForStart();
-                assertTrue(parent.isBuilding());
-                Thread.sleep(1000);
-
-                assertThat(r.j.jenkins.getQueue().getItems(), Matchers.<Queue.Item>arrayWithSize(4));
-            }
-        });
-        r.addStep(new Statement() {
-            @Override public void evaluate() throws Throwable {
-                MatrixProject project = r.j.jenkins.getItemByFullName("p", MatrixProject.class);
-                MatrixBuild p1 = project.getBuildByNumber(1);
-                r.j.assertBuildStatus(Result.FAILURE, p1);
-                MatrixBuild p2 = project.getBuildByNumber(1);
-                r.j.assertBuildStatus(Result.FAILURE, p2);
-
-                r.j.createOnlineSlave(Label.get("foo"));
-                r.j.createOnlineSlave(Label.get("bar"));
-                r.j.waitUntilNoActivity();
-
-                assertThat(p1.getExactRuns(), Matchers.<MatrixRun>iterableWithSize(2));
-                for (MatrixRun run : p1.getExactRuns()) {
-                    r.j.assertBuildStatus(Result.SUCCESS, run);
-                }
-                assertThat(p2.getExactRuns(), Matchers.<MatrixRun>iterableWithSize(2));
-                for (MatrixRun run : p2.getExactRuns()) {
-                    r.j.assertBuildStatus(Result.SUCCESS, run);
-                }
             }
         });
     }
