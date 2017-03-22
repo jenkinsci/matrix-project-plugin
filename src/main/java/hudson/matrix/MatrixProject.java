@@ -208,20 +208,18 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
 
     public MatrixProject(String name) {
         this(Jenkins.getInstance(), name);
+        buildLock = new ReentrantReadWriteLock();
     }
 
     public MatrixProject(ItemGroup parent, String name) {
         super(parent, name);
+        buildLock = new ReentrantReadWriteLock();
     }
 
     /**
      * Lock the project
      */
     public void buildLock(){
-        // create lock instance if not exist
-        if (buildLock == null) {
-            buildLock = new ReentrantReadWriteLock();
-        }
         buildLock.writeLock().lock();
     }
     /**
