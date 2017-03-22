@@ -65,13 +65,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.DoNotUse;
 import org.kohsuke.stapler.HttpResponse;
-import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
 /**
@@ -92,6 +93,13 @@ public class MatrixConfiguration extends Project<MatrixConfiguration,MatrixRun> 
      * Hash value of {@link #combination}. Cached for efficiency.
      */
     private transient String digestName;
+
+    /**
+     * Cached label expression.
+     *
+     * null in case it needs to be computed, empty for no restriction.
+     */
+    private transient @CheckForNull String label;
 
     public MatrixConfiguration(MatrixProject parent, Combination c) {
         super(parent,c.toString());
@@ -172,6 +180,7 @@ public class MatrixConfiguration extends Project<MatrixConfiguration,MatrixRun> 
     /*package*/ void setCombination(Combination c) {
         this.combination = c;
         this.digestName = c.digest().substring(0,8);
+        this.label = null;
     }
 
     /**
@@ -319,17 +328,28 @@ public class MatrixConfiguration extends Project<MatrixConfiguration,MatrixRun> 
 
     @Override
     public Label getAssignedLabel() {
-        // combine all the label axes by &&.
-    	String expr;
-        String exprSlave = Util.join(combination.values(getParent().getAxes().subList(LabelAxis.class)), "&&");
-        String exprLabel = Util.join(combination.values(getParent().getAxes().subList(LabelExpAxis.class)), "&&");
-        if(!exprSlave.equals("") && !exprLabel.equals("")){
-        	expr = exprSlave + "&&" + exprLabel;
-        } else{
-        	expr = (exprSlave.equals("")) ? exprLabel : exprSlave;
+        if (label == null) {
+            label = computeAssignedLabel();
         }
         final Jenkins jenkins = Jenkins.getInstance();
-        return jenkins != null ? jenkins.getLabel(Util.fixEmpty(expr)) : null;
+        return jenkins != null ? jenkins.getLabel(Util.fixEmpty(label)) : null;
+    }
+
+    private @Nonnull String computeAssignedLabel() {
+        // combine all the label axes by &&.
+        StringBuilder sb = new StringBuilder();
+        boolean written = false;
+        for (Axis axis : getParent().getAxes()) {
+            if (axis instanceof LabelAxis || axis instanceof LabelExpAxis) {
+                if (written) {
+                    sb.append("&&");
+                }
+                sb.append(combination.get(axis));
+                written = true;
+            }
+        }
+
+        return sb.toString();
     }
 
     @Override
