@@ -23,15 +23,17 @@
  */
 package hudson.matrix;
 
-import com.github.olivergondza.dumpling.factory.JvmRuntimeFactory;
-import com.github.olivergondza.dumpling.model.jvm.JvmRuntime;
 import hudson.matrix.MatrixConfiguration.ParentBuildAction;
+
+import static org.hamcrest.Matchers.anyOf;
+import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assert.*;
+
 import hudson.model.Label;
 import hudson.model.Queue;
 import hudson.model.Result;
-import static org.junit.Assert.*;
-
 import org.hamcrest.Matchers;
+import org.hamcrest.core.AnyOf;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runners.model.Statement;
@@ -39,9 +41,6 @@ import org.jvnet.hudson.test.RestartableJenkinsRule;
 
 import java.util.Arrays;
 
-/**
- *
- */
 public class RestartingRestoreTest {
 
     @Rule public RestartableJenkinsRule r = new RestartableJenkinsRule();
@@ -74,6 +73,48 @@ public class RestartingRestoreTest {
                 String restoredBuildId = a.getMatrixBuild().getExternalizableId();
 
                 assertEquals(matrixBuildId, restoredBuildId);
+            }
+        });
+    }
+
+    @Test public void resumeAllCombinations() throws Exception {
+        r.addStep(new Statement() {
+            @Override public void evaluate() throws Throwable {
+                MatrixProject project = r.j.createMatrixProject("p");
+                project.setConcurrentBuild(true);
+                project.setAxes(new AxisList(new LabelAxis("labels", Arrays.asList("foo", "bar"))));
+
+                MatrixBuild parent = project.scheduleBuild2(0).waitForStart();
+                assertTrue(parent.isBuilding());
+                parent = project.scheduleBuild2(0).waitForStart();
+                assertTrue(parent.isBuilding());
+                Thread.sleep(1000);
+
+                assertThat(r.j.jenkins.getQueue().getItems(), Matchers.<Queue.Item>arrayWithSize(4));
+            }
+        });
+        r.addStep(new Statement() {
+            @Override public void evaluate() throws Throwable {
+                Thread.sleep(10000); // If the jobs is loaded too soon, its builds are never loaded.
+                MatrixProject project = r.j.jenkins.getItemByFullName("p", MatrixProject.class);
+                AnyOf<Result> isFailedOrAborted = anyOf(equalTo(Result.ABORTED), equalTo(Result.FAILURE));
+                MatrixBuild p1 = project.getBuildByNumber(1);
+                assertThat(p1.getResult(), isFailedOrAborted);
+                MatrixBuild p2 = project.getBuildByNumber(1);
+                assertThat(p2.getResult(), isFailedOrAborted);
+
+                r.j.createOnlineSlave(Label.get("foo"));
+                r.j.createOnlineSlave(Label.get("bar"));
+                r.j.waitUntilNoActivity();
+
+                assertThat(p1.getExactRuns(), Matchers.<MatrixRun>iterableWithSize(2));
+                for (MatrixRun run : p1.getExactRuns()) {
+                    r.j.assertBuildStatus(Result.SUCCESS, run);
+                }
+                assertThat(p2.getExactRuns(), Matchers.<MatrixRun>iterableWithSize(2));
+                for (MatrixRun run : p2.getExactRuns()) {
+                    r.j.assertBuildStatus(Result.SUCCESS, run);
+                }
             }
         });
     }
