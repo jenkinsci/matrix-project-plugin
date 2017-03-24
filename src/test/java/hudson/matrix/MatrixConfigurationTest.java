@@ -25,7 +25,10 @@ package hudson.matrix;
 
 import static org.junit.Assert.*;
 
+import java.util.Arrays;
 import java.util.Collection;
+
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -68,5 +71,35 @@ public class MatrixConfigurationTest {
 
         HtmlPage page = wc.getPage(p.getItem("a=b"), "configure");
         assertEquals("Page should not exist", 404, page.getWebResponse().getStatusCode());
+    }
+
+    @Test
+    public void labelAxis() throws Exception {
+        LabelAxis label = new LabelAxis("label", Arrays.asList("a", "b"));
+        LabelExpAxis expr = new LabelExpAxis("expr", Arrays.asList("a||b", "a&&b"));
+
+        MatrixProject labelP = r.createMatrixProject();
+        labelP.setAxes(new AxisList(label));
+        MatrixProject exprP = r.createMatrixProject();
+        exprP.setAxes(new AxisList(expr));
+        MatrixProject combinedP = r.createMatrixProject();
+        combinedP.setAxes(new AxisList(expr, label));
+
+        Collection<MatrixConfiguration> lc = labelP.getItems();
+        assertThat(lc, Matchers.<MatrixConfiguration>iterableWithSize(2));
+        assertEquals("a", labelP.getItem("label=a").getAssignedLabel().toString());
+        assertEquals("b", labelP.getItem("label=b").getAssignedLabel().toString());
+
+        Collection<MatrixConfiguration> ec = exprP.getItems();
+        assertThat(ec, Matchers.<MatrixConfiguration>iterableWithSize(2));
+        assertEquals("a||b", exprP.getItem("expr=a||b").getAssignedLabel().toString());
+        assertEquals("a&&b", exprP.getItem("expr=a&&b").getAssignedLabel().toString());
+
+        Collection<MatrixConfiguration> cc = combinedP.getItems();
+        assertThat(cc, Matchers.<MatrixConfiguration>iterableWithSize(4));
+        assertEquals("a&&b&&a", combinedP.getItem("expr=a&&b,label=a").getAssignedLabel().toString());
+        assertEquals("a&&b&&b", combinedP.getItem("expr=a&&b,label=b").getAssignedLabel().toString());
+        assertEquals("a||b&&a", combinedP.getItem("expr=a||b,label=a").getAssignedLabel().toString());
+        assertEquals("a||b&&b", combinedP.getItem("expr=a||b,label=b").getAssignedLabel().toString());
     }
 }
