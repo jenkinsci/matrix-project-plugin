@@ -204,31 +204,20 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
     /**
      * Lock to prevent project changes on different build at the same time
      */
-    private ReadWriteLock buildLock;
+    private transient ReadWriteLock buildLock = new ReentrantReadWriteLock();
 
     public MatrixProject(String name) {
         this(Jenkins.getInstance(), name);
-        buildLock = new ReentrantReadWriteLock();
     }
 
     public MatrixProject(ItemGroup parent, String name) {
         super(parent, name);
+    }
+
+    protected Object readResolve() {
         buildLock = new ReentrantReadWriteLock();
+        return this;
     }
-
-    /**
-     * Lock the project
-     */
-    public void buildLock(){
-        buildLock.writeLock().lock();
-    }
-    /**
-     * Unlock the project
-     */
-    public void buildUnlock() {
-        buildLock.writeLock().unlock();
-    }
-
 
     @Override
     public String getPronoun() {
@@ -614,7 +603,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
      *      (think of it as reconfiguring a project right before a build.) And when that happens, this value is the
      *      build in progress. Otherwise this value is null (for example, when Jenkins is booting up.)
      */
-    /*package*/ Set<MatrixConfiguration> rebuildConfigurations(MatrixBuildExecution context) throws IOException {
+    private Set<MatrixConfiguration> rebuildConfigurations(MatrixBuildExecution context) throws IOException {
         {
             // backward compatibility check to see if there's any data in the old structure
             // if so, bring them to the newer structure.
@@ -681,6 +670,34 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
         this.activeConfigurations = active;
 
         return active;
+    }
+
+    /**
+     * Configuration for matrix build
+     */
+    public static class RunConfiguration {
+        public Set<MatrixConfiguration> config;
+        public AxisList axisList;
+    }
+
+    /**
+     * Rebuild project settings and return actual configuration and axis list
+     */
+    /*package*/ RunConfiguration getRunConfiguration(MatrixBuildExecution context) throws IOException {
+        RunConfiguration runConfig = new RunConfiguration();
+        try {
+            buildLock.writeLock().lock();
+
+            // give axes a chance to rebuild themselves
+            runConfig.config = rebuildConfigurations(context);
+
+            // deep copy the axes
+            runConfig.axisList = (AxisList) Jenkins.XSTREAM.fromXML(Jenkins.XSTREAM.toXML(axes));
+
+        } finally {
+            buildLock.writeLock().unlock();
+        }
+        return runConfig;
     }
 
     private boolean isDynamicFilter(final String filter) {

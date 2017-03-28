@@ -350,26 +350,15 @@ public class MatrixBuild extends AbstractBuild<MatrixProject,MatrixBuild> {
             MatrixProject p = getProject();
             PrintStream logger = listener.getLogger();
 
-            try {
-                // lock the project
-                p.buildLock();
+            // list up aggregators
+            listUpAggregators(p.getPublishers().values());
+            listUpAggregators(p.getProperties().values());
+            listUpAggregators(p.getBuildWrappers().values());
 
-                // give axes a chance to rebuild themselves
-                activeConfigurations = p.rebuildConfigurations(this);
-
-                // list up aggregators
-                listUpAggregators(p.getPublishers().values());
-                listUpAggregators(p.getProperties().values());
-                listUpAggregators(p.getBuildWrappers().values());
-
-                // deep copy the axes
-                axes = (AxisList) Jenkins.XSTREAM.fromXML(Jenkins.XSTREAM.toXML(p.getAxes()));
-
-            } finally {
-                // unlock the project
-                p.buildUnlock();
-            }
-
+            // rebuild project configuration
+            MatrixProject.RunConfiguration config = p.getRunConfiguration(this);
+            activeConfigurations = config.config;
+            axes = config.axisList;
 
             try {
                 return p.getExecutionStrategy().run(this);
