@@ -82,8 +82,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -204,7 +204,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
     /**
      * Lock to prevent project changes on different build at the same time
      */
-    private transient ReadWriteLock buildLock = new ReentrantReadWriteLock();
+    private transient Lock buildLock = new ReentrantLock();
 
     public MatrixProject(String name) {
         this(Jenkins.getInstance(), name);
@@ -215,7 +215,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
     }
 
     protected Object readResolve() {
-        buildLock = new ReentrantReadWriteLock();
+        buildLock = new ReentrantLock();
         return this;
     }
 
@@ -686,7 +686,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
     /*package*/ RunConfiguration getRunConfiguration(MatrixBuildExecution context) throws IOException {
         RunConfiguration runConfig = new RunConfiguration();
         try {
-            buildLock.writeLock().lock();
+            buildLock.lock();
 
             // give axes a chance to rebuild themselves
             runConfig.config = rebuildConfigurations(context);
@@ -695,7 +695,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
             runConfig.axisList = (AxisList) Jenkins.XSTREAM.fromXML(Jenkins.XSTREAM.toXML(axes));
 
         } finally {
-            buildLock.writeLock().unlock();
+            buildLock.unlock();
         }
         return runConfig;
     }
