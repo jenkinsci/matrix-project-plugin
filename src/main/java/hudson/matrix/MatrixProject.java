@@ -603,7 +603,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
      *      (think of it as reconfiguring a project right before a build.) And when that happens, this value is the
      *      build in progress. Otherwise this value is null (for example, when Jenkins is booting up.)
      */
-    private Set<MatrixConfiguration> rebuildConfigurations(MatrixBuildExecution context) throws IOException {
+    /*package*/ Set<MatrixConfiguration> rebuildConfigurations(MatrixBuildExecution context) throws IOException {
         {
             // backward compatibility check to see if there's any data in the old structure
             // if so, bring them to the newer structure.
@@ -675,7 +675,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
     /**
      * Configuration for matrix build
      */
-    public static class RunConfiguration {
+    /*package*/ static class RunConfiguration {
         public Set<MatrixConfiguration> config;
         public AxisList axisList;
     }
