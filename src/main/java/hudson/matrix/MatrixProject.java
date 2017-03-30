@@ -82,6 +82,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -199,12 +201,22 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
      */
     private String childCustomWorkspace;
 
+    /**
+     * Lock to prevent project changes on different build at the same time
+     */
+    private transient Lock buildLock = new ReentrantLock();
+
     public MatrixProject(String name) {
         this(Jenkins.getInstance(), name);
     }
 
     public MatrixProject(ItemGroup parent, String name) {
         super(parent, name);
+    }
+
+    protected Object readResolve() {
+        buildLock = new ReentrantLock();
+        return this;
     }
 
     @Override
@@ -658,6 +670,34 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
         this.activeConfigurations = active;
 
         return active;
+    }
+
+    /**
+     * Configuration for matrix build
+     */
+    /*package*/ static class RunConfiguration {
+        public Set<MatrixConfiguration> config;
+        public AxisList axisList;
+    }
+
+    /**
+     * Rebuild project settings and return actual configuration and axis list
+     */
+    /*package*/ RunConfiguration getRunConfiguration(MatrixBuildExecution context) throws IOException {
+        RunConfiguration runConfig = new RunConfiguration();
+        try {
+            buildLock.lock();
+
+            // give axes a chance to rebuild themselves
+            runConfig.config = rebuildConfigurations(context);
+
+            // deep copy the axes
+            runConfig.axisList = (AxisList) Jenkins.XSTREAM.fromXML(Jenkins.XSTREAM.toXML(axes));
+
+        } finally {
+            buildLock.unlock();
+        }
+        return runConfig;
     }
 
     private boolean isDynamicFilter(final String filter) {

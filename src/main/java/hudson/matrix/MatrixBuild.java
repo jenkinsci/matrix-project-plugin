@@ -350,15 +350,15 @@ public class MatrixBuild extends AbstractBuild<MatrixProject,MatrixBuild> {
             MatrixProject p = getProject();
             PrintStream logger = listener.getLogger();
 
-            // give axes a chance to rebuild themselves
-            activeConfigurations = p.rebuildConfigurations(this);
-
             // list up aggregators
             listUpAggregators(p.getPublishers().values());
             listUpAggregators(p.getProperties().values());
             listUpAggregators(p.getBuildWrappers().values());
 
-            axes = p.getAxes();
+            // rebuild project configuration
+            MatrixProject.RunConfiguration config = p.getRunConfiguration(this);
+            activeConfigurations = config.config;
+            axes = config.axisList;
 
             try {
                 return p.getExecutionStrategy().run(this);

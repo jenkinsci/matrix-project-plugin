@@ -28,11 +28,16 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertArrayEquals;
+
+import hudson.matrix.helper.DynamicTestAxis;
 
 import hudson.model.Item;
+import hudson.model.queue.QueueTaskFuture;
 import hudson.security.AuthorizationMatrixProperty;
 import hudson.security.ProjectMatrixAuthorizationStrategy;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 import org.acegisecurity.context.SecurityContextHolder;
@@ -44,6 +49,7 @@ import hudson.Functions;
 import java.io.IOException;
 import java.util.Set;
 
+import org.apache.commons.lang.reflect.FieldUtils;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.RejectedAccessException;
 import org.jenkinsci.plugins.scriptsecurity.scripts.ScriptApproval;
 import org.junit.Rule;
@@ -134,5 +140,33 @@ public class MatrixTest {
         assertEquals(signature, pendingSignatures.iterator().next().signature);
         scriptApproval.approveSignature(signature);
         assertEquals(Collections.emptySet(), scriptApproval.getPendingSignatures());
+    }
+
+
+    @Issue("JENKINS-34389")
+    @Test public void axisValuesChanged() throws Exception {
+        // create project with dynamic axis
+        MatrixProject project = j.createMatrixProject();
+        project.setAxes(new AxisList(
+                new DynamicTestAxis("axis")
+        ));
+        project.setConcurrentBuild(true);
+
+        // build project
+        QueueTaskFuture<MatrixBuild> matrixBuildQueue = project.scheduleBuild2(0);
+        matrixBuildQueue.waitForStart();
+
+        QueueTaskFuture<MatrixBuild> matrixBuildQueue2 = project.scheduleBuild2(0);
+
+        MatrixBuild build = matrixBuildQueue.get();
+        MatrixBuild build2 = matrixBuildQueue2.get();
+
+        // get axes from build
+        AxisList axes = (AxisList) FieldUtils.readField(build, "axes", true);
+        AxisList axes2 = (AxisList) FieldUtils.readField(build2, "axes", true);
+
+        // check if axes are valid
+        assertArrayEquals(axes.get(0).getValues().toArray(), Arrays.asList("1", "10").toArray());
+        assertArrayEquals(axes2.get(0).getValues().toArray(), Arrays.asList("2", "20").toArray());
     }
 }
