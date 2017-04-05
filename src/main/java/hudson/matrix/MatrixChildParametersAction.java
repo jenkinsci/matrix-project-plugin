@@ -25,6 +25,7 @@ package hudson.matrix;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.annotation.Nonnull;
@@ -50,7 +51,7 @@ import hudson.model.TaskListener;
 @Restricted(NoExternalUse.class)
 public class MatrixChildParametersAction extends ParametersAction implements MatrixChildAction {
 
-    private final List<ParameterValue> parameters;
+    private transient List<ParameterValue> parameters;
 
     MatrixChildParametersAction(List<ParameterValue> parameters) {
         this.parameters = parameters;
@@ -60,6 +61,17 @@ public class MatrixChildParametersAction extends ParametersAction implements Mat
     public List<ParameterValue> getParameters() {
         return parameters;
     }
+
+    public void onLoad(MatrixRun run){
+        ParametersAction action = run.getParentBuild().getAction(ParametersAction.class);
+        if(action!=null){
+            parameters = new ArrayList<ParameterValue>(action.getParameters());
+        }
+        else{
+            parameters = Collections.EMPTY_LIST;
+        }
+    }
+
 
     @Override
     public ParameterValue getParameter(String name) {

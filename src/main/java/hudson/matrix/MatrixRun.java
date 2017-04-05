@@ -26,6 +26,7 @@ package hudson.matrix;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.model.AbstractBuild;
+import hudson.model.Action;
 import hudson.model.Build;
 import hudson.model.Node;
 import hudson.slaves.WorkspaceList;
@@ -37,6 +38,7 @@ import org.kohsuke.stapler.StaplerRequest;
 import java.io.File;
 import java.io.IOException;
 import java.util.Calendar;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -123,6 +125,18 @@ public class MatrixRun extends Build<MatrixConfiguration,MatrixRun> {
                 r.put(e.getKey(), e.getValue());
         }
         return r;
+    }
+
+
+    @Override
+    protected void onLoad() {
+        super.onLoad();
+        Iterator<MatrixChildParametersAction> i = this.getActions(MatrixChildParametersAction.class).iterator();
+
+        while(i.hasNext()) {
+            MatrixChildParametersAction a = i.next();
+            a.onLoad(this);
+        }
     }
 
     /**
