@@ -131,11 +131,8 @@ public class MatrixRun extends Build<MatrixConfiguration,MatrixRun> {
     @Override
     protected void onLoad() {
         super.onLoad();
-        Iterator<MatrixChildParametersAction> i = this.getActions(MatrixChildParametersAction.class).iterator();
-
-        while(i.hasNext()) {
-            MatrixChildParametersAction a = i.next();
-            a.onLoad(this);
+        for (MatrixChildParametersAction action : this.getActions(MatrixChildParametersAction.class)){
+            action.onLoad(this);
         }
     }
 

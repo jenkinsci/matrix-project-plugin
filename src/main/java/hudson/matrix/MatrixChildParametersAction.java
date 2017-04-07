@@ -50,7 +50,7 @@ import hudson.model.TaskListener;
  */
 @Restricted(NoExternalUse.class)
 public class MatrixChildParametersAction extends ParametersAction implements MatrixChildAction {
-
+    
     private transient List<ParameterValue> parameters;
 
     MatrixChildParametersAction(List<ParameterValue> parameters) {
@@ -62,13 +62,14 @@ public class MatrixChildParametersAction extends ParametersAction implements Mat
         return parameters;
     }
 
+    //adding references to parameters from parent build - replacement of saving it persistently and loading as a different object.
     public void onLoad(MatrixRun run){
         ParametersAction action = run.getParentBuild().getAction(ParametersAction.class);
-        if(action!=null){
+        if (action != null){
             parameters = new ArrayList<ParameterValue>(action.getParameters());
         }
         else{
-            parameters = Collections.EMPTY_LIST;
+            parameters = Collections.emptyList();
         }
     }
 
