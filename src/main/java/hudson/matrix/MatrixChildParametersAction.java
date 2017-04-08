@@ -30,6 +30,7 @@ import java.util.List;
 
 import javax.annotation.Nonnull;
 
+import jenkins.model.RunAction2;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
@@ -49,8 +50,8 @@ import hudson.model.TaskListener;
  * The class itself is public to be visible to core so it can pick up the {@link MatrixChildParametersActionEnvironmentContributor}.
  */
 @Restricted(NoExternalUse.class)
-public class MatrixChildParametersAction extends ParametersAction implements MatrixChildAction {
-    
+public class MatrixChildParametersAction extends ParametersAction implements MatrixChildAction, RunAction2 {
+
     private transient List<ParameterValue> parameters;
 
     MatrixChildParametersAction(List<ParameterValue> parameters) {
@@ -62,17 +63,25 @@ public class MatrixChildParametersAction extends ParametersAction implements Mat
         return parameters;
     }
 
-    //adding references to parameters from parent build - replacement of saving it persistently and loading as a different object.
-    public void onLoad(MatrixRun run){
-        ParametersAction action = run.getParentBuild().getAction(ParametersAction.class);
-        if (action != null){
-            parameters = new ArrayList<ParameterValue>(action.getParameters());
-        }
-        else{
-            parameters = Collections.emptyList();
+    @Override
+    public void onAttached(Run<?, ?> r) {}
+
+    @Override
+    public void onLoad(Run<?, ?> r) {
+        if (r instanceof MatrixRun) {
+            MatrixRun run = (MatrixRun) r;
+            ParametersAction action = run.getParentBuild().getAction(ParametersAction.class);
+            if (action != null) {
+                // Parameters of build and its runs are guaranteed to be the same. Even the actual instances are the same
+                // until it gets (re)loaded from disk when the parameters reside in memory 1+N times squandering memory.
+                // This populates now volatile collection with parameters shared between the build and all its runs bringing
+                // the space complexity back to 1.
+                parameters = action.getParameters();
+            } else {
+                parameters = Collections.emptyList();
+            }
         }
     }
-
 
     @Override
     public ParameterValue getParameter(String name) {
