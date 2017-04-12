@@ -94,7 +94,7 @@ class FilterScript {
         for (final ParameterValue pv: parameters) {
             if (pv == null) continue;
             final String name = pv.getName();
-            final String value = pv.createVariableResolver(null).resolve(name);
+            final String value = pv.createVariableResolver(execution.getBuild()).resolve(name);
             binding.setVariable(name, value);
         }
 
