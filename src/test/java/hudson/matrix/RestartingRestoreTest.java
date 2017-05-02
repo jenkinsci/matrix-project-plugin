@@ -97,10 +97,11 @@ public class RestartingRestoreTest {
             @Override public void evaluate() throws Throwable {
                 Thread.sleep(10000); // If the jobs is loaded too soon, its builds are never loaded.
                 MatrixProject project = r.j.jenkins.getItemByFullName("p", MatrixProject.class);
-                AnyOf<Result> isFailedOrAborted = anyOf(equalTo(Result.ABORTED), equalTo(Result.FAILURE));
                 MatrixBuild p1 = project.getBuildByNumber(1);
+                MatrixBuild p2 = project.getBuildByNumber(2);
+
+                AnyOf<Result> isFailedOrAborted = anyOf(equalTo(Result.ABORTED), equalTo(Result.FAILURE));
                 assertThat(p1.getResult(), isFailedOrAborted);
-                MatrixBuild p2 = project.getBuildByNumber(1);
                 assertThat(p2.getResult(), isFailedOrAborted);
 
                 r.j.createOnlineSlave(Label.get("foo"));
