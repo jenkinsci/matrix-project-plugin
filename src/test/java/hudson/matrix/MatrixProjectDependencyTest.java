@@ -28,7 +28,7 @@ public class MatrixProjectDependencyTest {
 	 * the DependencyGraph 
 	 */
 	@Test public void matrixProjectTriggersDependencies() throws Exception {
-		MatrixProject matrixProject = j.createMatrixProject();
+		MatrixProject matrixProject = j.createProject(MatrixProject.class);
 		FreeStyleProject freestyleProject = j.createFreeStyleProject();
 		matrixProject.getPublishersList().add(new BuildTrigger(freestyleProject.getName(), false));
 		

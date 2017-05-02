@@ -40,6 +40,7 @@ import hudson.tasks.BatchFile;
 
 import org.jvnet.hudson.test.Email;
 import org.jvnet.hudson.test.SingleFileSCM;
+import org.jvnet.hudson.test.ToolInstallations;
 import org.jvnet.hudson.test.UnstableBuilder;
 import org.jvnet.hudson.test.recipes.LocalData;
 
@@ -96,7 +97,6 @@ import static org.junit.Assert.*;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.RandomlyFails;
 import org.junit.rules.TemporaryFolder;
 
 /**
@@ -115,7 +115,7 @@ public class MatrixProjectTest {
     @Test
     public void testBuildAxisInAnt() throws Exception {
         MatrixProject p = createMatrixProject();
-        Ant.AntInstallation ant = j.configureDefaultAnt();
+        Ant.AntInstallation ant = ToolInstallations.configureDefaultAnt(tmp);
         p.getBuildersList().add(new Ant("-Dprop=${db} test", ant.getName(), null, null, null));
 
         // we need a dummy build script that echos back our property
@@ -137,7 +137,7 @@ public class MatrixProjectTest {
     @Test
     public void testBuildAxisInMaven() throws Exception {
         MatrixProject p = createMatrixProject();
-        Maven.MavenInstallation maven = j.configureDefaultMaven();
+        Maven.MavenInstallation maven = ToolInstallations.configureDefaultMaven();
         p.getBuildersList().add(new Maven("-Dprop=${db} validate", maven.getName()));
 
         // we need a dummy build script that echos back our property
@@ -184,7 +184,7 @@ public class MatrixProjectTest {
     }
 
     protected MatrixProject createMatrixProject() throws IOException {
-        MatrixProject p = j.createMatrixProject();
+        MatrixProject p = j.createProject(MatrixProject.class);
 
         // set up 2x2 matrix
         AxisList axes = new AxisList();
@@ -214,7 +214,7 @@ public class MatrixProjectTest {
 
     void assertRectangleTable(MatrixProject p) throws Exception {
         HtmlPage html = j.createWebClient().getPage(p);
-        HtmlTable table = html.selectSingleNode("id('matrix')/table");
+        HtmlTable table = html.getFirstByXPath("id('matrix')/table");
 
         // remember cells that are extended from rows above.
         Map<Integer,Integer> rowSpans = new HashMap<Integer,Integer>();
@@ -552,7 +552,7 @@ public class MatrixProjectTest {
 
     @Issue("JENKINS-17337")
     @Test public void reload() throws Exception {
-        MatrixProject p = j.createMatrixProject();
+        MatrixProject p = j.createProject(MatrixProject.class);
         AxisList axes = new AxisList();
         axes.add(new TextAxis("p", "only"));
         p.setAxes(axes);
@@ -578,7 +578,7 @@ public class MatrixProjectTest {
     public void dontRunOnExclusiveSlave() throws Exception {
         List<MatrixProject> projects = new ArrayList<MatrixProject>();
         for (int i = 0; i <= 10; i++) {
-            MatrixProject m = j.createMatrixProject();
+            MatrixProject m = j.createProject(MatrixProject.class);
             AxisList axes = new AxisList();
             axes.add(new TextAxis("p", "only"));
             m.setAxes(axes);

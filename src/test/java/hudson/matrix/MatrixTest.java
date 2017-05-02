@@ -80,7 +80,7 @@ public class MatrixTest {
     @Issue("JENKINS-9293")
     @Test public void configurationACL() throws Exception {
         j.jenkins.setAuthorizationStrategy(new ProjectMatrixAuthorizationStrategy());
-        MatrixProject mp = j.createMatrixProject();
+        MatrixProject mp = j.createProject(MatrixProject.class);
         mp.setAxes(new AxisList(new Axis("foo", "a", "b")));
         MatrixConfiguration mc = mp.getItem("foo=a");
         assertNotNull(mc);
@@ -93,7 +93,7 @@ public class MatrixTest {
     }
 
     @Test public void api() throws Exception {
-        MatrixProject project = j.createMatrixProject();
+        MatrixProject project = j.createProject(MatrixProject.class);
         project.setAxes(new AxisList(
                 new Axis("FOO", "abc", "def"),
                 new Axis("BAR", "uvw", "xyz")));
@@ -103,7 +103,7 @@ public class MatrixTest {
 
     @Issue("JENKINS-27162")
     @Test public void completedLogging() throws Exception {
-        MatrixProject project = j.createMatrixProject();
+        MatrixProject project = j.createProject(MatrixProject.class);
         project.setAxes(new AxisList(
                 new Axis("axis", "a", "b")
         ));
@@ -118,7 +118,7 @@ public class MatrixTest {
 
     @Issue("SECURITY-125")
     @Test public void combinationFilterSecurity() throws Exception {
-        MatrixProject project = j.createMatrixProject();
+        MatrixProject project = j.createProject(MatrixProject.class);
         String combinationFilter = "jenkins.model.Jenkins.getInstance().setSystemMessage('hacked')";
         expectRejection(project, combinationFilter, "staticMethod jenkins.model.Jenkins getInstance");
         assertNull(j.jenkins.getSystemMessage());
@@ -146,7 +146,7 @@ public class MatrixTest {
     @Issue("JENKINS-34389")
     @Test public void axisValuesChanged() throws Exception {
         // create project with dynamic axis
-        MatrixProject project = j.createMatrixProject();
+        MatrixProject project = j.createProject(MatrixProject.class);
         project.setAxes(new AxisList(
                 new DynamicTestAxis("axis")
         ));

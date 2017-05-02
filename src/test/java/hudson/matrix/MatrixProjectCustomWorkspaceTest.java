@@ -42,7 +42,7 @@ public class MatrixProjectCustomWorkspaceTest {
 
     @Test
     public void customWorkspaceForParentAndChild() throws Exception {
-        MatrixProject p = j.createMatrixProject();
+        MatrixProject p = j.createProject(MatrixProject.class);
         File dir = tmp.newFolder();
         p.setCustomWorkspace(dir.getPath());
         p.setChildCustomWorkspace("xyz");
@@ -61,7 +61,7 @@ public class MatrixProjectCustomWorkspaceTest {
 
     @Test
     public void customWorkspaceForParent() throws Exception {
-        MatrixProject p = j.createMatrixProject();
+        MatrixProject p = j.createProject(MatrixProject.class);
         File dir = tmp.newFolder();
         p.setCustomWorkspace(dir.getPath());
         p.setChildCustomWorkspace(null);
@@ -87,7 +87,7 @@ public class MatrixProjectCustomWorkspaceTest {
 
     @Test
     public void customWorkspaceForChild() throws Exception {
-        MatrixProject p = j.createMatrixProject();
+        MatrixProject p = j.createProject(MatrixProject.class);
         p.setCustomWorkspace(null);
         p.setChildCustomWorkspace(".");
 
@@ -111,7 +111,7 @@ public class MatrixProjectCustomWorkspaceTest {
      */
     @Test
     public void noCustomWorkspace() throws Exception {
-        MatrixProject p = j.createMatrixProject();
+        MatrixProject p = j.createProject(MatrixProject.class);
         p.setCustomWorkspace(null);
         p.setChildCustomWorkspace(null);
 
