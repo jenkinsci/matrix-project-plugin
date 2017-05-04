@@ -142,7 +142,19 @@ public class AxisTest {
         HtmlForm form = page.getFormByName("config");
         j.getButtonByCaption(form, "Add axis").click();
         page.getAnchorByText(axis).click();
-        Thread.sleep(300);
+        waitForInput(form);
         return form;
+    }
+
+    private void waitForInput(HtmlForm form) throws InterruptedException {
+        int numberInputs = form.getInputsByName("_.name").size();
+        int tries = 30;
+        while (tries > 0 && numberInputs == 0) {
+            tries--;
+            Thread.sleep(10);
+            numberInputs = form.getInputsByName("_.name").size();
+        }
+
+        assertThat("Input should have appeared", numberInputs != 0);
     }
 }
