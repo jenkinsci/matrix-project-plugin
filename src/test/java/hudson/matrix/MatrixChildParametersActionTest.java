@@ -18,7 +18,7 @@ public class MatrixChildParametersActionTest {
 
     @Test
     public void testLoadingParameters() throws Exception {
-        MatrixProject project = j.createMatrixProject("project");
+        MatrixProject project = j.createProject(MatrixProject.class, "project");
         StringParameterDefinition def1 = new StringParameterDefinition("definition1", "value1", "description");
         StringParameterDefinition def2 = new StringParameterDefinition("definition2", "value2", "description");
         ParametersDefinitionProperty prop = new ParametersDefinitionProperty(def1,def2);

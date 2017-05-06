@@ -53,7 +53,7 @@ public class RestartingRestoreTest {
     @Test public void persistenceOfParentInMatrixRun() {
         r.addStep(new Statement() {
             @Override public void evaluate() throws Throwable {
-                MatrixProject p = r.j.createMatrixProject("project");
+                MatrixProject p = r.j.createProject(MatrixProject.class, "project");
                 p.setAxes(new AxisList(new TextAxis("AXIS", "VALUE")));
 
                 // Schedule and wait for build to finish
@@ -80,7 +80,7 @@ public class RestartingRestoreTest {
     @Test public void resumeAllCombinations() throws Exception {
         r.addStep(new Statement() {
             @Override public void evaluate() throws Throwable {
-                MatrixProject project = r.j.createMatrixProject("p");
+                MatrixProject project = r.j.createProject(MatrixProject.class, "p");
                 project.setConcurrentBuild(true);
                 project.setAxes(new AxisList(new LabelAxis("labels", Arrays.asList("foo", "bar"))));
 

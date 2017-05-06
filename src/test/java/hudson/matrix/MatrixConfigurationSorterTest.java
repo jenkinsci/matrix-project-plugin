@@ -19,7 +19,7 @@ public class MatrixConfigurationSorterTest {
     @Rule public JenkinsRule j = new JenkinsRule();
 
     @Test public void testConfigRoundtrip() throws Exception {
-        MatrixProject p = j.createMatrixProject();
+        MatrixProject p = j.createProject(MatrixProject.class);
         j.configRoundtrip((Item)p);
         j.assertEqualDataBoundBeans(new NoopMatrixConfigurationSorter(),strategy(p).getSorter());
 

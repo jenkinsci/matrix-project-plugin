@@ -39,7 +39,7 @@ public class LabelExpAxisTest {
     public void test() throws Exception {
         j.jenkins.setLabelString("aaaa bbbb");
 
-        MatrixProject project = j.createMatrixProject("project");
+        MatrixProject project = j.createProject(MatrixProject.class,"project");
         DescriptorImpl descriptor = new LabelExpAxis.DescriptorImpl();
 
         assertEquals(FormValidation.Kind.ERROR, descriptor.doCheckLabelExpr(project, "").kind);
