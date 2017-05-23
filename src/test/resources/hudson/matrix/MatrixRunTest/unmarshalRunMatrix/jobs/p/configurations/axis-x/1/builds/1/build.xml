@@ -4,9 +4,9 @@
     <hudson.model.CauseAction>
       <causes>
         <hudson.model.Cause_-UpstreamCause>
-          <upstreamProject>MatrixProject</upstreamProject>
-          <upstreamUrl>job/MatrixProject/</upstreamUrl>
-          <upstreamBuild>8</upstreamBuild>
+          <upstreamProject>p</upstreamProject>
+          <upstreamUrl>job/p/</upstreamUrl>
+          <upstreamBuild>1</upstreamBuild>
           <upstreamCauses>
             <hudson.model.Cause_-UserCause>
               <authenticationName>auser</authenticationName>
@@ -25,7 +25,7 @@
       </causes>
     </jenkins.model.InterruptedBuildAction>
   </actions>
-  <number>8</number>
+  <number>1</number>
   <result>ABORTED</result>
   <duration>3253844</duration>
   <charset>windows-1252</charset>
