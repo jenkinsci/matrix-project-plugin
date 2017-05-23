@@ -28,10 +28,12 @@ import hudson.model.Run;
 
 import java.io.InputStream;
 
+import hudson.util.VersionNumber;
 import jenkins.model.CauseOfInterruption;
 import jenkins.model.InterruptedBuildAction;
 import static org.junit.Assert.*;
 
+import jenkins.model.Jenkins;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -46,7 +48,7 @@ public class MatrixRunTest {
      */
     @Issue("JENKINS-10903")
     @Test public void unmarshalRunMatrix() {
-        InputStream is = MatrixRunTest.class.getResourceAsStream("runMatrix.xml");
+        InputStream is = getRunAsStream();
         MatrixRun result = (MatrixRun) Run.XSTREAM.fromXML(is);
         assertNotNull(result);
         assertNotNull(result.getPersistentActions());
@@ -57,6 +59,18 @@ public class MatrixRunTest {
         CauseOfInterruption.UserInterruption cause =
             (CauseOfInterruption.UserInterruption) action.getCauses().get(0);
         assertNotNull(cause);
+    }
+
+    private InputStream getRunAsStream() {
+        // In jenkins 1.653 the CauseAction was modified, see JENKINS-33467. So we do this to make possible to run
+        // mvn clean compile test-compile && mvn surefire:test -Djenkins.version=2.46.2 that is, we are able to run
+        // the tests against core versions different from the baseline.
+        // See JENKINS-44444
+        if (Jenkins.getVersion().isOlderThan(new VersionNumber("1.653"))) {
+            return MatrixProject.class.getResourceAsStream("runMatrix.xml");
+        } else {
+            return MatrixProject.class.getResourceAsStream("runMatrix_1653.xml");
+        }
     }
 
 }
