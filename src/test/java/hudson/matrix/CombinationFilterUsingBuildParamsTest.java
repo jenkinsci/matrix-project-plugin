@@ -23,6 +23,7 @@
  */
 package hudson.matrix;
 
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -72,7 +73,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
  * @author ogondza
  */
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({Jenkins.class, MatrixBuildListener.class, MatrixProject.class, AbstractItem.class, Whitelist.class})
+@PrepareForTest({MatrixBuildListener.class, MatrixProject.class, AbstractItem.class, Whitelist.class})
 public class CombinationFilterUsingBuildParamsTest {
 
     /**
@@ -110,7 +111,6 @@ public class CombinationFilterUsingBuildParamsTest {
     @Mock private MatrixRun run;
     @Mock private BuildListener listener;
 
-    @Mock private Jenkins jenkins;
     @Mock private ExtensionList<MatrixBuildListener> extensions;
 
     @Before
@@ -239,17 +239,16 @@ public class CombinationFilterUsingBuildParamsTest {
 
     private void usingDummyJenkins() {
 
-        PowerMockito.mockStatic(Jenkins.class);
-        when(Jenkins.getInstance()).thenReturn(jenkins);
-        when(jenkins.getNodes()).thenReturn(new ArrayList<Node>());
         PowerMockito.mockStatic(Whitelist.class);
         when(Whitelist.all()).thenReturn(new BlanketWhitelist());
     }
 
-    private void usingNoListeners() {
+    private void usingNoListeners() throws Exception {
 
         when(extensions.iterator()).thenReturn(new ArrayList<MatrixBuildListener>().iterator());
-        when(MatrixBuildListener.all()).thenReturn(extensions);
+        PowerMockito.mockStatic(MatrixBuildListener.class);
+        PowerMockito.when(MatrixBuildListener.all()).thenReturn(extensions);
+        PowerMockito.when(MatrixBuildListener.buildConfiguration(any(MatrixBuild.class), any(MatrixConfiguration.class))).thenCallRealMethod();
     }
 
     private void withReleaseAxis(final List<String> releases) {
