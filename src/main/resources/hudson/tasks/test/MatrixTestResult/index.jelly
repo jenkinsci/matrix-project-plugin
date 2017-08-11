@@ -23,7 +23,7 @@ THE SOFTWARE.
 -->
 
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt" xmlns:local="local" xmlns:test="/lib/test">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:test="/lib/test">
   <l:layout title="Test">
     <st:include page="sidepanel.jelly" it="${it.owner}"/>
     <l:main-panel>
@@ -33,10 +33,10 @@ THE SOFTWARE.
       <table class="pane sortable bigtable">
         <tr>
           <td class="pane-header">Configuration Name</td>
-          <td class="pane-header" style="width:4em">Duration</td>
-          <td class="pane-header" style="width:4em">All</td>
-          <td class="pane-header" style="width:4em">Failed</td>
-          <td class="pane-header" style="width:4em">Skipped</td>
+          <td class="pane-header" style="width:4em;text-align:right">Duration</td>
+          <td class="pane-header" style="width:4em;text-align:right">All</td>
+          <td class="pane-header" style="width:4em;text-align:right">Failed</td>
+          <td class="pane-header" style="width:4em;text-align:right">Skipped</td>
         </tr>
 
         <j:forEach var="report" items="${it.childReports}">
