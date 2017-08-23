@@ -23,12 +23,12 @@
         </license>
     </licenses>
     <developers>
-    		<developer>
-    			<id>olivergondza</id>
-		    <name>Oliver Gondza</name>
-		</developer>
-	</developers>
-	<scm>
+        <developer>
+            <id>olivergondza</id>
+            <name>Oliver Gondza</name>
+        </developer>
+    </developers>
+    <scm>
         <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
         <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
         <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
