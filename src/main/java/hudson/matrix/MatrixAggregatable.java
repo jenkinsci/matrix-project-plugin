@@ -23,6 +23,7 @@
  */
 package hudson.matrix;
 
+import hudson.Extension;
 import hudson.model.JobProperty;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.Publisher;
@@ -33,7 +34,7 @@ import hudson.model.BuildListener;
 /**
  * {@link Publisher}, {@link JobProperty}, {@link BuildWrapper} can optionally implement this interface
  * to perform result aggregation across {@link MatrixRun}.
- *
+ * <p>You may also register singleton instances of this as {@link Extension}s.
  * <p>
  * This is useful for example to aggregate all the test results
  * in {@link MatrixRun} into a single table/graph.
