@@ -25,6 +25,7 @@
 package hudson.matrix;
 
 import hudson.AbortException;
+import hudson.ExtensionList;
 import hudson.Functions;
 import hudson.Util;
 import hudson.console.ModelHyperlinkNote;
@@ -354,6 +355,7 @@ public class MatrixBuild extends AbstractBuild<MatrixProject,MatrixBuild> {
             listUpAggregators(p.getPublishers().values());
             listUpAggregators(p.getProperties().values());
             listUpAggregators(p.getBuildWrappers().values());
+            listUpAggregators(ExtensionList.lookup(MatrixAggregatable.class));
 
             // rebuild project configuration
             MatrixProject.RunConfiguration config = p.getRunConfiguration(this);
