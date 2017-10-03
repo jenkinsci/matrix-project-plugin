@@ -204,7 +204,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
     /**
      * Lock to prevent project changes on different build at the same time
      */
-    private transient Lock buildLock = new ReentrantLock();
+    private transient @Nonnull ReentrantLock buildLock = new ReentrantLock();
 
     public MatrixProject(String name) {
         this(Jenkins.getInstance(), name);
@@ -676,8 +676,8 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
      * Configuration for matrix build
      */
     /*package*/ static class RunConfiguration {
-        public Set<MatrixConfiguration> config;
-        public AxisList axisList;
+        Set<MatrixConfiguration> config;
+        AxisList axisList;
     }
 
     /**
@@ -685,15 +685,13 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
      */
     /*package*/ RunConfiguration getRunConfiguration(MatrixBuildExecution context) throws IOException {
         RunConfiguration runConfig = new RunConfiguration();
+        buildLock.lock();
         try {
-            buildLock.lock();
-
             // give axes a chance to rebuild themselves
             runConfig.config = rebuildConfigurations(context);
 
             // deep copy the axes
             runConfig.axisList = (AxisList) Jenkins.XSTREAM.fromXML(Jenkins.XSTREAM.toXML(axes));
-
         } finally {
             buildLock.unlock();
         }
