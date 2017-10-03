@@ -553,36 +553,4 @@ public class MatrixConfiguration extends Project<MatrixConfiguration,MatrixRun> 
     public void doConfigure(StaplerResponse rsp) throws IOException {
         rsp.sendError(HttpServletResponse.SC_NOT_FOUND);
     }
-
-    /**
-     * {@inheritDoc}
-     *
-    @Override
-    public boolean scheduleBuild() {
-        return scheduleBuild2(0) != null;
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-    @Override
-    public boolean scheduleBuild(Cause c) {
-        return scheduleBuild2(0, new CauseAction(c)) != null;
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-    @Override
-    public boolean scheduleBuild(int quietPeriod) {
-        return scheduleBuild2(quietPeriod) != null;
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-    @Override
-    public boolean scheduleBuild(int quietPeriod, Cause c) {
-        return scheduleBuild2(quietPeriod, new CauseAction(c)) != null;
-    }*/
 }
