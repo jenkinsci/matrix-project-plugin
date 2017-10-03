@@ -36,26 +36,9 @@ import hudson.XmlFile;
 import hudson.init.InitMilestone;
 import hudson.init.Initializer;
 import hudson.matrix.MatrixBuild.MatrixBuildExecution;
-import hudson.model.AbstractProject;
-import hudson.model.Action;
-import hudson.model.BuildableItemWithBuildWrappers;
-import hudson.model.DependencyGraph;
-import hudson.model.Descriptor;
+import hudson.model.*;
 import hudson.model.Descriptor.FormException;
-import hudson.model.Item;
-import hudson.model.ItemGroup;
-import hudson.model.Items;
-import hudson.model.JDK;
-import hudson.model.Job;
-import hudson.model.Label;
-import hudson.model.ParameterDefinition;
-import hudson.model.ParametersDefinitionProperty;
 import hudson.model.Queue.FlyweightTask;
-import hudson.model.Result;
-import hudson.model.Run;
-import hudson.model.SCMedItem;
-import hudson.model.Saveable;
-import hudson.model.TopLevelItem;
 import hudson.tasks.BuildStep;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrappers;
@@ -1114,4 +1097,35 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
         Run.XSTREAM.alias("matrix-run",MatrixRun.class);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+    @Override
+    public boolean scheduleBuild() {
+        return scheduleBuild2(0) != null;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+    @Override
+    public boolean scheduleBuild(Cause c) {
+        return scheduleBuild2(0, new CauseAction(c)) != null;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+    @Override
+    public boolean scheduleBuild(int quietPeriod) {
+        return scheduleBuild2(quietPeriod) != null;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+    @Override
+    public boolean scheduleBuild(int quietPeriod, Cause c) {
+        return scheduleBuild2(quietPeriod, new CauseAction(c)) != null;
+    }*/
 }
