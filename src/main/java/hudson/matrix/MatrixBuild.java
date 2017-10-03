@@ -109,7 +109,7 @@ public class MatrixBuild extends AbstractBuild<MatrixProject,MatrixBuild> {
     /**
      * Deletes the build and all matrix configurations in this build when the button is pressed.
      *
-     * @deprecated since TODO, kept not to break REST clients.
+     * @deprecated kept not to break REST clients.
      */
     @RequirePOST
     @Deprecated
@@ -303,7 +303,7 @@ public class MatrixBuild extends AbstractBuild<MatrixProject,MatrixBuild> {
                     throw HttpResponses.redirectViaContextPath(url);
                 }
             }
-        } catch (IllegalArgumentException _) {
+        } catch (IllegalArgumentException ignored) {
             // failed to parse the token as Combination. Must be something else
         }
         return super.getDynamic(token,req,rsp);
