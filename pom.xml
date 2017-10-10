@@ -74,6 +74,7 @@
                     <groupId>org.hamcrest</groupId>
                     <artifactId>hamcrest-core</artifactId>
                 </exclusion>
+                <!-- prevents upper bounds conflict between org.mockito:mockito-core:1.9.5 and org.powermock:powermock-module-junit4:1.6.1 (lib versions, 1.0 and 2.1) -->
                 <exclusion>
                     <groupId>org.objenesis</groupId>
                     <artifactId>objenesis</artifactId>
@@ -115,6 +116,7 @@
           <version>3.0.0</version>
           <scope>provided</scope>
         </dependency>
+        <!-- Fix test error due to fail to transform class AbstractProject when using javassist-3.18.1-GA -->
         <dependency>
             <groupId>org.javassist</groupId>
             <artifactId>javassist</artifactId>
