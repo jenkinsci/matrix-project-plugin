@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>2.29</version>
+        <version>2.36</version>
         <relativePath />
     </parent>
     <artifactId>matrix-project</artifactId>
@@ -74,6 +74,11 @@
                     <groupId>org.hamcrest</groupId>
                     <artifactId>hamcrest-core</artifactId>
                 </exclusion>
+                <!-- prevents upper bounds conflict between org.mockito:mockito-core:1.9.5 and org.powermock:powermock-module-junit4:1.6.1 (lib versions, 1.0 and 2.1) -->
+                <exclusion>
+                    <groupId>org.objenesis</groupId>
+                    <artifactId>objenesis</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -110,6 +115,13 @@
           <artifactId>annotations</artifactId>
           <version>3.0.0</version>
           <scope>provided</scope>
+        </dependency>
+        <!-- Fix test error due to fail to transform class AbstractProject when using javassist-3.18.1-GA -->
+        <dependency>
+            <groupId>org.javassist</groupId>
+            <artifactId>javassist</artifactId>
+            <version>3.19.0-GA</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
     <build>
