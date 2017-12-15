@@ -30,6 +30,8 @@ import hudson.model.Build;
 import hudson.model.Node;
 import hudson.slaves.WorkspaceList;
 import hudson.slaves.WorkspaceList.Lease;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.Ancestor;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
@@ -126,14 +128,19 @@ public class MatrixRun extends Build<MatrixConfiguration,MatrixRun> {
     }
 
     /**
-     * If the parent {@link MatrixBuild} is kept, keep this record too.
-     */
-    @Override
-    public String getWhyKeepLog() {
+     * Simple extension to {@link #getWhyKeepLog()} required in order to have a warning
+     * which does not prevent the actual deletion.
+     * If parent build displays warning on delete, display it for run too.
+     * @return message displayed deleting run
+     **/
+    @Restricted(NoExternalUse.class)
+    public String getDeleteMessage() {
         MatrixBuild pb = getParentBuild();
-        if(pb!=null && pb.getWhyKeepLog()!=null)
-            return Messages.MatrixRun_KeptBecauseOfParent(pb);
-        return super.getWhyKeepLog();
+        String message = getWhyKeepLog();
+        if(pb != null) {
+            message = pb.getDeleteMessage();
+        }
+        return message;
     }
 
     @Override

@@ -581,8 +581,6 @@ public class MatrixProjectTest {
         assertEquals(3, p.getBuilds().size());
         assertEquals(2, c.getBuilds().size());
 
-        //j.interactiveBreak();
-
         // UI delete
         JenkinsRule.WebClient wc = j.createWebClient();
         HtmlPage deletePage = wc.getPage(uiDelete).getAnchorByText("Delete Build").click();
@@ -590,7 +588,6 @@ public class MatrixProjectTest {
         assertThat(deletePage.getWebResponse().getContentAsString(), containsString("Warning: #3 depends on this."));
 
         j.submit(deletePage.getForms().get(1));
-        //deletePage.getForms().get(1).getInputByValue("Yes").click();
         assertEquals(2, p.getBuilds().size());
 
         // Code delete
@@ -613,6 +610,12 @@ public class MatrixProjectTest {
         assertEquals(3, p.getBuilds().size());
         assertEquals(2, c.getBuilds().size());
 
+        assertNull("build #1 should not be locked", p.getBuildByNumber(2).getWhyKeepLog());
+        assertNotNull("build #1 should have delete message", p.getBuildByNumber(2).getDeleteMessage());
+
+        assertNull("configuration run #1 should not be locked", c.getBuildByNumber(2).getWhyKeepLog());
+        assertNotNull("configuration run #1 should have delete message", c.getBuildByNumber(2).getDeleteMessage());
+
         // UI delete
         JenkinsRule.WebClient wc = j.createWebClient();
         HtmlPage deletePage = wc.getPage(uiDelete).getAnchorByText("Delete Build").click();
@@ -620,12 +623,11 @@ public class MatrixProjectTest {
         assertThat(deletePage.getWebResponse().getContentAsString(), containsString("Warning: #3 depends on this."));
 
         j.submit(deletePage.getForms().get(1));
-        //deletePage.getForms().get(1).getInputByValue("Yes").click();
-        assertEquals(2, p.getBuilds().size());
+        assertEquals(1, c.getBuilds().size());
 
         // Code delete
         codeDelete.delete();
-        assertEquals(1, p.getBuilds().size());
+        assertEquals(0, c.getBuilds().size());
     }
 
     @Test @Issue("JENKINS-13554")

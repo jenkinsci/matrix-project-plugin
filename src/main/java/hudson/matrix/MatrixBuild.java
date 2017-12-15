@@ -42,6 +42,8 @@ import hudson.tasks.junit.JUnitResultArchiver;
 import hudson.tasks.test.TestResultAggregator;
 import hudson.util.HttpResponses;
 import jenkins.model.Jenkins;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
@@ -253,12 +255,19 @@ public class MatrixBuild extends AbstractBuild<MatrixProject,MatrixBuild> {
         return r;
     }
 
-    @Override
-    public String getWhyKeepLog() {
+    /**
+     * Simple extension to {@link #getWhyKeepLog()} required in order to have a warning
+     * which does not prevent the actual deletion.
+     * @return message displayed deleting build
+     */
+    @Restricted(NoExternalUse.class)
+    public String getDeleteMessage() {
         MatrixBuild b = getNextBuild();
-        if (isLinkedBy(b))
-            return Messages.MatrixBuild_depends_on_this(b.getDisplayName());
-        return super.getWhyKeepLog();
+        String message = getWhyKeepLog();
+        if (isLinkedBy(b)) {
+            message = Messages.MatrixBuild_depends_on_this(b.getDisplayName());
+        }
+        return message;
     }
 
     /** 
