@@ -23,6 +23,7 @@
  */
 package hudson.matrix;
 
+import com.gargoylesoftware.htmlunit.Page;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import hudson.cli.CLICommandInvoker;
 import hudson.cli.DeleteBuildsCommand;
@@ -93,6 +94,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import jenkins.model.Jenkins;
+
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.*;
 
 import org.junit.Rule;
@@ -568,34 +571,61 @@ public class MatrixProjectTest {
     @Test @Issue("JENKINS-13554")
     public void deletedLockedParentBuild() throws Exception {
         MatrixProject p = j.jenkins.createProject(MatrixProject.class, "project");
-        p.setAxes(new AxisList(new TextAxis("AXIS", "VALUE")));
-        MatrixBuild build = p.scheduleBuild2(0).get();
-        MatrixConfiguration c = p.getItem("AXIS=VALUE");
+        p.setAxes(new AxisList(new TextAxis("AXIS", "1", "2")));
+        MatrixBuild codeDelete = p.scheduleBuild2(0).get();
+        MatrixBuild uiDelete = p.scheduleBuild2(0).get();
+        p.scheduleBuild2(0).get();
+        MatrixConfiguration c = p.getItem("AXIS=1");
+        c.getLastBuild().delete(); // Punch a hole to matrix locking older builds
 
-        build.keepLog();
+        assertEquals(3, p.getBuilds().size());
+        assertEquals(2, c.getBuilds().size());
 
-        build.delete();
+        //j.interactiveBreak();
 
-        assertEquals("parent build is deleted", 0, p.getBuilds().size());
-        assertEquals("child build is deleted", 0, c.getBuilds().size());
+        // UI delete
+        JenkinsRule.WebClient wc = j.createWebClient();
+        HtmlPage deletePage = wc.getPage(uiDelete).getAnchorByText("Delete Build").click();
+
+        assertThat(deletePage.getWebResponse().getContentAsString(), containsString("Warning: #3 depends on this."));
+
+        j.submit(deletePage.getForms().get(1));
+        //deletePage.getForms().get(1).getInputByValue("Yes").click();
+        assertEquals(2, p.getBuilds().size());
+
+        // Code delete
+        codeDelete.delete();
+        assertEquals(1, p.getBuilds().size());
     }
 
     @Test @Issue("JENKINS-13554")
-    public void deletedParentBuildWithLockedChildren() throws Exception {
+    public void deletedLockedChildrenBuild() throws Exception {
         MatrixProject p = j.jenkins.createProject(MatrixProject.class, "project");
-        p.setAxes(new AxisList(new TextAxis("AXIS", "VALUE")));
-        MatrixBuild build = p.scheduleBuild2(0).get();
+        p.setAxes(new AxisList(new TextAxis("AXIS", "1", "2")));
         p.scheduleBuild2(0).get();
+        p.scheduleBuild2(0).get();
+        p.scheduleBuild2(0).get();
+        MatrixConfiguration c = p.getItem("AXIS=1");
+        c.getLastBuild().delete(); // Punch a hole to matrix locking older builds
+        MatrixRun uiDelete = c.getBuildByNumber(2);
+        MatrixRun codeDelete = c.getBuildByNumber(1);
 
-        MatrixConfiguration c = p.getItem("AXIS=VALUE");
+        assertEquals(3, p.getBuilds().size());
+        assertEquals(2, c.getBuilds().size());
 
-        c.getBuildByNumber(2).delete(); // delete newest run
-        assertNotNull(c.getBuildByNumber(1).getWhyKeepLog());
+        // UI delete
+        JenkinsRule.WebClient wc = j.createWebClient();
+        HtmlPage deletePage = wc.getPage(uiDelete).getAnchorByText("Delete Build").click();
 
-        build.delete();
+        assertThat(deletePage.getWebResponse().getContentAsString(), containsString("Warning: #3 depends on this."));
 
-        assertEquals("last parent build should be kept", 1, p.getBuilds().size());
-        assertEquals("child builds are deleted", 0, c.getBuilds().size());
+        j.submit(deletePage.getForms().get(1));
+        //deletePage.getForms().get(1).getInputByValue("Yes").click();
+        assertEquals(2, p.getBuilds().size());
+
+        // Code delete
+        codeDelete.delete();
+        assertEquals(1, p.getBuilds().size());
     }
 
     @Test @Issue("JENKINS-13554")
