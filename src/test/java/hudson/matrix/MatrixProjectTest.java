@@ -587,7 +587,7 @@ public class MatrixProjectTest {
 
         assertThat(deletePage.getWebResponse().getContentAsString(), containsString("Warning: #3 depends on this."));
 
-        j.submit(deletePage.getForms().get(1));
+        j.submit(deletePage.getForms().get(deletePage.getForms().size() - 1));
         assertEquals(2, p.getBuilds().size());
 
         // Code delete
@@ -622,7 +622,7 @@ public class MatrixProjectTest {
 
         assertThat(deletePage.getWebResponse().getContentAsString(), containsString("Warning: #3 depends on this."));
 
-        j.submit(deletePage.getForms().get(1));
+        j.submit(deletePage.getForms().get(deletePage.getForms().size() - 1));
         assertEquals(1, c.getBuilds().size());
 
         // Code delete
