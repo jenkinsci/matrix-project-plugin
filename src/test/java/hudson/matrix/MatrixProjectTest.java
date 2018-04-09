@@ -23,11 +23,9 @@
  */
 package hudson.matrix;
 
-import com.gargoylesoftware.htmlunit.Page;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import hudson.cli.CLICommandInvoker;
 import hudson.cli.DeleteBuildsCommand;
-import hudson.model.Action;
 import hudson.model.Cause;
 import hudson.model.Result;
 import hudson.slaves.DumbSlave;
@@ -97,6 +95,7 @@ import jenkins.model.Jenkins;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeFalse;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -419,6 +418,8 @@ public class MatrixProjectTest {
     @Issue("JENKINS-34758")
     @Test
     public void testParametersAsEnvOnChildren() throws Exception {
+        assumeFalse(Functions.isWindows());
+
         MatrixProject p = createMatrixProject();
         p.setAxes(new AxisList(new TextAxis("foo","1")));
         p.addProperty(new ParametersDefinitionProperty(
@@ -469,8 +470,18 @@ public class MatrixProjectTest {
         // get one going
         f1.waitForStart();
         QueueTaskFuture<MatrixBuild> f2 = p.scheduleBuild2(0);
-        j.assertBuildStatusSuccess(f1.get());
-        j.assertBuildStatusSuccess(f2.get());
+        MatrixBuild b1 = f1.get();
+        for (MatrixRun matrixRun : b1.getExactRuns()) {
+            // Test children first as failure of a parent does not say much
+            j.assertBuildStatusSuccess(matrixRun);
+        }
+        j.assertBuildStatusSuccess(b1);
+        MatrixBuild b2 = f2.get();
+        for (MatrixRun matrixRun : b2.getExactRuns()) {
+            // Ditto
+            j.assertBuildStatusSuccess(matrixRun);
+        }
+        j.assertBuildStatusSuccess(b2);
 
         assertEquals(4, dirs.size());
     }

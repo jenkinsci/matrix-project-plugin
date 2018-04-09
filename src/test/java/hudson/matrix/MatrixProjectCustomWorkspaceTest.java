@@ -37,6 +37,8 @@ import jenkins.model.Jenkins;
  */
 public class MatrixProjectCustomWorkspaceTest {
 
+    private static final String S = File.separator;
+
     @Rule public JenkinsRule j = new JenkinsRule();
     @Rule public TemporaryFolder tmp = new TemporaryFolder();
 
@@ -183,7 +185,7 @@ public class MatrixProjectCustomWorkspaceTest {
         p.scheduleBuild2(0).get();
         MatrixRun build = p.getItem("AXIS=VALUE").getLastBuild();
 
-        assertThat(build.getWorkspace().getRemote(), containsString("/workspace/defaultName/AXIS/VALUE"));
+        assertThat(build.getWorkspace().getRemote(), containsString(S + "workspace" + S + "defaultName" + S + "AXIS" + S + "VALUE"));
     }
 
     @Test
@@ -196,14 +198,14 @@ public class MatrixProjectCustomWorkspaceTest {
         p.scheduleBuild2(0).get();
         MatrixRun build = p.getItem("AXIS=VALUE").getLastBuild();
 
-        assertThat(build.getWorkspace().getRemote(), containsString("/workspace/shortName/" + build.getParent().getDigestName()));
+        assertThat(build.getWorkspace().getRemote(), containsString(S + "workspace" + S + "shortName" + S + build.getParent().getDigestName()));
 
         p.setChildCustomWorkspace("${COMBINATION}"); // Override global value
 
         p.scheduleBuild2(0).get();
         build = p.getItem("AXIS=VALUE").getLastBuild();
 
-        assertThat(build.getWorkspace().getRemote(), containsString("/workspace/shortName/AXIS/VALUE"));
+        assertThat(build.getWorkspace().getRemote(), containsString(S + "workspace" + S + "shortName" + S + "AXIS" + S + "VALUE"));
     }
 
     @Test
@@ -214,13 +216,13 @@ public class MatrixProjectCustomWorkspaceTest {
         p.scheduleBuild2(0).get();
         MatrixRun build = p.getItem("AXIS=VALUE").getLastBuild();
 
-        assertThat(build.getWorkspace().getRemote(), containsString("/workspace/shortName/AXIS/VALUE"));
+        assertThat(build.getWorkspace().getRemote(), containsString(S + "workspace" + S + "shortName"  + S +  "AXIS"  + S +  "VALUE"));
 
         p.setChildCustomWorkspace("${SHORT_COMBINATION}");
 
         p.scheduleBuild2(0).get();
         build = p.getItem("AXIS=VALUE").getLastBuild();
 
-        assertThat(build.getWorkspace().getRemote(), containsString("/workspace/shortName/" + build.getParent().getDigestName()));
+        assertThat(build.getWorkspace().getRemote(), containsString(S + "workspace" + S + "shortName" + S + build.getParent().getDigestName()));
     }
 }
