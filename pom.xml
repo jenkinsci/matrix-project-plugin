@@ -15,6 +15,7 @@
     <properties>
       <jenkins.version>1.609</jenkins.version>
       <java.level>6</java.level>
+      <hpi-plugin.version>2.2</hpi-plugin.version> <!-- https://github.com/jenkinsci/maven-hpi-plugin/pull/63 -->
     </properties>
     <licenses>
         <license>
@@ -48,15 +49,21 @@
     </pluginRepositories>
     <dependencies>
         <dependency>
+            <groupId>org.jenkins-ci.plugins</groupId>
+            <artifactId>junit</artifactId>
+            <version>1.20</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jenkins-ci.plugins</groupId>
+            <artifactId>script-security</artifactId>
+            <version>1.13</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.jenkins-ci.main</groupId>
             <artifactId>jenkins-test-harness-tools</artifactId>
             <version>2.0</version>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jenkins-ci.plugins</groupId>
-            <artifactId>junit</artifactId>
-            <version>1.20</version>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
@@ -111,11 +118,6 @@
                     <artifactId>mockito-all</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.jenkins-ci.plugins</groupId>
-            <artifactId>script-security</artifactId>
-            <version>1.13</version>
         </dependency>
         <dependency>
           <groupId>com.google.code.findbugs</groupId>
