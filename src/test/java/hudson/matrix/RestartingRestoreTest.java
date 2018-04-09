@@ -24,14 +24,11 @@
 package hudson.matrix;
 
 import hudson.matrix.MatrixConfiguration.ParentBuildAction;
-
-import static org.hamcrest.Matchers.anyOf;
-import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.*;
-
 import hudson.model.Label;
+import hudson.model.ParametersDefinitionProperty;
 import hudson.model.Queue;
 import hudson.model.Result;
+import hudson.model.StringParameterDefinition;
 import org.hamcrest.Matchers;
 import org.hamcrest.core.AnyOf;
 import org.junit.Rule;
@@ -40,6 +37,12 @@ import org.junit.runners.model.Statement;
 import org.jvnet.hudson.test.RestartableJenkinsRule;
 
 import java.util.Arrays;
+
+import static org.hamcrest.Matchers.anyOf;
+import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 public class RestartingRestoreTest {
 
@@ -65,7 +68,7 @@ public class RestartingRestoreTest {
             }
         });
         r.addStep(new Statement() {
-            @Override public void evaluate() throws Throwable {
+            @Override public void evaluate() {
                 MatrixProject p = r.j.jenkins.getItemByFullName("project", MatrixProject.class);
 
                 MatrixRun run = p.getItem("AXIS=VALUE").getLastBuild();
@@ -77,13 +80,33 @@ public class RestartingRestoreTest {
         });
     }
 
-    @Test public void resumeAllCombinations() throws Exception {
+    @Test public void resumeAllCombinations() {
         r.addStep(new Statement() {
             @Override public void evaluate() throws Throwable {
                 MatrixProject project = r.j.createProject(MatrixProject.class, "p");
                 project.setConcurrentBuild(true);
                 project.setAxes(new AxisList(new LabelAxis("labels", Arrays.asList("foo", "bar"))));
+            }
+        });
+        resumeBuildAfterRestart();
+    }
 
+    @Test public void resumeAllCombinationsWithParameters() {
+        r.addStep(new Statement() {
+            @Override public void evaluate() throws Throwable {
+                MatrixProject project = r.j.createProject(MatrixProject.class, "p");
+                project.setConcurrentBuild(true);
+                project.setAxes(new AxisList(new LabelAxis("labels", Arrays.asList("foo", "bar"))));
+                project.addProperty(new ParametersDefinitionProperty(new StringParameterDefinition("foo", "bar")));
+            }
+        });
+        resumeBuildAfterRestart();
+    }
+
+    private void resumeBuildAfterRestart() {
+        r.addStep(new Statement() {
+            @Override public void evaluate() throws Throwable {
+                MatrixProject project = r.j.jenkins.getItemByFullName("p", MatrixProject.class);
                 MatrixBuild parent = project.scheduleBuild2(0).waitForStart();
                 assertTrue(parent.isBuilding());
                 parent = project.scheduleBuild2(0).waitForStart();

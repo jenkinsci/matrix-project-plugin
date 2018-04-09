@@ -23,7 +23,6 @@
  */
 package hudson.matrix;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -52,14 +51,20 @@ import hudson.model.TaskListener;
 @Restricted(NoExternalUse.class)
 public class MatrixChildParametersAction extends ParametersAction implements MatrixChildAction, RunAction2 {
 
-    private transient List<ParameterValue> parameters;
+    private transient @Nonnull List<ParameterValue> parameters;
 
-    MatrixChildParametersAction(List<ParameterValue> parameters) {
+    MatrixChildParametersAction(@Nonnull List<ParameterValue> parameters) {
         this.parameters = parameters;
     }
 
+    private Object readResolve() {
+        // The field might never get initialized in case #onLoad() gets never called. The same applies to supper#parameters
+        // we can not change here. Let's create new instance here its parameters will be populated on best effort in #onLoad().
+        return new MatrixChildParametersAction(Collections.<ParameterValue>emptyList());
+    }
+
     @Override
-    public List<ParameterValue> getParameters() {
+    public @Nonnull List<ParameterValue> getParameters() {
         return parameters;
     }
 
@@ -70,15 +75,16 @@ public class MatrixChildParametersAction extends ParametersAction implements Mat
     public void onLoad(Run<?, ?> r) {
         if (r instanceof MatrixRun) {
             MatrixRun run = (MatrixRun) r;
-            ParametersAction action = run.getParentBuild().getAction(ParametersAction.class);
+            MatrixBuild parentBuild = run.getParentBuild();
+            if (parentBuild == null) return;
+
+            ParametersAction action = parentBuild.getAction(ParametersAction.class);
             if (action != null) {
                 // Parameters of build and its runs are guaranteed to be the same. Even the actual instances are the same
                 // until it gets (re)loaded from disk when the parameters reside in memory 1+N times squandering memory.
                 // This populates now volatile collection with parameters shared between the build and all its runs bringing
                 // the space complexity back to 1.
                 parameters = action.getParameters();
-            } else {
-                parameters = Collections.emptyList();
             }
         }
     }
@@ -105,8 +111,7 @@ public class MatrixChildParametersAction extends ParametersAction implements Mat
     public static final class MatrixChildParametersActionEnvironmentContributor extends EnvironmentContributor {
 
         @Override
-        public void buildEnvironmentFor(@Nonnull Run r, @Nonnull EnvVars envs, @Nonnull TaskListener listener)
-                throws IOException, InterruptedException {
+        public void buildEnvironmentFor(@Nonnull Run r, @Nonnull EnvVars envs, @Nonnull TaskListener listener) {
             if (r instanceof MatrixRun) {
                 MatrixChildParametersAction childParameters = r.getAction(MatrixChildParametersAction.class);
                 if (childParameters != null) {
