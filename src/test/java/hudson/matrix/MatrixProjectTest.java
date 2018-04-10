@@ -58,6 +58,7 @@ import hudson.model.BuildListener;
 import hudson.util.OneShotEvent;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -457,7 +458,7 @@ public class MatrixProjectTest {
                 dirs.add(build.getWorkspace().getRemote());
                 FilePath marker = build.getWorkspace().child("file");
                 String name = build.getFullDisplayName();
-                marker.write(name, "UTF-8");
+                marker.write(name, Charset.defaultCharset().name());
                 latch.countDown();
                 latch.await();
                 assertEquals(name,marker.readToString());
