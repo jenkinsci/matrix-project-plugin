@@ -29,9 +29,9 @@ import org.jenkinsci.plugins.scriptsecurity.scripts.ScriptApproval;
  * @author Kohsuke Kawaguchi
  */
 class FilterScript {
-    private final Script script;
+    private final String script;
 
-    FilterScript(Script script) {
+    FilterScript(String script) {
         this.script = script;
     }
 
@@ -40,9 +40,9 @@ class FilterScript {
      *      Variables the script will see.
      */
     private boolean evaluate(Binding context) {
-        script.setBinding(context);
         try {
-            return TRUE.equals(GroovySandbox.run(script, Whitelist.all()));
+            GroovyShell shell = new GroovyShell(GroovySandbox.createSecureClassLoader(FilterScript.class.getClassLoader()), context, GroovySandbox.createSecureCompilerConfiguration());
+            return TRUE.equals(GroovySandbox.run(shell, script, Whitelist.all()));
         } catch (RejectedAccessException x) {
             throw ScriptApproval.get().accessRejected(x, ApprovalContext.create());
         }
@@ -112,9 +112,7 @@ class FilterScript {
         if (Util.fixEmptyAndTrim(expression)==null)
             return defaultScript;
 
-        GroovyShell shell = new GroovyShell(GroovySandbox.createSecureClassLoader(FilterScript.class.getClassLoader()), new Binding(), GroovySandbox.createSecureCompilerConfiguration());
-
-        return new FilterScript(shell.parse(expression));
+        return new FilterScript(expression);
     }
 
     /**

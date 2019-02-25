@@ -23,9 +23,13 @@
  */
 package hudson.matrix;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.HashMap;
+import org.hamcrest.Matchers;
+import static org.junit.Assert.assertThat;
 import org.jvnet.hudson.test.HudsonTestCase;
+import org.jvnet.hudson.test.Issue;
 
 /**
  * @author Kohsuke Kawaguchi
@@ -53,6 +57,23 @@ public class CombinationTest extends HudsonTestCase {
         assertTrue(eval(c,"(a=='something').implies(b=='other')"));
         assertTrue(eval(c,"index%2==0")^eval(d,"index%2==0"));
         assertTrue(eval(c,"index%2==1")^eval(d,"index%2==1"));
+    }
+
+    @Issue("SECURITY-1339")
+    public void testSandboxConstructors() {
+        Combination c = new Combination(Collections.<String, String>emptyMap());
+        try {
+            eval(c, "class DoNotRunConstructor {\n" +
+            "  static void main(String[] args) {}\n" +
+            "  DoNotRunConstructor() {\n" +
+            "    assert jenkins.model.Jenkins.instance.createProject(hudson.model.FreeStyleProject, 'should-not-exist')\n" +
+            "  }\n" +
+            "}\n");
+            fail("Exception should have been thrown");
+        } catch (Exception e) {
+            assertNull(jenkins.getItem("should-not-exist"));
+            assertThat(e.getMessage(), Matchers.containsString("staticMethod jenkins.model.Jenkins getInstance"));
+        }
     }
 
     private boolean eval(Combination c, String exp) {
