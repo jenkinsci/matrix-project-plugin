@@ -26,11 +26,15 @@ package hudson.matrix;
 import hudson.Extension;
 import hudson.Functions;
 import hudson.Util;
+import hudson.model.Node;
 import jenkins.model.Jenkins;
 import hudson.model.labels.LabelAtom;
+
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * {@link Axis} that selects label expressions.
@@ -75,11 +79,26 @@ public class LabelAxis extends Axis {
         }
 
         public String buildLabelCheckBox(LabelAtom la, LabelAxis instance) {
+            String desc = "";
+            Set<Node> nodes = la.getNodes();
+            if (la.isSelfLabel()) { // if true this is Individual nodes
+                for (Node node : nodes) {// maybe only one?
+                    desc = node.getNodeDescription();
+                }
+            } else {  // false this is Labels
+                if(la.getDescription() != null){
+                    desc += la.getDescription()+": ";
+                }
+                for (Node node : nodes) {
+                    desc += node.getDisplayName() + ", ";
+                }
+                desc = StringUtils.strip(desc, ", ");
+            }
             return jsstr("<input type='checkbox' name='values' json='%s' ",
                         Functions.htmlAttributeEscape(la.getName()))
                    +String.format("+has(%s)+",jsstr(la.getName()))
                    +jsstr("/><label class='attach-previous'>%s (%s)</label>",
-                        la.getName(),la.getDescription());
+                        la.getName(),desc);
             // '${h.jsStringEscape('<input type="checkbox" name="values" json="'+h.htmlAttributeEscape(l.name)+'" ')}'+has("${h.jsStringEscape(l.name)}")+'${h.jsStringEscape('/><label class="attach-previous">'+l.name+' ('+l.description+')</label>')}'
         }
     }
