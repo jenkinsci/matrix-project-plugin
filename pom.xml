@@ -15,7 +15,7 @@
     <properties>
       <jenkins.version>2.60.3</jenkins.version>
       <java.level>8</java.level>
-      <cpotbugs.skip>true</cpotbugs.skip> <!-- Clean up redundant null check warnings and re-enable after SECURITY-1339 is released -->
+      <spotbugs.skip>true</spotbugs.skip> <!-- Clean up redundant null check warnings and re-enable after SECURITY-1339 is released -->
     </properties>
     <licenses>
         <license>

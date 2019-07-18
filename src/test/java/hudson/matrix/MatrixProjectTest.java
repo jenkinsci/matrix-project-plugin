@@ -140,6 +140,7 @@ public class MatrixProjectTest {
      */
     @Test
     public void testBuildAxisInMaven() throws Exception {
+        assumeFalse("TODO seems to have problems with variable substitution", Functions.isWindows());
         MatrixProject p = createMatrixProject();
         Maven.MavenInstallation maven = ToolInstallations.configureDefaultMaven();
         p.getBuildersList().add(new Maven("-Dprop=${db} validate", maven.getName()));
