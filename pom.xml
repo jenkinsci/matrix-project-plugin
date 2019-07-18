@@ -15,7 +15,7 @@
     <properties>
       <jenkins.version>2.60.3</jenkins.version>
       <java.level>8</java.level>
-      <findbugs.skip>true</findbugs.skip> <!-- Clean up redundant null check warnings and re-enable after SECURITY-1339 is released -->
+      <cpotbugs.skip>true</cpotbugs.skip> <!-- Clean up redundant null check warnings and re-enable after SECURITY-1339 is released -->
     </properties>
     <licenses>
         <license>
@@ -107,8 +107,7 @@
         </dependency>
         <dependency>
             <groupId>org.powermock</groupId>
-            <artifactId>powermock-api-mockito</artifactId>
-            <version>1.6.1</version> <!-- TODO why is this unmanaged? -->
+            <artifactId>powermock-api-mockito2</artifactId>
             <scope>test</scope>
             <exclusions>
                 <exclusion>
@@ -116,13 +115,6 @@
                     <artifactId>mockito-all</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
-        <!-- Fix test error due to fail to transform class AbstractProject when using javassist-3.18.1-GA -->
-        <dependency>
-            <groupId>org.javassist</groupId>
-            <artifactId>javassist</artifactId>
-            <version>3.24.0-GA</version> <!-- TODO should be managed -->
-            <scope>test</scope>
         </dependency>
     </dependencies>
     <build>
