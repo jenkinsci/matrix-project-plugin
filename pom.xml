@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>2.36</version>
+        <version>3.47</version>
         <relativePath />
     </parent>
     <artifactId>matrix-project</artifactId>
@@ -11,17 +11,16 @@
     <packaging>hpi</packaging>
     <name>Matrix Project Plugin</name>
     <description>Multi-configuration (matrix) project type.</description>
-    <url>https://wiki.jenkins-ci.org/display/JENKINS/Matrix+Project+Plugin</url>
+    <url>https://wiki.jenkins.io/display/JENKINS/Matrix+Project+Plugin</url>
     <properties>
-      <jenkins.version>2.7.3</jenkins.version>
-      <java.level>7</java.level>
-      <hpi-plugin.version>2.2</hpi-plugin.version> <!-- https://github.com/jenkinsci/maven-hpi-plugin/pull/63 -->
+      <jenkins.version>2.60.3</jenkins.version>
+      <java.level>8</java.level>
       <findbugs.skip>true</findbugs.skip> <!-- Clean up redundant null check warnings and re-enable after SECURITY-1339 is released -->
     </properties>
     <licenses>
         <license>
             <name>MIT License</name>
-            <url>http://opensource.org/licenses/MIT</url>
+            <url>https://opensource.org/licenses/MIT</url>
         </license>
     </licenses>
     <developers>
@@ -39,13 +38,13 @@
     <repositories>
         <repository>
             <id>repo.jenkins-ci.org</id>
-            <url>http://repo.jenkins-ci.org/public/</url>
+            <url>https://repo.jenkins-ci.org/public/</url>
         </repository>
     </repositories>
     <pluginRepositories>
         <pluginRepository>
             <id>repo.jenkins-ci.org</id>
-            <url>http://repo.jenkins-ci.org/public/</url>
+            <url>https://repo.jenkins-ci.org/public/</url>
         </pluginRepository>
     </pluginRepositories>
     <dependencies>
@@ -82,7 +81,6 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>1.9.5</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>
@@ -99,7 +97,6 @@
         <dependency>
             <groupId>org.powermock</groupId>
             <artifactId>powermock-module-junit4</artifactId>
-            <version>1.6.1</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>
@@ -111,7 +108,7 @@
         <dependency>
             <groupId>org.powermock</groupId>
             <artifactId>powermock-api-mockito</artifactId>
-            <version>1.6.1</version>
+            <version>1.6.1</version> <!-- TODO why is this unmanaged? -->
             <scope>test</scope>
             <exclusions>
                 <exclusion>
@@ -120,37 +117,16 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <dependency>
-          <groupId>com.google.code.findbugs</groupId>
-          <artifactId>annotations</artifactId>
-          <version>3.0.0</version>
-          <scope>provided</scope>
-        </dependency>
         <!-- Fix test error due to fail to transform class AbstractProject when using javassist-3.18.1-GA -->
         <dependency>
             <groupId>org.javassist</groupId>
             <artifactId>javassist</artifactId>
-            <version>3.19.0-GA</version>
+            <version>3.24.0-GA</version> <!-- TODO should be managed -->
             <scope>test</scope>
         </dependency>
     </dependencies>
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.codehaus.gmaven</groupId>
-                <artifactId>gmaven-plugin</artifactId>
-                <version>1.5-jenkins-3</version>
-                <configuration>
-                    <providerSelection>1.7</providerSelection>
-                </configuration>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.codehaus.gmaven.runtime</groupId>
-                        <artifactId>gmaven-runtime-1.7</artifactId>
-                        <version>1.3</version>
-                    </dependency>
-                </dependencies>
-            </plugin>
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
@@ -159,16 +135,4 @@
             </plugin>
         </plugins>
     </build>
-
-    <!-- Can be removed once moved to 2.6 parent pom -->
-    <distributionManagement>
-        <repository>
-            <id>maven.jenkins-ci.org</id>
-            <url>https://repo.jenkins-ci.org/releases/</url>
-        </repository>
-        <snapshotRepository>
-            <id>maven.jenkins-ci.org</id>
-            <url>https://repo.jenkins-ci.org/snapshots/</url>
-        </snapshotRepository>
-   </distributionManagement>
 </project>

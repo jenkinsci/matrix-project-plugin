@@ -92,6 +92,6 @@ public abstract class AxisDescriptor extends Descriptor<Axis> {
     }
 
     private FormValidation unsafeChar(char chr) {
-        return FormValidation.error(hudson.model.Messages.Hudson_UnsafeChar(chr));
+        return FormValidation.error("‘" + chr + "’ is an unsafe character");
     }
 }
