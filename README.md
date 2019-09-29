@@ -44,16 +44,10 @@ The immediate upshot is that if we have another release type to add (for example
 we can simply add the value to the releasetype user defined axis. The single change will add 
 configuration to build the debug-optimized release type against all three values of target.
 
-## Misc
-NOTE: you have to choose "Build multi-configuration project" when creating a project, it can not
+## Notes
+* You have to choose "Build multi-configuration project" when creating a project, it can not
 be changed later. If you skip this step, you will be very confused and not get very far.
-
-Some links explaining this feature a bit more:
-
-* [Experience with Hudson - Building matrix project](http://stackoverflow.com/questions/424295/experience-with-hudson-building-matrix-project)
-* [Automated Builds using Windows](https://web.archive.org/web/20120626011127/http://blog.smartbear.com/software-quality/bid/169935/post/11-06-30/running-testcomplete-tests-with-multi-configuration-jenkins-projects) 
-
-Newbie Note: Each configuration is akin to an individual job.  It has its own build history, logs,
+* Each configuration is akin to an individual job.  It has its own build history, logs,
  environment, etc. The history of your multi-config job only shows you a list of configurations executed.
  You have to drill into each configuration to see the history and console logs.
 
@@ -69,8 +63,7 @@ option, under Advanced Project Options. "Actual" or non-flyweight build executio
 the "Slaves" axis that can be added under the project's Configuration Matrix: individual nodes and/or labels 
 containing multiple nodes can be selected, as well as filtering axis combinations.
 
-You can also control which nodes can run flyweight tasks using the Exclude flyweight tasks plugin, or you 
-can pin the flyweight executor to a specific node using the Matrix Tie Parent Plugin 
+You can also control which nodes can run flyweight tasks,  using the [Exclude flyweight tasks plugin](https://plugins.jenkins.io/excludeMatrixParent), or you can pin the flyweight executor to a specific node (Please look under the "advanced" option of the matrix project configuration to tie the matrix parent to a label/slave). 
 
 ## Extensions
 Please refer to the [list of extensions points](https://jenkins.io/doc/developer/extensions/matrix-project/) of this plugin.
@@ -78,31 +71,38 @@ Please refer to the [list of extensions points](https://jenkins.io/doc/developer
 
 ## Matrix Axis Extensions
 
-[Dynamic Axis Plugin](https://plugins.jenkins.io/dynamic-axis)
+### [Dynamic Axis Plugin](https://plugins.jenkins.io/dynamic-axis)
 This plugin allows you to define a matrix build axis that is dynamically populated from an environment variable:
 
-[Selenium Axis Plugin](https://plugins.jenkins.io/selenium-axis)
+### [Selenium Axis Plugin](https://plugins.jenkins.io/selenium-axis)
 Creates an axis based on a local Selenium grid and also build against the SauceLabs Selenium capability at the same time.
 Both components rebuild before each build to take advantage of any new capabilities.
 
 The Selenium grid uses all capabilities available and the SauceLab one a random subset, which can be configured or disabled.
 
-[Yaml Axis Plugin](https://plugins.jenkins.io/yaml-axis)
+### [Yaml Axis Plugin](https://plugins.jenkins.io/yaml-axis)
 Matrix project axis creation and exclusion plugin using yaml file (It's similar to .travis.yml)
 
-[Sauce OnDemand Plugin](https://plugins.jenkins.io/sauce-ondemand)]
+### [Sauce OnDemand Plugin](https://plugins.jenkins.io/sauce-ondemand)]
 This plugin allows you to integrate Sauce Selenium Testing with Jenkins.
 
-[Matrix Groovy Execution Strategy Plugin]
+### [Matrix Groovy Execution Strategy Plugin](https://plugins.jenkins.io/matrix-groovy-execution-strategy)
 A plugin to decide the execution order and valid combinations of matrix projects.
 
-[Elastic Axis]
+### [Elastic Axis](https://plugins.jenkins.io/elastic-axis)
 This plugin is a power up for the multi configuration jobs allowing you to configure jobs to run on all slaves under a single label.Page:
 
-[NodeLabel Parameter Plugin]
+### [NodeLabel Parameter Plugin](https://plugins.jenkins.io/nodelabelparameter)
 This plugin adds two new parameter types to job configuration - node and label, this allows to dynamically select the node where a job/project should be executed.
 
 If your plug-in is not listed here, please file a PR for the README file.
+
+## External links
+
+* [Experience with Hudson - Building matrix project](http://stackoverflow.com/questions/424295/experience-with-hudson-building-matrix-project)
+* [Automated Builds using Windows](https://web.archive.org/web/20120626011127/http://blog.smartbear.com/software-quality/bid/169935/post/11-06-30/running-testcomplete-tests-with-multi-configuration-jenkins-projects) 
+
+
 
 ## Version history
 Please refer to the [changelog](/CHANGELOG.md)
