@@ -48,7 +48,6 @@ public class MatrixConfigurationTest {
             new Axis("a","active1","active2", "unactive"));
         project.setAxes(axes);
         project.setCombinationFilter("a!=\"unactive\"");
-        Collection<MatrixConfiguration> configurations = project.getActiveConfigurations();
         MatrixConfiguration toDelete = project.getItem("a=unactive");
         toDelete.delete();
         assertFalse("Configuration should be deleted for disk", toDelete.getRootDir().exists());

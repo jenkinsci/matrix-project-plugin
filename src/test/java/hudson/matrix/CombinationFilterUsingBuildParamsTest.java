@@ -36,7 +36,6 @@ import hudson.matrix.listeners.MatrixBuildListener;
 import hudson.model.AbstractItem;
 import hudson.model.BuildListener;
 import hudson.model.Cause;
-import hudson.model.Node;
 import hudson.model.ParametersAction;
 import hudson.model.Result;
 import hudson.model.Run;
@@ -50,8 +49,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-
-import jenkins.model.Jenkins;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.Whitelist;

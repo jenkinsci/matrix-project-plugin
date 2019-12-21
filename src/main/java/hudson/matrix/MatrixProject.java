@@ -82,7 +82,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -1067,6 +1066,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
             return "plugin/matrix-project/images/:size/matrixproject.png";
         }
 
+        @Override
         public MatrixProject newInstance(ItemGroup parent, String name) {
             return new MatrixProject(parent,name);
         }

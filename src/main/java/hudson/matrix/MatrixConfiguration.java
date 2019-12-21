@@ -46,12 +46,11 @@ import hudson.model.JDK;
 import hudson.model.Label;
 import hudson.model.ParametersAction;
 import hudson.model.Project;
-import hudson.model.SCMedItem;
 import hudson.model.Queue.NonBlockingTask;
-import hudson.model.Cause.LegacyCodeCause;
 import hudson.model.Run;
 import hudson.scm.SCM;
 import jenkins.scm.SCMCheckoutStrategy;
+import jenkins.triggers.SCMTriggerItem;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.Builder;
 import hudson.tasks.LogRotator;
@@ -80,7 +79,7 @@ import org.kohsuke.stapler.StaplerResponse;
  *
  * @author Kohsuke Kawaguchi
  */
-public class MatrixConfiguration extends Project<MatrixConfiguration,MatrixRun> implements SCMedItem, NonBlockingTask {
+public class MatrixConfiguration extends Project<MatrixConfiguration,MatrixRun> implements SCMTriggerItem, NonBlockingTask {
 
     private static final Logger LOGGER = Logger.getLogger(MatrixConfiguration.class.getName());
 
@@ -469,7 +468,7 @@ public class MatrixConfiguration extends Project<MatrixConfiguration,MatrixRun> 
 	 *    Use {@link #scheduleBuild(ParametersAction, Cause)}.  Since 1.283
 	 */
     public boolean scheduleBuild(ParametersAction parameters) {
-    	return scheduleBuild(parameters, new LegacyCodeCause());
+        return scheduleBuild(parameters, new Cause.UserIdCause());
     }
 
     /** Starts the build with the ParametersAction that are passed in.

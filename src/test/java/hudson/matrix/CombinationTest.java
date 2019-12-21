@@ -39,7 +39,6 @@ public class CombinationTest extends HudsonTestCase {
             new Axis("a","X","x"),
             new Axis("b","Y","y"));
 
-    @SuppressWarnings({"RedundantStringConstructorCall"})
     public void testEval() {
         Map<String,String> r = new HashMap<String, String>();
         r.put("a","X");
