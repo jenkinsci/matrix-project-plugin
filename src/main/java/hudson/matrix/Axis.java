@@ -246,7 +246,7 @@ public class Axis extends AbstractDescribableImpl<Axis> implements Comparable<Ax
         List<String> values = new ArrayList<String>();
         String prefix = name+'.';
 
-        Enumeration e = req.getParameterNames();
+        Enumeration<String> e = req.getParameterNames();
         while (e.hasMoreElements()) {
             String paramName = (String) e.nextElement();
             if(paramName.startsWith(prefix))

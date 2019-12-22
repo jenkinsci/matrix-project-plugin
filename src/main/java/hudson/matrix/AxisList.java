@@ -53,7 +53,7 @@ public class AxisList extends ArrayList<Axis> {
 
     public Axis find(String name) {
         for (Axis a : this) {
-            if(a.name.equals(name))
+            if(a.getName().equals(name))
                 return a;
         }
         return null;

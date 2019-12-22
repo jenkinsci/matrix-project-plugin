@@ -1,7 +1,6 @@
 package hudson.matrix;
 
 import hudson.model.*;
-import hudson.util.FormValidation;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -44,9 +43,9 @@ public class MatrixChildParametersActionTest {
         ParameterValue definition1 = action.getParameter("definition1");
         ParameterValue definition2 = action.getParameter("definition2");
         for(MatrixRun run : build.getExactRuns()){
-            ParametersAction matrichChildParameters = build.getAction(ParametersAction.class);
-            ParameterValue definition1Child = run.getAction(ParametersAction.class).getParameter("definition1");
-            ParameterValue definition2Child = run.getAction(ParametersAction.class).getParameter("definition2");
+            ParametersAction matrichChildParameters = run.getAction(ParametersAction.class);
+            ParameterValue definition1Child = matrichChildParameters.getParameter("definition1");
+            ParameterValue definition2Child = matrichChildParameters.getParameter("definition2");
             assertSame("Parameters shoud be references to parameters of parent build.", definition1Child, definition1);
             assertSame("Parameters shoud be references to parameters of parent build.", definition2Child, definition2);
         }

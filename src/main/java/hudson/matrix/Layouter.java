@@ -203,7 +203,7 @@ public abstract class Layouter<T> {
             buildMap(zp,z);
             for (Axis a : trivial) {
                 if (a.size() > 0) {
-                    m.put(a.name, a.value(0));
+                    m.put(a.getName(), a.value(0));
                 }
             }
             return getT(new Combination(m));
@@ -213,7 +213,7 @@ public abstract class Layouter<T> {
             int n = p;
             for( int i= axes.size()-1; i>=0; i-- ) {
                 Axis a = axes.get(i);
-                m.put(a.name, a.value(n%a.size()));
+                m.put(a.getName(), a.value(n%a.size()));
                 n /= a.size();
             }
         }
