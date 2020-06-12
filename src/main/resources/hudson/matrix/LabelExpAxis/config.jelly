@@ -27,6 +27,6 @@ THE SOFTWARE.
 		<f:textbox default="label_exp" />
 	</f:entry>
 	<f:entry title="${%Label Expressions}" field="labelExpr">
-		<f:textarea name="values" value="${instance.getValuesString()}" autoCompleteDelimChar=" "/>
+		<f:textarea name="values" value="${instance.getValuesString()}"/>
 	</f:entry>
 </j:jelly>
