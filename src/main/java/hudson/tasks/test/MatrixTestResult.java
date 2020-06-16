@@ -52,7 +52,7 @@ public class MatrixTestResult extends AggregatedTestResultAction {
      */
     @Override
     protected String getChildName(AbstractTestResultAction tr) {
-        return ((MatrixBuild)tr.run).getProject().getName();
+        return tr.run.getParent().getName();
     }
 
     @Override
@@ -64,7 +64,7 @@ public class MatrixTestResult extends AggregatedTestResultAction {
     @Override
     public String getTestResultPath(TestResult it) {
         // Prepend Configuration path
-        return it.getOwner().getParent().getShortUrl() + super.getTestResultPath(it);
+        return it.getRun().getParent().getShortUrl() + super.getTestResultPath(it);
     }
 
     /* We are required to override and call super since the parent class is in
