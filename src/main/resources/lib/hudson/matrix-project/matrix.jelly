@@ -63,7 +63,7 @@ THE SOFTWARE.
               </j:if>
               <j:forEach begin="1" end="${o.repeatX(loop.index)}">
                 <j:forEach var="v" items="${x.values}">
-                  <td class="matrix-header" colspan="${o.width(loop.index)}" tooltip="${x.name}">
+                  <td class="matrix-header" colspan="${o.width(loop.index)}" tooltip="${h.xmlEscape(x.name)}">
                     ${v}
                   </td>
                 </j:forEach>
@@ -76,7 +76,7 @@ THE SOFTWARE.
             <tr>
               <j:forEach var="y" items="${o.y}" varStatus="loop">
                 <j:if test="${r.drawYHeader(loop.index)!=null}">
-                  <td class="matrix-leftcolumn" rowspan="${o.height(loop.index)}" tooltip="${y.name}">
+                  <td class="matrix-leftcolumn" rowspan="${o.height(loop.index)}" tooltip="${h.xmlEscape(y.name)}">
                     ${r.drawYHeader(loop.index)}
                   </td>
                 </j:if>
