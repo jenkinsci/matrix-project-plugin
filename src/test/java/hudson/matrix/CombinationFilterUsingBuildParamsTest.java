@@ -61,6 +61,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.verification.VerificationMode;
 import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -71,6 +72,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
  */
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({MatrixBuildListener.class, MatrixProject.class, AbstractItem.class, Whitelist.class})
+@PowerMockIgnore({"javax.xml.*"})
 public class CombinationFilterUsingBuildParamsTest {
 
     /**
