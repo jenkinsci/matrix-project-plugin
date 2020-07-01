@@ -54,16 +54,16 @@ be changed later. If you skip this step, you will be very confused and not get v
 ## Executors used by a multi-configuration project
 Reference: [Re: Will a multi-configuration / matrix job always use up one executor on the master?](http://groups.google.com/group/jenkinsci-users/msg/eb809fb06759d861)
 
-A matrix build project (that uses the Slave axis) will use one additional executor ("master executor"?)
-on a random node to coordinate the executions on the nodes defined by the Slave axis.
-This executor is added as a temporary executor(also called as "flyweight task") to the node and does not
+A matrix build project (that uses the Agent axis) will use one additional executor ("master executor"?)
+on a random node to coordinate the executions on the nodes defined by the Agent axis.
+This executor is added as a temporary executor (also called as "flyweight task") to the node and does not
 use up a configured executor slot on this node (this behavior is controlled by hudson.model.Hudson.flyweightSupport).
 Only this "master executor" or "flyweight task" will be affected by the "Restrict where this project can be run"
 option, under Advanced Project Options. "Actual" or non-flyweight build execution can be controlled with 
-the "Slaves" axis that can be added under the project's Configuration Matrix: individual nodes and/or labels 
+the "Agents" axis that can be added under the project's Configuration Matrix: individual nodes and/or labels 
 containing multiple nodes can be selected, as well as filtering axis combinations.
 
-You can also control which nodes can run flyweight tasks,  using the [Exclude flyweight tasks plugin](https://plugins.jenkins.io/excludeMatrixParent), or you can pin the flyweight executor to a specific node (Please look under the "advanced" option of the matrix project configuration to tie the matrix parent to a label/slave). 
+You can also control which nodes can run flyweight tasks,  using the [Exclude flyweight tasks plugin](https://plugins.jenkins.io/excludeMatrixParent), or you can pin the flyweight executor to a specific node (Please look under the "advanced" option of the matrix project configuration to tie the matrix parent to a label/agent). 
 
 ## Extensions
 Please refer to the [list of extensions points](https://jenkins.io/doc/developer/extensions/matrix-project/) of this plugin.
@@ -90,7 +90,7 @@ This plugin allows you to integrate Sauce Selenium Testing with Jenkins.
 A plugin to decide the execution order and valid combinations of matrix projects.
 
 ### [Elastic Axis](https://plugins.jenkins.io/elastic-axis)
-This plugin is a power up for the multi configuration jobs allowing you to configure jobs to run on all slaves under a single label.Page:
+This plugin is a power up for the multi configuration jobs allowing you to configure jobs to run on all agents under a single label.
 
 ### [NodeLabel Parameter Plugin](https://plugins.jenkins.io/nodelabelparameter)
 This plugin adds two new parameter types to job configuration - node and label, this allows to dynamically select the node where a job/project should be executed.

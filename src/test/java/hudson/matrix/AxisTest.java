@@ -63,7 +63,7 @@ public class AxisTest {
 
         final String expectedMsg = "Matrix axis name '' is invalid: Axis name can not be empty";
         assertFailedWith(expectedMsg, withName("", "User-defined Axis"));
-        assertFailedWith(expectedMsg, withName("", "Slaves"));
+        assertFailedWith(expectedMsg, withName("", "Agents"));
         assertFailedWith(expectedMsg, withName("", "Label expression"));
     }
 
@@ -73,12 +73,12 @@ public class AxisTest {
 
         String expectedMsg = "Matrix axis name 'a,b' is invalid: ‘,’ is an unsafe character";
         assertFailedWith(expectedMsg, withName("a,b", "User-defined Axis"));
-        assertFailedWith(expectedMsg, withName("a,b", "Slaves"));
+        assertFailedWith(expectedMsg, withName("a,b", "Agents"));
         assertFailedWith(expectedMsg, withName("a,b", "Label expression"));
 
         expectedMsg = "Matrix axis name 'a=b' is invalid: ‘=’ is an unsafe character";
         assertFailedWith(expectedMsg, withName("a=b", "User-defined Axis"));
-        assertFailedWith(expectedMsg, withName("a=b", "Slaves"));
+        assertFailedWith(expectedMsg, withName("a=b", "Agents"));
         assertFailedWith(expectedMsg, withName("a=b", "Label expression"));
     }
 
@@ -100,7 +100,7 @@ public class AxisTest {
     @Test
     public void emptyAxisValueListResultInNoConfigurations() throws Exception {
         emptyValue("User-defined Axis");
-        emptyValue("Slaves");
+        emptyValue("Agents");
         emptyValue("Label expression");
         emptyValue("JDK");
 
