@@ -70,13 +70,6 @@
             <artifactId>sshd</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <!-- Without this, org.jenkins-ci.modules:sshd:2.6 pulls in the too-old 1.4. -->
-            <groupId>org.jenkins-ci.modules</groupId>
-            <artifactId>ssh-cli-auth</artifactId>
-            <version>1.8</version>
-            <scope>test</scope>
-        </dependency>
 
         <dependency>
             <groupId>org.mockito</groupId>
