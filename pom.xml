@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>4.8</version>
+        <version>4.15</version>
         <relativePath />
     </parent>
     <artifactId>matrix-project</artifactId>
@@ -16,7 +16,7 @@
       <revision>1.19</revision>
       <changelist>-SNAPSHOT</changelist>
       <gitHubRepo>jenkinsci/matrix-project-plugin</gitHubRepo>
-      <jenkins.version>2.164.3</jenkins.version>
+      <jenkins.version>2.249.1</jenkins.version>
       <java.level>8</java.level>
       <spotbugs.skip>true</spotbugs.skip> <!-- Clean up redundant null check warnings and re-enable after SECURITY-1339 is released -->
     </properties>
@@ -57,19 +57,17 @@
         <dependency>
             <groupId>org.jenkins-ci.main</groupId>
             <artifactId>jenkins-test-harness-tools</artifactId>
-            <version>2.0</version>
+            <version>2.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>matrix-auth</artifactId>
-            <version>2.5</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.modules</groupId>
             <artifactId>sshd</artifactId>
-            <version>2.6</version>
             <scope>test</scope>
         </dependency>
 
@@ -99,8 +97,8 @@
         <dependencies>
             <dependency>
                 <groupId>io.jenkins.tools.bom</groupId>
-                <artifactId>bom-2.164.x</artifactId>
-                <version>10</version>
+                <artifactId>bom-2.249.x</artifactId>
+                <version>20</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
