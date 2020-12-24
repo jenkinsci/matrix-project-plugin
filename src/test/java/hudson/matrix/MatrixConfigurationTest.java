@@ -111,7 +111,7 @@ public class MatrixConfigurationTest {
     }
 
     @Test
-    @Issue("JENKINS-27530")
+    @Issue("JENKINS-37292")
     public void nextBuildNumber() throws Exception {
         MatrixProject p = r.createProject(MatrixProject.class);
         p.setAxes(new AxisList(new Axis("a", "b")));
