@@ -23,8 +23,16 @@
  */
 package hudson.matrix;
 
-import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -100,5 +108,21 @@ public class MatrixConfigurationTest {
         assertEquals("a&&b&&b", combinedP.getItem("expr=a&&b,label=b").getAssignedLabel().toString());
         assertEquals("a||b&&a", combinedP.getItem("expr=a||b,label=a").getAssignedLabel().toString());
         assertEquals("a||b&&b", combinedP.getItem("expr=a||b,label=b").getAssignedLabel().toString());
+    }
+
+    @Test
+    @Issue("JENKINS-27530")
+    public void nextBuildNumber() throws Exception {
+        MatrixProject p = r.createProject(MatrixProject.class);
+        p.setAxes(new AxisList(new Axis("a", "b")));
+        p.getItems().forEach( mc -> {
+            int size = (int)mc.getBuilds().stream().count();
+            assertThat(mc.getNextBuildNumber(), is(greaterThan(size)));
+        });
+        r.buildAndAssertSuccess(p);
+        p.getItems().forEach( mc -> {
+            int size = (int)mc.getBuilds().stream().count();
+            assertThat(mc.getNextBuildNumber(), is(greaterThan(size)));
+        });
     }
 }
