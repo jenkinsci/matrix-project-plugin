@@ -203,7 +203,7 @@ public class MatrixConfiguration extends Project<MatrixConfiguration,MatrixRun> 
     public int getNextBuildNumber() {
         MatrixBuild lcb = getParent().getLastCompletedBuild();
         if (lcb == null) {
-            return 0;
+            return 1;
         }
         int n = lcb.getNumber() + 1;
         MatrixRun lb = getLastBuild();
