@@ -26,7 +26,7 @@ package hudson.matrix;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.AbstractProject;
-import hudson.model.AbstractProject.AbstractProjectDescriptor;
+import hudson.model.labels.LabelExpression;
 import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
 
@@ -91,6 +91,9 @@ public class LabelExpAxis extends Axis {
             return !j.getNodes().isEmpty() || !j.clouds.isEmpty();
         }
 
+        // Unfortunately, auto-completion of the label expressions is not possible because f:textarea does not support
+        // it. For that, it would need to be a set of textboxes instead.
+
         @Restricted(NoExternalUse.class)
         public FormValidation doCheckLabelExpr(@AncestorInPath AbstractProject<?,?> project, @QueryParameter String value) {
 
@@ -98,7 +101,7 @@ public class LabelExpAxis extends Axis {
 
             List<FormValidation> validations = new ArrayList<FormValidation>();
             for (String expr: getExprValues(value)) {
-                final FormValidation validation = AbstractProjectDescriptor.validateLabelExpression(expr, project);
+                final FormValidation validation = LabelExpression.validate(expr, project);
                 validations.add(validation);
             }
 
