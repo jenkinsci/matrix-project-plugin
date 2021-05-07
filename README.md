@@ -54,11 +54,11 @@ be changed later. If you skip this step, you will be very confused and not get v
 ## Executors used by a multi-configuration project
 Reference: [Re: Will a multi-configuration / matrix job always use up one executor on the master?](http://groups.google.com/group/jenkinsci-users/msg/eb809fb06759d861)
 
-A matrix build project (that uses the Agent axis) will use one additional executor ("master executor"?)
+A matrix build project (that uses the Agent axis) will use one additional executor ("controller executor"?)
 on a random node to coordinate the executions on the nodes defined by the Agent axis.
 This executor is added as a temporary executor (also called as "flyweight task") to the node and does not
 use up a configured executor slot on this node (this behavior is controlled by hudson.model.Hudson.flyweightSupport).
-Only this "master executor" or "flyweight task" will be affected by the "Restrict where this project can be run"
+Only this "controller executor" or "flyweight task" will be affected by the "Restrict where this project can be run"
 option, under Advanced Project Options. "Actual" or non-flyweight build execution can be controlled with 
 the "Agents" axis that can be added under the project's Configuration Matrix: individual nodes and/or labels 
 containing multiple nodes can be selected, as well as filtering axis combinations.

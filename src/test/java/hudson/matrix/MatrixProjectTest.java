@@ -554,10 +554,10 @@ public class MatrixProjectTest {
     }
 
     /**
-     * Given a small master and a big exclusive slave, the fair scheduling would prefer running the flyweight job
-     * in the slave. But if the scheduler honors the EXCLUSIVE flag, then we should see it built on the master.
+     * Given a small controller and a big exclusive agent, the fair scheduling would prefer running the flyweight job
+     * in the agent. But if the scheduler honors the EXCLUSIVE flag, then we should see it built on the controller.
      *
-     * Since there's a chance that the fair scheduling just so happens to pick up the master by chance,
+     * Since there's a chance that the fair scheduling just so happens to pick up the controller by chance,
      * we try multiple jobs to reduce the chance of that happening.
      */
     @Issue("JENKINS-5076")

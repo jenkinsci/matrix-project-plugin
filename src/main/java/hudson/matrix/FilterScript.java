@@ -137,7 +137,7 @@ class FilterScript {
         }
     };
 
-    // TODO JENKINS-25804: harmless generic methods like this should be whitelisted in script-security
+    // TODO JENKINS-25804: harmless generic methods like this should be allowlisted in script-security
     @Extension public static class ImpliesWhitelist extends ProxyWhitelist {
         public ImpliesWhitelist() throws IOException {
             super(new StaticWhitelist("staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods implies java.lang.Boolean java.lang.Boolean"));
