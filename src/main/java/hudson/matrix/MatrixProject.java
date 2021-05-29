@@ -852,7 +852,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
         
         Set<Label> r = new HashSet<Label>();
         for (Combination c : axes.subList(LabelAxis.class).list())
-            r.add(jenkins.getLabel(Util.join(c.values(),"&&")));
+            r.add(jenkins.getLabel(String.join("&&", c.values())));
         return r;
     }
 
