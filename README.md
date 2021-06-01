@@ -52,7 +52,7 @@ be changed later. If you skip this step, you will be very confused and not get v
  You have to drill into each configuration to see the history and console logs.
 
 ## Executors used by a multi-configuration project
-Reference: [Re: Will a multi-configuration / matrix job always use up one executor on the build-in node?](http://groups.google.com/group/jenkinsci-users/msg/eb809fb06759d861)
+Reference: [Re: Will a multi-configuration / matrix job always use up one executor on the built-in node?](http://groups.google.com/group/jenkinsci-users/msg/eb809fb06759d861)
 
 A matrix build project (that uses the Agent axis) will use one additional executor
 on a random node to coordinate the executions on the nodes defined by the Agent axis.
