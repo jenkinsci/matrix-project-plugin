@@ -25,7 +25,6 @@ package hudson.matrix;
 
 import hudson.Extension;
 import hudson.Functions;
-import hudson.Util;
 import jenkins.model.Jenkins;
 import hudson.model.labels.LabelAtom;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -50,7 +49,7 @@ public class LabelAxis extends Axis {
 
     @Override
     public String getValueString() {
-        return Util.join(getValues(),"/");
+        return String.join("/", getValues());
     }
 
     @Extension

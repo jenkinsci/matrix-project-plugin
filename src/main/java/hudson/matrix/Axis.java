@@ -216,7 +216,7 @@ public class Axis extends AbstractDescribableImpl<Axis> implements Comparable<Ax
 
     @Override
     public String toString() {
-        return new StringBuilder().append(name).append("={").append(Util.join(values,",")).append('}').toString();
+        return new StringBuilder().append(name).append("={").append(String.join(",", values)).append('}').toString();
     }
 
     /**
