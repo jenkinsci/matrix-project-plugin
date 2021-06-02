@@ -16,7 +16,7 @@
       <revision>1.19</revision>
       <changelist>-SNAPSHOT</changelist>
       <gitHubRepo>jenkinsci/matrix-project-plugin</gitHubRepo>
-      <jenkins.version>2.249.1</jenkins.version>
+      <jenkins.version>2.282</jenkins.version>
       <java.level>8</java.level>
       <spotbugs.skip>true</spotbugs.skip> <!-- Clean up redundant null check warnings and re-enable after SECURITY-1339 is released -->
     </properties>
@@ -68,6 +68,7 @@
         <dependency>
             <groupId>org.jenkins-ci.modules</groupId>
             <artifactId>sshd</artifactId>
+            <version>3.0.3</version>
             <scope>test</scope>
         </dependency>
 
