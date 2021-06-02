@@ -34,7 +34,7 @@ import org.hamcrest.core.AnyOf;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runners.model.Statement;
-import org.jvnet.hudson.test.RestartableJenkinsRule;
+import org.jvnet.hudson.test.JenkinsSessionRule;
 
 import java.util.Arrays;
 
@@ -46,17 +46,16 @@ import static org.junit.Assert.assertTrue;
 
 public class RestartingRestoreTest {
 
-    @Rule public RestartableJenkinsRule r = new RestartableJenkinsRule();
+    @Rule public JenkinsSessionRule sessions = new JenkinsSessionRule();
 
     private String matrixBuildId;
 
     /**
      * Makes sure that the parent of a MatrixRun survives a restart.
      */
-    @Test public void persistenceOfParentInMatrixRun() {
-        r.addStep(new Statement() {
-            @Override public void evaluate() throws Throwable {
-                MatrixProject p = r.j.createProject(MatrixProject.class, "project");
+    @Test public void persistenceOfParentInMatrixRun() throws Throwable {
+        sessions.then(j -> {
+                MatrixProject p = j.createProject(MatrixProject.class, "project");
                 p.setAxes(new AxisList(new TextAxis("AXIS", "VALUE")));
 
                 // Schedule and wait for build to finish
@@ -65,61 +64,51 @@ public class RestartingRestoreTest {
                 MatrixRun run = p.getItem("AXIS=VALUE").getLastBuild();
                 ParentBuildAction a = run.getAction(ParentBuildAction.class);
                 matrixBuildId = a.getMatrixBuild().getExternalizableId();
-            }
         });
-        r.addStep(new Statement() {
-            @Override public void evaluate() {
-                MatrixProject p = r.j.jenkins.getItemByFullName("project", MatrixProject.class);
+        sessions.then(j -> {
+                MatrixProject p = j.jenkins.getItemByFullName("project", MatrixProject.class);
 
                 MatrixRun run = p.getItem("AXIS=VALUE").getLastBuild();
                 ParentBuildAction a = run.getAction(ParentBuildAction.class);
                 String restoredBuildId = a.getMatrixBuild().getExternalizableId();
 
                 assertEquals(matrixBuildId, restoredBuildId);
-            }
         });
     }
 
-    @Test public void resumeAllCombinations() {
-        r.addStep(new Statement() {
-            @Override public void evaluate() throws Throwable {
-                MatrixProject project = r.j.createProject(MatrixProject.class, "p");
+    @Test public void resumeAllCombinations() throws Throwable {
+        sessions.then(j -> {
+                MatrixProject project = j.createProject(MatrixProject.class, "p");
                 project.setConcurrentBuild(true);
                 project.setAxes(new AxisList(new LabelAxis("labels", Arrays.asList("foo", "bar"))));
-            }
         });
         resumeBuildAfterRestart();
     }
 
-    @Test public void resumeAllCombinationsWithParameters() {
-        r.addStep(new Statement() {
-            @Override public void evaluate() throws Throwable {
-                MatrixProject project = r.j.createProject(MatrixProject.class, "p");
+    @Test public void resumeAllCombinationsWithParameters() throws Throwable {
+        sessions.then(j -> {
+                MatrixProject project = j.createProject(MatrixProject.class, "p");
                 project.setConcurrentBuild(true);
                 project.setAxes(new AxisList(new LabelAxis("labels", Arrays.asList("foo", "bar"))));
                 project.addProperty(new ParametersDefinitionProperty(new StringParameterDefinition("foo", "bar")));
-            }
         });
         resumeBuildAfterRestart();
     }
 
-    private void resumeBuildAfterRestart() {
-        r.addStep(new Statement() {
-            @Override public void evaluate() throws Throwable {
-                MatrixProject project = r.j.jenkins.getItemByFullName("p", MatrixProject.class);
+    private void resumeBuildAfterRestart() throws Throwable {
+        sessions.then(j -> {
+                MatrixProject project = j.jenkins.getItemByFullName("p", MatrixProject.class);
                 MatrixBuild parent = project.scheduleBuild2(0).waitForStart();
                 assertTrue(parent.isBuilding());
                 parent = project.scheduleBuild2(0).waitForStart();
                 assertTrue(parent.isBuilding());
                 Thread.sleep(1000);
 
-                assertThat(r.j.jenkins.getQueue().getItems(), Matchers.<Queue.Item>arrayWithSize(4));
-            }
+                assertThat(j.jenkins.getQueue().getItems(), Matchers.<Queue.Item>arrayWithSize(4));
         });
-        r.addStep(new Statement() {
-            @Override public void evaluate() throws Throwable {
+        sessions.then(j -> {
                 Thread.sleep(10000); // If the jobs is loaded too soon, its builds are never loaded.
-                MatrixProject project = r.j.jenkins.getItemByFullName("p", MatrixProject.class);
+                MatrixProject project = j.jenkins.getItemByFullName("p", MatrixProject.class);
                 MatrixBuild p1 = project.getBuildByNumber(1);
                 MatrixBuild p2 = project.getBuildByNumber(2);
 
@@ -127,19 +116,18 @@ public class RestartingRestoreTest {
                 assertThat(p1.getResult(), isFailedOrAborted);
                 assertThat(p2.getResult(), isFailedOrAborted);
 
-                r.j.createOnlineSlave(Label.get("foo"));
-                r.j.createOnlineSlave(Label.get("bar"));
-                r.j.waitUntilNoActivity();
+                j.createOnlineSlave(Label.get("foo"));
+                j.createOnlineSlave(Label.get("bar"));
+                j.waitUntilNoActivity();
 
                 assertThat(p1.getExactRuns(), Matchers.<MatrixRun>iterableWithSize(2));
                 for (MatrixRun run : p1.getExactRuns()) {
-                    r.j.assertBuildStatus(Result.SUCCESS, run);
+                    j.assertBuildStatus(Result.SUCCESS, run);
                 }
                 assertThat(p2.getExactRuns(), Matchers.<MatrixRun>iterableWithSize(2));
                 for (MatrixRun run : p2.getExactRuns()) {
-                    r.j.assertBuildStatus(Result.SUCCESS, run);
+                    j.assertBuildStatus(Result.SUCCESS, run);
                 }
-            }
         });
     }
 }
