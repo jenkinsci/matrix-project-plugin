@@ -129,7 +129,7 @@ public class MatrixConfiguration extends Project<MatrixConfiguration,MatrixRun> 
 
     @Override
     public final boolean isDisabled() {
-        // Matrix configurations cannot be disabled independently from the master
+        // Matrix configurations cannot be disabled independently from the controller
         return getParent().isDisabled(); 
     }
 
