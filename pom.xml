@@ -7,7 +7,7 @@
         <relativePath />
     </parent>
     <artifactId>matrix-project</artifactId>
-    <version>${revision}${changelist}</version>
+    <version>1.19</version>
     <packaging>hpi</packaging>
     <name>Matrix Project Plugin</name>
     <description>Multi-configuration (matrix) project type.</description>
@@ -30,7 +30,7 @@
         <connection>scm:git:git://github.com/${gitHubRepo}.git</connection>
         <developerConnection>scm:git:git@github.com:${gitHubRepo}.git</developerConnection>
         <url>https://github.com/${gitHubRepo}</url>
-        <tag>${scmTag}</tag>
+        <tag>matrix-project-1.19</tag>
     </scm>
     <repositories>
         <repository>
