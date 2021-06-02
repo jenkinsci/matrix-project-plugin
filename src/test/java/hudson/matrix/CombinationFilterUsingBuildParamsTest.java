@@ -23,33 +23,10 @@
  */
 package hudson.matrix;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import hudson.ExtensionList;
 import hudson.matrix.MatrixBuild.MatrixBuildExecution;
 import hudson.matrix.listeners.MatrixBuildListener;
-import hudson.model.AbstractItem;
-import hudson.model.BuildListener;
-import hudson.model.Cause;
-import hudson.model.ParametersAction;
-import hudson.model.Result;
-import hudson.model.Run;
-import hudson.model.StringParameterValue;
-
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-
+import hudson.model.*;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.Whitelist;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.BlanketWhitelist;
@@ -64,6 +41,14 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.*;
+
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Mockito.*;
 
 /**
  * Make sure that the combination filter schedules correct builds in correct order
@@ -270,6 +255,7 @@ public class CombinationFilterUsingBuildParamsTest {
         when(conf.getDisplayName()).thenReturn(axis);
         when(conf.getUrl()).thenReturn(axis);
         when(conf.getBuildByNumber(anyInt())).thenReturn(run);
+        when(conf.scheduleBuild(anyList(),any())).thenReturn(true);
 
         return conf;
     }
