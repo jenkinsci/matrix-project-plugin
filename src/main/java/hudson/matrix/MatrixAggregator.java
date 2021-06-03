@@ -97,7 +97,8 @@ public abstract class MatrixAggregator implements ExtensionPoint {
      * to indicate that the build is about to finish.
      * 
      * @return
-     *      See {@link #startBuild()} for the return value semantics.
+     *      true if the aggregation succeeded, false if there was an error.
+     *      The build will continue even if you return false.
      */
     public boolean endBuild() throws InterruptedException, IOException {
         return true;

@@ -430,7 +430,15 @@ public class MatrixBuild extends AbstractBuild<MatrixProject,MatrixBuild> {
 
         public void post2(BuildListener listener) throws Exception {
             for (MatrixAggregator a : aggregators)
-                a.endBuild();
+                // all aggregations will be performed even any of them failed.
+                try {
+                    if (!a.endBuild()) {
+                        listener.error(String.format("Aggregation failed for %s", a.toString()));
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace(listener.error(String.format("Aggregation failed for %s", a.toString())));
+                    setResult(Result.FAILURE);
+                }
         }
     }
 }
