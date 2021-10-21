@@ -27,7 +27,7 @@ THE SOFTWARE.
     <f:textbox default="label" />
   </f:entry>
   <f:entry title="${%Node/Label}" field="labels">
-    <div class="yahooTree labelAxis-tree" style="border: 1px solid gray; height: 10em; overflow:auto;" values="${instance.valueString}" />
+    <div class="yahooTree labelAxis-tree" style="border: 1px solid gray; height: 10em; overflow:auto;" values="${instance.valueStringHtmlEscaped}" />
     <script>
       Behaviour.specify("DIV.labelAxis-tree", 'LabelAxis', 0, function(e) {
         var tree = new YAHOO.widget.TreeView(e);
