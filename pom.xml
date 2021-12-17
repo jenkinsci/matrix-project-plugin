@@ -7,13 +7,13 @@
         <relativePath />
     </parent>
     <artifactId>matrix-project</artifactId>
-    <version>1.18.1</version>
+    <version>${revision}${changelist}</version>
     <packaging>hpi</packaging>
     <name>Matrix Project Plugin</name>
     <description>Multi-configuration (matrix) project type.</description>
     <url>https://github.com/jenkinsci/matrix-project-plugin</url>
     <properties>
-      <revision>1.18.1</revision>
+      <revision>1.18.2</revision>
       <changelist>-SNAPSHOT</changelist>
       <gitHubRepo>jenkinsci/matrix-project-plugin</gitHubRepo>
       <jenkins.version>2.164.3</jenkins.version>
@@ -30,7 +30,7 @@
         <connection>scm:git:git://github.com/${gitHubRepo}.git</connection>
         <developerConnection>scm:git:git@github.com:${gitHubRepo}.git</developerConnection>
         <url>https://github.com/${gitHubRepo}</url>
-        <tag>matrix-project-1.18.1</tag>
+        <tag>${scmTag}</tag>
     </scm>
     <repositories>
         <repository>
