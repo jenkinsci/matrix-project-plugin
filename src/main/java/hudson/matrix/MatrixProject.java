@@ -87,9 +87,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
-import javax.annotation.Nullable;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import javax.servlet.ServletException;
 
 import jenkins.model.Jenkins;
@@ -203,7 +203,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
     /**
      * Lock to prevent project changes on different build at the same time
      */
-    private transient @Nonnull ReentrantLock buildLock = new ReentrantLock();
+    private transient @NonNull ReentrantLock buildLock = new ReentrantLock();
 
     public MatrixProject(String name) {
         this(Jenkins.getInstance(), name);
@@ -775,8 +775,8 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
      * @param child child {@link MatrixConfiguration}
      * @return Root directory for the combination
      */
-    @Nonnull
-    public File getRootDirFor(@Nonnull MatrixConfiguration child) {
+    @NonNull
+    public File getRootDirFor(@NonNull MatrixConfiguration child) {
         return getRootDirFor(child.getCombination());
     }
 
@@ -799,8 +799,8 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
      * @param combination Combination to be checked
      * @return Root directory for the combination
      */
-    @Nonnull
-    public File getRootDirFor(@Nonnull Combination combination) {
+    @NonNull
+    public File getRootDirFor(@NonNull Combination combination) {
         File f = getConfigurationsDir();
         for (Entry<String, String> e : combination.entrySet())
             f = new File(f,"axis-"+e.getKey()+'/'+Util.rawEncode(e.getValue()));
@@ -822,7 +822,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
      * Gets the {@link JDK}s where the builds will be run.
      * @return never null but can be empty
      */
-    public @Nonnull Set<JDK> getJDKs() {
+    public @NonNull Set<JDK> getJDKs() {
         final Jenkins jenkins = Jenkins.getInstance();
         if (jenkins == null) {
             return Collections.emptySet();
@@ -844,7 +844,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
      * Gets the {@link Label}s where the builds will be run.
      * @return never null
      */
-    public @Nonnull Set<Label> getLabels() {    
+    public @NonNull Set<Label> getLabels() {    
         final Jenkins jenkins = Jenkins.getInstance();
         if (jenkins == null) {
             return Collections.emptySet();

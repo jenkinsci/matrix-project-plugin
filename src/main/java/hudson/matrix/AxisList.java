@@ -31,7 +31,7 @@ import com.thoughtworks.xstream.XStream;
 import hudson.Util;
 import hudson.util.RobustCollectionConverter;
 
-import javax.annotation.Nullable;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.*;
 
 /**

@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 import jenkins.model.RunAction2;
 import org.kohsuke.accmod.Restricted;
@@ -51,9 +51,9 @@ import hudson.model.TaskListener;
 @Restricted(NoExternalUse.class)
 public class MatrixChildParametersAction extends ParametersAction implements MatrixChildAction, RunAction2 {
 
-    private transient @Nonnull List<ParameterValue> parameters;
+    private transient @NonNull List<ParameterValue> parameters;
 
-    MatrixChildParametersAction(@Nonnull List<ParameterValue> parameters) {
+    MatrixChildParametersAction(@NonNull List<ParameterValue> parameters) {
         this.parameters = parameters;
     }
 
@@ -64,7 +64,7 @@ public class MatrixChildParametersAction extends ParametersAction implements Mat
     }
 
     @Override
-    public @Nonnull List<ParameterValue> getParameters() {
+    public @NonNull List<ParameterValue> getParameters() {
         return parameters;
     }
 
@@ -111,7 +111,7 @@ public class MatrixChildParametersAction extends ParametersAction implements Mat
     public static final class MatrixChildParametersActionEnvironmentContributor extends EnvironmentContributor {
 
         @Override
-        public void buildEnvironmentFor(@Nonnull Run r, @Nonnull EnvVars envs, @Nonnull TaskListener listener) {
+        public void buildEnvironmentFor(@NonNull Run r, @NonNull EnvVars envs, @NonNull TaskListener listener) {
             if (r instanceof MatrixRun) {
                 MatrixChildParametersAction childParameters = r.getAction(MatrixChildParametersAction.class);
                 if (childParameters != null) {
@@ -122,7 +122,7 @@ public class MatrixChildParametersAction extends ParametersAction implements Mat
             }
         }
 
-        private static void putEnvVar(@Nonnull EnvVars envs, String name, String value){
+        private static void putEnvVar(@NonNull EnvVars envs, String name, String value){
             if (value != null) {
                 envs.put(name, value);
             } else {

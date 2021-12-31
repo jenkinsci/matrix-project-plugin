@@ -33,7 +33,7 @@ import hudson.model.Queue;
 import hudson.model.Queue.Task;
 
 import java.util.List;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Controls which subset of {@link MatrixRun}s to rebuild.
@@ -78,7 +78,7 @@ public abstract class MatrixBuildListener implements ExtensionPoint {
 	/**
 	 * Returns all the registered {@link MatrixBuildListener} descriptors.
 	 */
-        @Nonnull
+        @NonNull
 	public static ExtensionList<MatrixBuildListener> all() {
             return ExtensionList.lookup(MatrixBuildListener.class);
 	}
