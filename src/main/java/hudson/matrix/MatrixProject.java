@@ -1063,7 +1063,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
          * @return A string it represents a URL pattern to get the Item icon in different sizes.
          */
         public String getIconFilePathPattern() {
-            return "plugin/matrix-project/images/:size/matrixproject.png";
+            return "plugin/matrix-project/images/matrixproject.svg";
         }
 
         @Override
