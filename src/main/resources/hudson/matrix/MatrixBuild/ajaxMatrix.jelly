@@ -26,17 +26,17 @@ THE SOFTWARE.
   Used to asynchronously update executor queue
 -->
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:s="/lib/form" xmlns:p="/lib/hudson/matrix-project">
+<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout" xmlns:p="/lib/hudson/matrix-project">
   <l:ajax>
     <p:matrix autoRefresh="${it.isBuilding()}">
       <j:set var="b" value="${p.run}" />
       <j:choose>
         <j:when test="${b==null}">
-          <img src="${imagesURL}/24x24/grey.png" tooltip="${%Not run}" alt="${%Not run}" height="24" width="24"/>
+          <l:icon class="icon-nobuilt icon-md" tooltip="${%Not run}" alt="${%Not run}"/>
         </j:when>
         <j:otherwise>
           <a href="${p.nearestRunUrl}" class="model-link inside">
-            <img src="${imagesURL}/24x24/${b.buildStatusUrl}" tooltip="${h.xmlEscape(p.tooltip)} ${it.number!=b.number?(it.isBuilding()?'- pending' : '- skipped'):''}" alt="${p.tooltip}" style="${it.number!=b.number?'opacity:0.5':''}" height="24" width="24"/>
+            <l:icon class="${b.iconColor.iconClassName} icon-md" tooltip="${h.xmlEscape(p.tooltip)} ${it.number!=b.number?(it.isBuilding()?'- pending' : '- skipped'):''}" alt="${p.tooltip}" style="${it.number!=b.number?'opacity:0.5':''}"/>
             <j:if test="${empty(o.x) and empty(o.y)}">
               ${p.combination.toString(o.z)}
             </j:if>
