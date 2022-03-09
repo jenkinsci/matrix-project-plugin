@@ -1,2 +1,1 @@
 _extends: .github
-tag-template: matrix-project-$NEXT_MINOR_VERSION
