@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>4.15</version>
+        <version>4.37</version>
         <relativePath />
     </parent>
     <artifactId>matrix-project</artifactId>
@@ -15,7 +15,7 @@
     <properties>
       <changelist>999999-SNAPSHOT</changelist>
       <gitHubRepo>jenkinsci/matrix-project-plugin</gitHubRepo>
-      <jenkins.version>2.282</jenkins.version>
+      <jenkins.version>2.289.1</jenkins.version>
       <java.level>8</java.level>
       <spotbugs.skip>true</spotbugs.skip> <!-- Clean up redundant null check warnings and re-enable after SECURITY-1339 is released -->
     </properties>
@@ -77,19 +77,8 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.powermock</groupId>
-            <artifactId>powermock-module-junit4</artifactId>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.hamcrest</groupId>
-                    <artifactId>hamcrest-core</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.powermock</groupId>
-            <artifactId>powermock-api-mockito2</artifactId>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-inline</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -97,8 +86,8 @@
         <dependencies>
             <dependency>
                 <groupId>io.jenkins.tools.bom</groupId>
-                <artifactId>bom-2.249.x</artifactId>
-                <version>20</version>
+                <artifactId>bom-2.289.x</artifactId>
+                <version>1155.v77b_fd92a_26fc</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
