@@ -58,7 +58,7 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import javax.annotation.CheckForNull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 
 import javax.servlet.ServletException;
 

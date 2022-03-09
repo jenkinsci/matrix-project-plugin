@@ -64,8 +64,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
@@ -334,7 +334,7 @@ public class MatrixConfiguration extends Project<MatrixConfiguration,MatrixRun> 
         return jenkins != null ? jenkins.getLabel(Util.fixEmpty(label)) : null;
     }
 
-    private @Nonnull String computeAssignedLabel() {
+    private @NonNull String computeAssignedLabel() {
         // combine all the label axes by &&.
         StringBuilder sb = new StringBuilder();
         boolean written = false;
