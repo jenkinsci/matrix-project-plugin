@@ -27,9 +27,14 @@ import hudson.Extension;
 import hudson.Functions;
 import jenkins.model.Jenkins;
 import hudson.model.labels.LabelAtom;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import static hudson.Functions.htmlAttributeEscape;
+import static hudson.Functions.jsStringEscape;
 
 /**
  * {@link Axis} that selects label expressions.
@@ -52,6 +57,18 @@ public class LabelAxis extends Axis {
         return String.join("/", getValues());
     }
 
+    public String getValueStringHtmlEscaped() {
+        final List<String> values = getValues();
+        StringBuilder str = new StringBuilder();
+        for (String value : values) {
+            if (str.length() > 0) {
+                str.append('/');
+            }
+            str.append(htmlAttributeEscape(value));
+        }
+        return str.toString();
+    }
+
     @Extension
     public static class DescriptorImpl extends AxisDescriptor {
         @Override
@@ -69,16 +86,15 @@ public class LabelAxis extends Axis {
             return !j.getNodes().isEmpty() || !j.clouds.isEmpty();
         }
 
-        private String jsstr(String body, Object... args) {
-            return '\"'+Functions.jsStringEscape(String.format(body,args))+'\"';
-        }
 
         public String buildLabelCheckBox(LabelAtom la, LabelAxis instance) {
-            return jsstr("<input type='checkbox' name='values' json='%s' ",
-                        Functions.htmlAttributeEscape(la.getName()))
-                   +String.format("+has(%s)+",jsstr(la.getName()))
-                   +jsstr("/><label class='attach-previous'>%s (%s)</label>",
-                        la.getName(),la.getDescription());
+            final String escapedName = jsStringEscape(htmlAttributeEscape(la.getName()));
+            final String escapedDescription = jsStringEscape(StringUtils.isEmpty(la.getDescription()) ? "" :
+                    htmlAttributeEscape(la.getDescription()));
+            return new StringBuilder("\"").append(jsStringEscape("<input type='checkbox' name='values' json='")).append(escapedName).append(jsStringEscape("' "))
+                    .append("\"").append(String.format("+has(\"%s\")+", escapedName)).append("\"")
+                    .append(jsStringEscape("/><label class='attach-previous'>")).append(escapedName).append(" (").append(escapedDescription).append(")</label>\"")
+                    .toString();
             // '${h.jsStringEscape('<input type="checkbox" name="values" json="'+h.htmlAttributeEscape(l.name)+'" ')}'+has("${h.jsStringEscape(l.name)}")+'${h.jsStringEscape('/><label class="attach-previous">'+l.name+' ('+l.description+')</label>')}'
         }
     }
