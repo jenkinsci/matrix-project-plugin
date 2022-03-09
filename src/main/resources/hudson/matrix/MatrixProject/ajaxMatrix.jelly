@@ -26,16 +26,16 @@ THE SOFTWARE.
   Used to asynchronously update executor queue
 -->
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:s="/lib/form" xmlns:p="/lib/hudson/matrix-project">
+<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout" xmlns:p="/lib/hudson/matrix-project">
   <l:ajax>
     <p:matrix autoRefresh="true">
       <j:choose>
         <j:when test="${p==null}">
-          <img src="${imagesURL}/24x24/grey.png" tooltip="${%Not configured}" alt="${%Not configured}" height="24" width="24"/>
+          <l:icon class="icon-nobuilt icon-md" tooltip="${%Not configured}" alt="${%Not configured}"/>
         </j:when>
         <j:otherwise>
           <a href="${p.shortUrl}" class="model-link inside">
-            <img src="${imagesURL}/24x24/${p.buildStatusUrl}" tooltip="${p.iconColor.description}" alt="${p.iconColor.description}" height="24" width="24"/>
+            <l:icon class="${p.iconColor.iconClassName} icon-md" tooltip="${p.iconColor.description}" alt="${p.iconColor.description}"/>
             <j:if test="${empty(o.x) and empty(o.y)}">
               ${p.combination.toString(o.z)}
             </j:if>
