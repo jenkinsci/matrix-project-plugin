@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>4.37</version>
+        <version>4.40</version>
         <relativePath />
     </parent>
     <artifactId>matrix-project</artifactId>
@@ -11,12 +11,11 @@
     <packaging>hpi</packaging>
     <name>Matrix Project Plugin</name>
     <description>Multi-configuration (matrix) project type.</description>
-    <url>https://github.com/jenkinsci/matrix-project-plugin</url>
+    <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
     <properties>
       <changelist>999999-SNAPSHOT</changelist>
-      <gitHubRepo>jenkinsci/matrix-project-plugin</gitHubRepo>
+      <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
       <jenkins.version>2.289.1</jenkins.version>
-      <java.level>8</java.level>
       <spotbugs.skip>true</spotbugs.skip> <!-- Clean up redundant null check warnings and re-enable after SECURITY-1339 is released -->
     </properties>
     <licenses>
@@ -26,7 +25,7 @@
         </license>
     </licenses>
     <scm>
-        <connection>scm:git:git://github.com/${gitHubRepo}.git</connection>
+        <connection>scm:git:https://github.com/${gitHubRepo}.git</connection>
         <developerConnection>scm:git:git@github.com:${gitHubRepo}.git</developerConnection>
         <url>https://github.com/${gitHubRepo}</url>
         <tag>${scmTag}</tag>
@@ -67,7 +66,6 @@
         <dependency>
             <groupId>org.jenkins-ci.modules</groupId>
             <artifactId>sshd</artifactId>
-            <version>3.0.3</version>
             <scope>test</scope>
         </dependency>
 
@@ -93,14 +91,4 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-    <build>
-        <plugins>
-            <plugin>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <argLine>-XX:MaxPermSize=128m</argLine>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
 </project>
