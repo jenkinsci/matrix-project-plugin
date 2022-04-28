@@ -23,22 +23,34 @@
  */
 package hudson.matrix;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
+
+import groovy.lang.GroovyRuntimeException;
 import java.util.Collections;
-import java.util.Map;
 import java.util.HashMap;
-import org.hamcrest.Matchers;
-import static org.junit.Assert.assertThat;
-import org.jvnet.hudson.test.HudsonTestCase;
+import java.util.Map;
+import org.junit.Rule;
+import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.JenkinsRule;
 
 /**
  * @author Kohsuke Kawaguchi
  */
-public class CombinationTest extends HudsonTestCase {
+public class CombinationTest {
+
+    @Rule
+    public JenkinsRule j = new JenkinsRule();
+
     AxisList axes = new AxisList(
             new Axis("a","X","x"),
             new Axis("b","Y","y"));
 
+    @Test
     public void testEval() {
         Map<String,String> r = new HashMap<String, String>();
         r.put("a","X");
@@ -59,20 +71,18 @@ public class CombinationTest extends HudsonTestCase {
     }
 
     @Issue("SECURITY-1339")
+    @Test
     public void testSandboxConstructors() {
         Combination c = new Combination(Collections.<String, String>emptyMap());
-        try {
+        GroovyRuntimeException e = assertThrows(GroovyRuntimeException.class, () ->
             eval(c, "class DoNotRunConstructor {\n" +
             "  static void main(String[] args) {}\n" +
             "  DoNotRunConstructor() {\n" +
             "    assert jenkins.model.Jenkins.instance.createProject(hudson.model.FreeStyleProject, 'should-not-exist')\n" +
             "  }\n" +
-            "}\n");
-            fail("Exception should have been thrown");
-        } catch (Exception e) {
-            assertNull(jenkins.getItem("should-not-exist"));
-            assertThat(e.getMessage(), Matchers.containsString("staticMethod jenkins.model.Jenkins getInstance"));
-        }
+            "}\n"));
+        assertNull(j.jenkins.getItem("should-not-exist"));
+        assertThat(e.getMessage(), containsString("staticMethod jenkins.model.Jenkins getInstance"));
     }
 
     private boolean eval(Combination c, String exp) {
