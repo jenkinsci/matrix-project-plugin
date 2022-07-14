@@ -80,7 +80,7 @@ public abstract class AxisDescriptor extends Descriptor<Axis> {
      * necessary to disallow '=' in value as everything after the first
      * occurrence is considered to be a value.
      *
-     * Subclasses are expected to expose own <tt>doCheck</tt> method possibly delegating to this one.
+     * Subclasses are expected to expose own <code>doCheck</code> method possibly delegating to this one.
      */
     public FormValidation checkValue(@QueryParameter String value) {
         if(Util.fixEmpty(value)==null)

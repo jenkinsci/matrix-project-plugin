@@ -84,7 +84,7 @@ public final class Combination extends TreeMap<String,String> implements Compara
      * Evaluates the given Groovy expression with values bound from this combination.
      *
      * <p>
-     * For example, if this combination is a=X,b=Y, then expressions like <tt>a=="X"</tt> would evaluate to
+     * For example, if this combination is a=X,b=Y, then expressions like <code>a=="X"</code> would evaluate to
      * true.
      */
     public boolean evalGroovyExpression(AxisList axes, String expression) {
@@ -147,7 +147,7 @@ public final class Combination extends TreeMap<String,String> implements Compara
 
     /**
      * Converts to the ID string representation:
-     * <tt>axisName=value,axisName=value,...</tt>
+     * <code>axisName=value,axisName=value,...</code>
      *
      * @param sep1
      *      The separator between multiple axes.
