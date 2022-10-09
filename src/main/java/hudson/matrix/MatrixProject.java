@@ -99,6 +99,7 @@ import net.sf.json.JSONObject;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.HttpResponse;
+import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.TokenList;
@@ -1081,6 +1082,10 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
                     r.add(d);
             }
             return r;
+        }
+
+        public FormValidation doCheckDisplayName(@QueryParameter String value, @QueryParameter String name) {
+            return Jenkins.get().doCheckDisplayName(value, name);
         }
 
         /**

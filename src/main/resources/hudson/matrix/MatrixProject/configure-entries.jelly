@@ -48,8 +48,11 @@ THE SOFTWARE.
         </f:entry>
       </f:optionalBlock>
 
+      <f:invisibleEntry>
+        <f:textbox name="name" value="${it.name}"/>
+      </f:invisibleEntry>
       <f:entry title="${%Display Name}" field="displayNameOrNull">
-         <f:textbox checkUrl="'${rootURL}/checkDisplayName?displayName='+encodeURIComponent(this.value)+'&amp;jobName='+encodeURIComponent('${h.jsStringEscape(it.name)}')"/>
+        <f:textbox checkUrl="${descriptor.descriptorFullUrl}/checkDisplayName" checkDependsOn="name"/>
       </f:entry>
     </f:advanced>
   </f:section>
