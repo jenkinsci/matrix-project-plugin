@@ -14,8 +14,9 @@ Behaviour.specify("DIV.labelAxis-tree", 'LabelAxis', 0, function(e) {
     labelAxisDataContainer.childNodes.forEach(node => {
         var labelCheckbox = node.getAttribute("data-label-checkbox");
 
-        // inserting 'checked' attribute after '<input ' hence index of 7
-        var output = [labelCheckbox.slice(0, 7), has(node.getAttribute("data-label-atom")), labelCheckbox.slice(7)].join('');
+        var CHECKED_ATTR_INSERT_IDX = "<input ".length;
+        var output = [labelCheckbox.slice(0, CHECKED_ATTR_INSERT_IDX),
+            has(node.getAttribute("data-label-atom")), labelCheckbox.slice(CHECKED_ATTR_INSERT_IDX)].join('');
         var label = node.getAttribute("data-label");
         new YAHOO.widget.HTMLNode(output, label === "machines" ? machines : labels, false);
     });
