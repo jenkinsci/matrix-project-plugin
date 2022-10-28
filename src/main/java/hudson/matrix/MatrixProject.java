@@ -1085,6 +1085,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
             return r;
         }
 
+        @Restricted(NoExternalUse.class)
         public FormValidation doCheckDisplayNameOrNull(@AncestorInPath MatrixProject job, @QueryParameter String value) {
             return Jenkins.get().doCheckDisplayName(value, job.getName());
         }
