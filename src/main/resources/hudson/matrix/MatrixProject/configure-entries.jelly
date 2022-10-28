@@ -48,11 +48,8 @@ THE SOFTWARE.
         </f:entry>
       </f:optionalBlock>
 
-      <f:invisibleEntry>
-        <f:textbox name="name" value="${it.name}"/>
-      </f:invisibleEntry>
       <f:entry title="${%Display Name}" field="displayNameOrNull">
-        <f:textbox checkUrl="${descriptor.descriptorFullUrl}/checkDisplayName" checkDependsOn="name"/>
+        <f:textbox/>
       </f:entry>
     </f:advanced>
   </f:section>
