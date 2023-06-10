@@ -42,7 +42,7 @@ import java.util.Collections;
 
 import org.acegisecurity.context.SecurityContextHolder;
 
-import com.gargoylesoftware.htmlunit.xml.XmlPage;
+import org.htmlunit.xml.XmlPage;
 
 import hudson.Functions;
 
