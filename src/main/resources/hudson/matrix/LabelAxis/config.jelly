@@ -37,7 +37,7 @@ THE SOFTWARE.
 
         var values = (e.getAttribute("values") || "").split("/");
         function has(v) {
-          return values.include(v) ? 'checked="checked" ' : "";
+          return values.includes(v) ? 'checked="checked" ' : "";
         }
         <j:forEach var="l" items="${app.labelAtoms}">
           new YAHOO.widget.HTMLNode(<j:out value="${descriptor.buildLabelCheckBox(l,instance)}"/>, ${l.isSelfLabel()?'machines':'labels'}, false);
