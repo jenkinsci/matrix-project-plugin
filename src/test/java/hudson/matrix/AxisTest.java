@@ -38,8 +38,8 @@ import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.JenkinsRule.WebClient;
 
-import com.gargoylesoftware.htmlunit.html.HtmlForm;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import org.htmlunit.html.HtmlForm;
+import org.htmlunit.html.HtmlPage;
 
 public class AxisTest {
 
@@ -88,12 +88,12 @@ public class AxisTest {
         wc.getOptions().setThrowExceptionOnFailingStatusCode(false);
 
         HtmlForm form = addAxis("User-defined Axis");
-        form.getInputByName("_.name").setValueAttribute("a_name");
-        form.getInputByName("_.valueString").setValueAttribute("a,b");
+        form.getInputByName("_.name").setValue("a_name");
+        form.getInputByName("_.valueString").setValue("a,b");
         assertFailedWith("Matrix axis value 'a,b' is invalid: ‘,’ is an unsafe character", j.submit(form));
 
         form = addAxis("Label expression");
-        form.getInputByName("_.name").setValueAttribute("a_name");
+        form.getInputByName("_.name").setValue("a_name");
         form.getElementsByAttribute("textarea", "name", "values").get(0).setTextContent("a,b");
         assertFailedWith("Matrix axis value 'a,b' is invalid: ‘,’ is an unsafe character", j.submit(form));
     }
@@ -116,7 +116,7 @@ public class AxisTest {
 
     private HtmlPage withName(String value, String axis) throws Exception {
         HtmlForm form = addAxis(axis);
-        form.getInputByName("_.name").setValueAttribute(value);
+        form.getInputByName("_.name").setValue(value);
         HtmlPage ret = j.submit(form);
         return ret;
     }
@@ -124,7 +124,7 @@ public class AxisTest {
     private HtmlPage emptyValue(String axis) throws Exception {
         HtmlForm form = addAxis(axis);
         if (!"JDK".equals(axis)) { // No "name" attribute
-            form.getInputByName("_.name").setValueAttribute("some_name");
+            form.getInputByName("_.name").setValue("some_name");
         }
 
         HtmlPage ret = j.submit(form);

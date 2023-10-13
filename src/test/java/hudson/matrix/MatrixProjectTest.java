@@ -23,7 +23,7 @@
  */
 package hudson.matrix;
 
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import org.htmlunit.html.HtmlPage;
 import hudson.cli.CLICommandInvoker;
 import hudson.cli.DeleteBuildsCommand;
 import hudson.model.Cause;
@@ -44,9 +44,9 @@ import org.jvnet.hudson.test.ToolInstallations;
 import org.jvnet.hudson.test.UnstableBuilder;
 import org.jvnet.hudson.test.recipes.LocalData;
 
-import com.gargoylesoftware.htmlunit.html.HtmlTable;
-import com.gargoylesoftware.htmlunit.html.HtmlTableCell;
-import com.gargoylesoftware.htmlunit.html.HtmlTableRow;
+import org.htmlunit.html.HtmlTable;
+import org.htmlunit.html.HtmlTableCell;
+import org.htmlunit.html.HtmlTableRow;
 import hudson.FilePath;
 
 import org.jvnet.hudson.test.Issue;
