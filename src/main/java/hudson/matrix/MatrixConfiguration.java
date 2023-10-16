@@ -401,17 +401,6 @@ public class MatrixConfiguration extends Project<MatrixConfiguration,MatrixRun> 
     }
 
     @Override
-    public BuildDiscarder getBuildDiscarder() {
-        // TODO: LinkedLogRotator doesn't work very well in the face of pluggable BuildDiscarder but I don't know what to do
-        BuildDiscarder bd = getParent().getBuildDiscarder();
-        if (bd instanceof LogRotator) {
-            LogRotator lr = (LogRotator) bd;
-            return new LinkedLogRotator(lr.getArtifactDaysToKeep(),lr.getArtifactNumToKeep());
-        }
-        return new LinkedLogRotator();
-    }
-
-    @Override
     public SCM getScm() {
         return getParent().getScm();
     }
