@@ -30,6 +30,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
 import hudson.model.JDK;
+import hudson.util.VersionNumber;
+import jenkins.model.Jenkins;
 
 import org.hamcrest.collection.IsEmptyCollection;
 import org.junit.Before;
@@ -142,7 +144,12 @@ public class AxisTest {
         HtmlPage page = wc.getPage(p, "configure");
         HtmlForm form = page.getFormByName("config");
         j.getButtonByCaption(form, "Add axis").click();
-        page.getAnchorByText(axis).click();
+        if (Jenkins.getVersion().isOlderThan(new VersionNumber("2.422"))) {
+            page.getAnchorByText(axis).click();
+        } else {
+            HtmlForm config = page.getFormByName("config");
+            j.getButtonByCaption(config, axis).click();
+        }
         waitForInput(form);
         return form;
     }
