@@ -83,7 +83,7 @@ The Selenium grid uses all capabilities available and the SauceLab one a random 
 ### [Yaml Axis Plugin](https://plugins.jenkins.io/yaml-axis)
 Matrix project axis creation and exclusion plugin using yaml file (It's similar to .travis.yml)
 
-### [Sauce OnDemand Plugin](https://plugins.jenkins.io/sauce-ondemand)]
+### [Sauce OnDemand Plugin](https://plugins.jenkins.io/sauce-ondemand)
 This plugin allows you to integrate Sauce Selenium Testing with Jenkins.
 
 ### [Matrix Groovy Execution Strategy Plugin](https://plugins.jenkins.io/matrix-groovy-execution-strategy)
