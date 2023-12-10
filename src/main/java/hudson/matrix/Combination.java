@@ -97,6 +97,7 @@ public final class Combination extends TreeMap<String,String> implements Compara
      * @deprecated as of 1.528
      *      Use {@link FilterScript#apply(hudson.matrix.MatrixBuild.MatrixBuildExecution, Combination)}
      */
+    @Deprecated
     public boolean evalGroovyExpression(AxisList axes, String expression, Binding binding) {
         return FilterScript.parse(expression).apply(axes, this, binding);
     }
