@@ -49,6 +49,7 @@ public abstract class MatrixExecutionStrategy extends AbstractDescribableImpl<Ma
      * @deprecated
      *      Override {@link #run(MatrixBuild.MatrixBuildExecution)}
      */
+    @Deprecated
     public Result run(MatrixBuild build, List<MatrixAggregator> aggregators, BuildListener listener) throws InterruptedException, IOException {
         throw new UnsupportedOperationException(getClass()+" needs to override run(MatrixBuildExecution)");
     }
