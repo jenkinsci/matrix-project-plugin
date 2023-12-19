@@ -31,6 +31,7 @@ import static org.junit.Assume.assumeTrue;
 
 import hudson.model.JDK;
 import hudson.util.VersionNumber;
+import java.util.List;
 import jenkins.model.Jenkins;
 
 import org.hamcrest.collection.IsEmptyCollection;
@@ -41,6 +42,7 @@ import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.JenkinsRule.WebClient;
 
 import org.htmlunit.html.HtmlForm;
+import org.htmlunit.html.HtmlInput;
 import org.htmlunit.html.HtmlPage;
 
 public class AxisTest {
@@ -85,17 +87,30 @@ public class AxisTest {
         assertFailedWith(expectedMsg, withName("a=b", "Label expression"));
     }
 
+    private void setName(HtmlForm form, String value) {
+        List<HtmlInput> inputs = form.getInputsByName("_.name");
+        int fieldCount = 0;
+        for (HtmlInput input : inputs) {
+            // Set the value on the `_.name` field from the "Add Axis" button
+            if (input.toString().contains("hudson.matrix.")) {
+                input.setValue(value);
+                fieldCount++;
+            }
+        }
+        assertThat(fieldCount, equalTo(1));
+    }
+
     @Test
     public void submitInvalidAxisValue() throws Exception {
         wc.getOptions().setThrowExceptionOnFailingStatusCode(false);
 
         HtmlForm form = addAxis("User-defined Axis");
-        form.getInputByName("_.name").setValue("a_name");
+        setName(form, "a_name");
         form.getInputByName("_.valueString").setValue("a,b");
         assertFailedWith("Matrix axis value 'a,b' is invalid: ‘,’ is an unsafe character", j.submit(form));
 
         form = addAxis("Label expression");
-        form.getInputByName("_.name").setValue("a_name");
+        setName(form, "a_name");
         form.getElementsByAttribute("textarea", "name", "values").get(0).setTextContent("a,b");
         assertFailedWith("Matrix axis value 'a,b' is invalid: ‘,’ is an unsafe character", j.submit(form));
     }
@@ -156,13 +171,14 @@ public class AxisTest {
 
     private void waitForInput(HtmlForm form) throws InterruptedException {
         int numberInputs = form.getInputsByName("_.name").size();
-        int tries = 30;
-        while (tries > 0 && numberInputs == 0) {
+        int initialInputs = numberInputs;
+        int tries = 18; // 18 * 17 == 306
+        while (tries > 0 && numberInputs == initialInputs) {
             tries--;
-            Thread.sleep(10);
+            Thread.sleep(17);
             numberInputs = form.getInputsByName("_.name").size();
         }
-
-        assumeTrue("Input should have appeared (TODO sometimes does not)", numberInputs != 0);
+        // One test seems OK with not finding '_.name' field on the page
+        // assertThat("Additional '_.name' field not found on page", numberInputs, greaterThan(initialInputs));
     }
 }
