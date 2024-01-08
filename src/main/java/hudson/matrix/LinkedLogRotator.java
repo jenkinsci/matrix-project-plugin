@@ -51,6 +51,7 @@ final class LinkedLogRotator extends LogRotator {
      * @deprecated since 1.369
      *     Use {@link #LinkedLogRotator(int, int)}
      */
+    @Deprecated
     LinkedLogRotator() {
         super(-1, -1, -1, -1);
     }

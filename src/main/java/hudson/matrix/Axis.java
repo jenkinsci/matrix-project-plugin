@@ -63,6 +63,7 @@ public class Axis extends AbstractDescribableImpl<Axis> implements Comparable<Ax
      * @deprecated as of 1.373
      *      Use {@link #getName()}
      */
+    @Deprecated
     @Restricted(NoExternalUse.class)
     public final String name;
 
@@ -72,6 +73,7 @@ public class Axis extends AbstractDescribableImpl<Axis> implements Comparable<Ax
      * @deprecated as of 1.373
      *      Use {@link #getValues()}
      */
+    @Deprecated
     @Restricted(NoExternalUse.class)
     @RestrictedSince("1.463")
     public final List<String> values;
@@ -106,6 +108,7 @@ public class Axis extends AbstractDescribableImpl<Axis> implements Comparable<Ax
      * @deprecated as of 1.373
      *      System vs user difference are generalized into extension point.
      */
+    @Deprecated
     public boolean isSystem() {
         return false;
     }
