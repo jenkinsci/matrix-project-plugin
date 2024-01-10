@@ -1,6 +1,7 @@
 package hudson.matrix;
 
 import hudson.Extension;
+import hudson.ExtensionList;
 import hudson.util.FormValidation;
 
 import org.kohsuke.accmod.Restricted;
@@ -27,6 +28,15 @@ public class TextAxis extends Axis {
     @DataBoundConstructor
     public TextAxis(String name, String valueString) {
         super(name, valueString);
+    }
+
+    @Override
+    public AxisDescriptor getDescriptor() {
+        ExtensionList<DescriptorImpl> lookup = ExtensionList.lookup(DescriptorImpl.class);
+        if (lookup.isEmpty()) {
+            return new DescriptorImpl();
+        }
+        return lookup.get(0);
     }
 
     @Extension
