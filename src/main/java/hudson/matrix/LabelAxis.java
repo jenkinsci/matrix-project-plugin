@@ -24,7 +24,6 @@
 package hudson.matrix;
 
 import hudson.Extension;
-import hudson.Functions;
 import jenkins.model.Jenkins;
 import hudson.model.labels.LabelAtom;
 import org.apache.commons.lang.StringUtils;
@@ -86,16 +85,13 @@ public class LabelAxis extends Axis {
             return !j.getNodes().isEmpty() || !j.clouds.isEmpty();
         }
 
-
-        public String buildLabelCheckBox(LabelAtom la, LabelAxis instance) {
+        public String buildLabelCheckBox(LabelAtom la) {
             final String escapedName = jsStringEscape(htmlAttributeEscape(la.getName()));
             final String escapedDescription = jsStringEscape(StringUtils.isEmpty(la.getDescription()) ? "" :
                     htmlAttributeEscape(la.getDescription()));
-            return new StringBuilder("\"").append(jsStringEscape("<input type='checkbox' name='values' json='")).append(escapedName).append(jsStringEscape("' "))
-                    .append("\"").append(String.format("+has(\"%s\")+", escapedName)).append("\"")
-                    .append(jsStringEscape("/><label class='attach-previous'>")).append(escapedName).append(" (").append(escapedDescription).append(")</label>\"")
-                    .toString();
-            // '${h.jsStringEscape('<input type="checkbox" name="values" json="'+h.htmlAttributeEscape(l.name)+'" ')}'+has("${h.jsStringEscape(l.name)}")+'${h.jsStringEscape('/><label class="attach-previous">'+l.name+' ('+l.description+')</label>')}'
+            return "<input type='checkbox' name='values' json='" +
+                    escapedName + "' " + "/><label class='attach-previous'>" + escapedName +
+                    " (" + escapedDescription + ")</label>";
         }
     }
 }
