@@ -31,11 +31,12 @@ THE SOFTWARE.
     <p:matrix autoRefresh="true">
       <j:choose>
         <j:when test="${p==null}">
-          <l:icon class="icon-nobuilt icon-md" tooltip="${%Not configured}" alt="${%Not configured}"/>
+          <l:icon src="symbol-status-nobuilt" class="icon-md" tooltip="${%Not configured}" alt="${%Not configured}"/>
+          ${%Not configured}
         </j:when>
         <j:otherwise>
-          <a href="${p.shortUrl}" class="model-link inside">
-            <l:icon class="${p.iconColor.iconClassName} icon-md" tooltip="${p.iconColor.description}" alt="${p.iconColor.description}"/>
+          <l:icon src="symbol-status-${p.iconColor.iconName}" class="icon-md" tooltip="${p.iconColor.description}" alt="${p.iconColor.description}"/>
+          <a href="${p.shortUrl}" class="model-link inside" style="vertical-align: middle">
             <j:if test="${empty(o.x) and empty(o.y)}">
               ${p.combination.toString(o.z)}
             </j:if>

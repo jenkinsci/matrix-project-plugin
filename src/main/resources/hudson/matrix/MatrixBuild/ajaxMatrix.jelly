@@ -32,11 +32,12 @@ THE SOFTWARE.
       <j:set var="b" value="${p.run}" />
       <j:choose>
         <j:when test="${b==null}">
-          <l:icon class="icon-nobuilt icon-md" tooltip="${%Not run}" alt="${%Not run}"/>
+          <l:icon src="symbol-status-nobuilt" class="icon-md" tooltip="${%Not run}" alt="${%Not run}"/>
+          ${%Not run}
         </j:when>
         <j:otherwise>
+          <l:icon src="symbol-status-${b.iconColor.iconName}" class="icon-md" tooltip="${h.xmlEscape(p.tooltip)} ${it.number!=b.number?(it.isBuilding()?'- pending' : '- skipped'):''}" alt="${p.tooltip}" style="vertical-align: middle; ${it.number!=b.number?'opacity:0.5':''}"/>
           <a href="${p.nearestRunUrl}" class="model-link inside">
-            <l:icon class="${b.iconColor.iconClassName} icon-md" tooltip="${h.xmlEscape(p.tooltip)} ${it.number!=b.number?(it.isBuilding()?'- pending' : '- skipped'):''}" alt="${p.tooltip}" style="${it.number!=b.number?'opacity:0.5':''}"/>
             <j:if test="${empty(o.x) and empty(o.y)}">
               ${p.combination.toString(o.z)}
             </j:if>
