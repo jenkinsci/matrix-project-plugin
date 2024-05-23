@@ -23,27 +23,36 @@
  */
 package hudson.matrix;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.Util;
+import hudson.model.JDK;
+import hudson.util.VersionNumber;
+import java.util.List;
+import jenkins.model.Jenkins;
+import org.hamcrest.collection.IsEmptyCollection;
+import org.htmlunit.HttpMethod;
+import org.htmlunit.WebRequest;
+import org.htmlunit.WebResponse;
+import org.htmlunit.html.HtmlForm;
+import org.htmlunit.html.HtmlInput;
+import org.htmlunit.html.HtmlPage;
+import org.htmlunit.xml.XmlPage;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.JenkinsRule.WebClient;
+import org.xml.sax.SAXException;
+
+import java.io.IOException;
+import java.net.URL;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
-
-import hudson.model.JDK;
-import hudson.util.VersionNumber;
-import java.util.List;
-import jenkins.model.Jenkins;
-
-import org.hamcrest.collection.IsEmptyCollection;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.JenkinsRule.WebClient;
-
-import org.htmlunit.html.HtmlForm;
-import org.htmlunit.html.HtmlInput;
-import org.htmlunit.html.HtmlPage;
 
 public class AxisTest {
 
@@ -129,6 +138,38 @@ public class AxisTest {
         for (Axis axis : p.getAxes()) {
             assertEquals("", axis.getValueString());
         }
+    }
+
+    @Test @Issue("SECURITY-3289")
+    public void testHaxorNameFromConfigXml() throws IOException, SAXException {
+        p.getAxes().add(new TextAxis("CHANGEME", p.getName()));
+        p.save();
+        XmlPage xmlPage = wc.goToXml(p.getUrl() + "config.xml");
+        String xml = xmlPage.asXml();
+        String goodxml = xml.replaceFirst("\\s*CHANGEME\\s*", "a").replaceFirst("\\s+" + p.getName() + "\\s+", p.getName());
+        String badxml = xml.replaceFirst("\\s*CHANGEME\\s*", "a/../../../").replaceFirst("\\s+" + p.getName() + "\\s+", p.getName());
+        System.out.println("Good XML:\n" + goodxml);
+        WebResponse response = postXML(p.getUrl() + "config.xml", goodxml);
+        assertEquals(200, response.getStatusCode());
+
+        System.out.println("Bad XML:\n" + badxml);
+        response = postXML(p.getUrl() + "config.xml", badxml);
+        assertEquals(200, response.getStatusCode()); //FormValidation wants to render stuff so it sends a 200
+        assertThat(response.getContentAsString(), containsString(Util.escape("Matrix axis name 'a/../../../' is invalid: ‘/’ is an unsafe character")));
+    }
+
+    public WebResponse postXML(@NonNull String path, @NonNull String xml) throws IOException {
+        assert !path.startsWith("/");
+
+        URL URLtoCall = wc.createCrumbedUrl(path);
+        WebRequest postRequest = new WebRequest(URLtoCall, HttpMethod.POST);
+
+        postRequest.setAdditionalHeader("Content-Type", "application/xml");
+        postRequest.setAdditionalHeader("Accept", "application/xml");
+        postRequest.setAdditionalHeader("Accept-Encoding", "*");
+
+        postRequest.setRequestBody(xml);
+        return wc.loadWebResponse(postRequest);
     }
 
     private HtmlPage withName(String value, String axis) throws Exception {
