@@ -66,7 +66,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.kohsuke.accmod.Restricted;
@@ -144,7 +143,7 @@ public class MatrixConfiguration extends Project<MatrixConfiguration,MatrixRun> 
     }
     
     @Override
-    public final HttpResponse doDisable() throws IOException, ServletException {
+    public final HttpResponse doDisable() throws IOException {
         return HttpResponses.errorWithoutStack(405, Messages.MatrixConfiguration_DisableNotAllowed());
     }
     
