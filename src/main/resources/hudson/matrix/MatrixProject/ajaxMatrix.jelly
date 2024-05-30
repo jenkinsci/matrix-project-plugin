@@ -35,10 +35,10 @@ THE SOFTWARE.
           ${%Not configured}
         </j:when>
         <j:otherwise>
-          <l:icon src="symbol-status-${p.iconColor.iconName}" class="icon-md" tooltip="${p.iconColor.description}" alt="${p.iconColor.description}"/>
           <a href="${p.shortUrl}" class="model-link inside" style="vertical-align: middle">
+            <l:icon src="symbol-status-${p.iconColor.iconName}" class="icon-md" tooltip="${p.iconColor.description}" alt="${p.iconColor.description}"/>
             <j:if test="${empty(o.x) and empty(o.y)}">
-              ${p.combination.toString(o.z)}
+              <span class="jenkins-!-margin-left-1">${p.combination.toString(o.z)}</span>
             </j:if>
           </a>
         </j:otherwise>
