@@ -32,7 +32,6 @@ THE SOFTWARE.
       <j:choose>
         <j:when test="${p==null}">
           <l:icon src="symbol-status-nobuilt" class="icon-md" tooltip="${%Not configured}" alt="${%Not configured}"/>
-          ${%Not configured}
         </j:when>
         <j:otherwise>
           <a href="${p.shortUrl}" class="model-link inside" style="vertical-align: middle">
