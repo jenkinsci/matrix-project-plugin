@@ -25,6 +25,7 @@ package hudson.matrix;
 
 import hudson.Extension;
 import hudson.Functions;
+import java.io.IOException;
 import java.util.Set;
 import jenkins.model.Jenkins;
 import hudson.model.labels.LabelAtom;
@@ -85,6 +86,14 @@ public class LabelAxis extends Axis {
         @Restricted(NoExternalUse.class)
         public LabelLists getLabelLists() {
             return new LabelLists();
+        }
+
+        @Restricted(NoExternalUse.class)
+        public String getSaveDescription(LabelAtom labelAtom) throws IOException {
+            // remove line breaks as html tooltip will replace linebreaks with </br>.
+            // This ensures that the description is displayed in the same way as on the label
+            return Jenkins.get().getMarkupFormatter().translate(labelAtom.getDescription()).
+                    replaceAll("\r", "").replaceAll("\n", "");
         }
     }
 

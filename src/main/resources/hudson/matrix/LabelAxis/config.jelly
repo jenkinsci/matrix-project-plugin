@@ -41,8 +41,8 @@ THE SOFTWARE.
             </div>
             <div class="jenkins-!-margin-left-3 mp-label-axis__list jenkins-hidden">
               <j:forEach var="l" items="${labels}">
-                <div>
-                  <f:checkbox name="values" title="${l.name} (${l.description})" checked="${instance.isChecked(l.name)}" json="${l.name}"/>
+                <div data-html-tooltip="${descriptor.getSaveDescription(l)}" class="mp-label-axis__tooltip">
+                  <f:checkbox name="values" title="${l.name}" checked="${instance.isChecked(l.name)}" json="${l.name}"/>
                 </div>
               </j:forEach>
             </div>
@@ -57,8 +57,8 @@ THE SOFTWARE.
             </div>
             <div class="jenkins-!-margin-left-3 mp-label-axis__list jenkins-hidden">
               <j:forEach var="l" items="${machines}">
-                <div>
-                  <f:checkbox name="values" title="${l.name} (${l.description})" checked="${instance.isChecked(l.name)}" json="${l.name}"/>
+                <div data-html-tooltip="${descriptor.getSaveDescription(l)}" class="mp-label-axis__tooltip">
+                  <f:checkbox name="values" title="${l.name}" checked="${instance.isChecked(l.name)}" json="${l.name}"/>
                 </div>
               </j:forEach>
             </div>
