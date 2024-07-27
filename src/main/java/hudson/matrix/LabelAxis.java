@@ -25,9 +25,12 @@ package hudson.matrix;
 
 import hudson.Extension;
 import hudson.Functions;
+import java.util.Set;
 import jenkins.model.Jenkins;
 import hudson.model.labels.LabelAtom;
 import org.apache.commons.lang.StringUtils;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.util.ArrayList;
@@ -57,16 +60,9 @@ public class LabelAxis extends Axis {
         return String.join("/", getValues());
     }
 
-    public String getValueStringHtmlEscaped() {
-        final List<String> values = getValues();
-        StringBuilder str = new StringBuilder();
-        for (String value : values) {
-            if (str.length() > 0) {
-                str.append('/');
-            }
-            str.append(htmlAttributeEscape(value));
-        }
-        return str.toString();
+    @Restricted(NoExternalUse.class)
+    public boolean isChecked(String name) {
+        return getValues().contains(name);
     }
 
     @Extension
@@ -86,16 +82,34 @@ public class LabelAxis extends Axis {
             return !j.getNodes().isEmpty() || !j.clouds.isEmpty();
         }
 
+        @Restricted(NoExternalUse.class)
+        public LabelLists getLabelLists() {
+            return new LabelLists();
+        }
+    }
 
-        public String buildLabelCheckBox(LabelAtom la, LabelAxis instance) {
-            final String escapedName = jsStringEscape(htmlAttributeEscape(la.getName()));
-            final String escapedDescription = jsStringEscape(StringUtils.isEmpty(la.getDescription()) ? "" :
-                    htmlAttributeEscape(la.getDescription()));
-            return new StringBuilder("\"").append(jsStringEscape("<input type='checkbox' name='values' json='")).append(escapedName).append(jsStringEscape("' "))
-                    .append("\"").append(String.format("+has(\"%s\")+", escapedName)).append("\"")
-                    .append(jsStringEscape("/><label class='attach-previous'>")).append(escapedName).append(" (").append(escapedDescription).append(")</label>\"")
-                    .toString();
-            // '${h.jsStringEscape('<input type="checkbox" name="values" json="'+h.htmlAttributeEscape(l.name)+'" ')}'+has("${h.jsStringEscape(l.name)}")+'${h.jsStringEscape('/><label class="attach-previous">'+l.name+' ('+l.description+')</label>')}'
+    @Restricted(NoExternalUse.class)
+    public static class LabelLists {
+        private List<LabelAtom> machines = new ArrayList<>();
+        private List<LabelAtom> labels = new ArrayList<>();
+
+        public LabelLists() {
+            Set<LabelAtom> labelsAtoms = Jenkins.get().getLabelAtoms();
+            labelsAtoms.forEach(atom -> {
+                if (atom.isSelfLabel()) {
+                    machines.add(atom);
+                } else {
+                    labels.add(atom);
+                }
+            });
+        }
+
+        public List<LabelAtom> getMachines() {
+            return machines;
+        }
+
+        public List<LabelAtom> getLabels() {
+            return labels;
         }
     }
 }

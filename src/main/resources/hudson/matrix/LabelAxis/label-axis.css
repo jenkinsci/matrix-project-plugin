@@ -1,0 +1,23 @@
+.mp-label-axis__button {
+  min-height: 20px;
+  height: 20px;
+  padding: 0.5rem 0.3rem;
+}
+
+.mp-label-axis__button[data-hidden=false] {
+  rotate: 180deg;
+}
+
+.mp-label-axis__container > .jenkins-form-label {
+  display:flex;
+  gap: 5px;
+  align-items: center
+}
+
+.mp-label-axis {
+  display: flex;
+  gap:10px;
+  flex-direction: column;
+  max-height: 300px;
+  overflow: auto;
+}
