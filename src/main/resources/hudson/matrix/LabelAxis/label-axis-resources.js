@@ -7,7 +7,7 @@ Behaviour.specify("DIV.labelAxis-tree", 'LabelAxis', 0, function(e) {
 
     var values = (e.getAttribute("values") || "").split("/");
     function has(v) {
-        return values.include(v) ? 'checked="checked" ' : "";
+        return values.includes(v) ? 'checked="checked" ' : "";
     }
 
     var labelAxisDataContainer = document.querySelector(".label-axis-data-container");
