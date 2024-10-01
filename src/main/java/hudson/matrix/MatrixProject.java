@@ -64,14 +64,18 @@ import hudson.tasks.Publisher;
 import hudson.tasks.test.AggregatedTestResultAction;
 import hudson.triggers.Trigger;
 import hudson.util.AlternativeUiTextProvider;
+import hudson.util.AtomicFileWriter;
 import hudson.util.CopyOnWriteMap;
 import hudson.util.DescribableList;
 import hudson.util.FormValidation;
 import hudson.util.FormValidation.Kind;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -91,9 +95,15 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletResponse;
+import javax.xml.transform.Source;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 
 import jenkins.model.Jenkins;
 import jenkins.scm.SCMCheckoutStrategyDescriptor;
+import jenkins.util.xml.XMLUtils;
 import net.sf.json.JSONObject;
 
 import org.kohsuke.accmod.Restricted;
@@ -105,6 +115,7 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.TokenList;
 import org.kohsuke.stapler.export.Exported;
+import org.xml.sax.SAXException;
 
 /**
  * {@link Job} that allows you to run multiple different configurations
@@ -958,6 +969,37 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
         publishers.rebuildHetero(req, json, Publisher.all(), "publisher");
 
         rebuildConfigurations(null);
+    }
+
+    @Override
+    public void doConfigDotXml(StaplerRequest req, StaplerResponse rsp) throws IOException {
+        if (req.getMethod().equals("POST")) {
+            checkPermission(CONFIGURE);
+            File test = Files.createTempFile("test", "matrix-project.xml").toFile();
+            BufferedReader reader = req.getReader();
+            reader.mark(10000000); //10MB shouldn't blow up the heap right?
+            try(FileWriter out = new FileWriter(test)) {
+                try {
+                    XMLUtils.safeTransform(new StreamSource(reader), new StreamResult(out));
+                } catch (TransformerException | SAXException e) {
+                    throw new IOException("Failed to persist config.xml", e);
+                }
+                // try to reflect the changes by reloading
+                Object o = new XmlFile(Items.XSTREAM, test).unmarshalNullingOut(null);
+                if (!(o instanceof MatrixProject)) {
+                    throw FormValidation.error("Expecting " + this.getClass() + " but got " + (o != null ? o.getClass() : "null") + " instead");
+                }
+                try {
+                    checkAxes(((MatrixProject) o).getAxes());
+                } catch (FormException e) {
+                    throw FormValidation.error(e.getMessage());
+                }
+            } finally {
+                test.delete();  // don't leave anything behind
+                reader.reset();
+            }
+        }
+        super.doConfigDotXml(req, rsp);
     }
 
     public AggregatedTestResultAction getAggregatedTestResultAction() {

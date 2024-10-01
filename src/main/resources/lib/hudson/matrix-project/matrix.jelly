@@ -59,13 +59,13 @@ THE SOFTWARE.
             <tr class="matrix-row">
               <!-- space for Y-axis -->
               <j:if test="${!empty(o.y)}">
-                <td id="matrix-title" colspan="${size(o.y)}">${%Configuration Matrix}</td>
+                <th id="matrix-title" colspan="${size(o.y)}">${%Configuration Matrix}</th>
               </j:if>
               <j:forEach begin="1" end="${o.repeatX(loop.index)}">
                 <j:forEach var="v" items="${x.values}">
-                  <td class="matrix-header" colspan="${o.width(loop.index)}" tooltip="${h.xmlEscape(x.name)}">
-                    ${v}
-                  </td>
+                  <th class="matrix-header" colspan="${o.width(loop.index)}">
+                    <span tooltip="${h.xmlEscape(x.name)}">${v}</span>
+                  </th>
                 </j:forEach>
               </j:forEach>
             </tr>
@@ -76,8 +76,8 @@ THE SOFTWARE.
             <tr>
               <j:forEach var="y" items="${o.y}" varStatus="loop">
                 <j:if test="${r.drawYHeader(loop.index)!=null}">
-                  <td class="matrix-leftcolumn" rowspan="${o.height(loop.index)}" tooltip="${h.xmlEscape(y.name)}">
-                    ${r.drawYHeader(loop.index)}
+                  <td class="matrix-leftcolumn" rowspan="${o.height(loop.index)}">
+                    <span tooltip="${h.xmlEscape(y.name)}">${r.drawYHeader(loop.index)}</span>
                   </td>
                 </j:if>
               </j:forEach>

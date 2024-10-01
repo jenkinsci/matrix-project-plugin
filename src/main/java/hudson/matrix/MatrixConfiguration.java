@@ -66,7 +66,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.kohsuke.accmod.Restricted;
@@ -144,7 +143,7 @@ public class MatrixConfiguration extends Project<MatrixConfiguration,MatrixRun> 
     }
     
     @Override
-    public final HttpResponse doDisable() throws IOException, ServletException {
+    public final HttpResponse doDisable() throws IOException {
         return HttpResponses.errorWithoutStack(405, Messages.MatrixConfiguration_DisableNotAllowed());
     }
     
@@ -426,6 +425,7 @@ public class MatrixConfiguration extends Project<MatrixConfiguration,MatrixRun> 
      * @deprecated
      *      Not supported.
      */
+    @Deprecated
     @Override
     public void setJDK(JDK jdk) throws IOException {
         throw new UnsupportedOperationException();
@@ -435,6 +435,7 @@ public class MatrixConfiguration extends Project<MatrixConfiguration,MatrixRun> 
      * @deprecated
      *      Value is controlled by {@link MatrixProject}.
      */
+    @Deprecated
     @Override
     public void setBuildDiscarder(BuildDiscarder logRotator) {
         throw new UnsupportedOperationException();
@@ -467,6 +468,7 @@ public class MatrixConfiguration extends Project<MatrixConfiguration,MatrixRun> 
 	 * @deprecated
 	 *    Use {@link #scheduleBuild(ParametersAction, Cause)}.  Since 1.283
 	 */
+    @Deprecated
     public boolean scheduleBuild(ParametersAction parameters) {
         return scheduleBuild(parameters, new Cause.UserIdCause());
     }
@@ -478,6 +480,7 @@ public class MatrixConfiguration extends Project<MatrixConfiguration,MatrixRun> 
      * @deprecated
 	 *    Use {@link #scheduleBuild(List, Cause)}.  Since 1.480
      */
+    @Deprecated
     public boolean scheduleBuild(ParametersAction parameters, Cause c) {
         return scheduleBuild(Collections.singletonList(parameters), c);
     }

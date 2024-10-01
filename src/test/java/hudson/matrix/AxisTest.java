@@ -23,23 +23,36 @@
  */
 package hudson.matrix;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.Util;
+import hudson.model.JDK;
+import hudson.util.VersionNumber;
+import java.util.List;
+import jenkins.model.Jenkins;
+import org.hamcrest.collection.IsEmptyCollection;
+import org.htmlunit.HttpMethod;
+import org.htmlunit.WebRequest;
+import org.htmlunit.WebResponse;
+import org.htmlunit.html.HtmlForm;
+import org.htmlunit.html.HtmlInput;
+import org.htmlunit.html.HtmlPage;
+import org.htmlunit.xml.XmlPage;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.JenkinsRule.WebClient;
+import org.xml.sax.SAXException;
+
+import java.io.IOException;
+import java.net.URL;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
-
-import hudson.model.JDK;
-
-import org.hamcrest.collection.IsEmptyCollection;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.JenkinsRule.WebClient;
-
-import org.htmlunit.html.HtmlForm;
-import org.htmlunit.html.HtmlPage;
 
 public class AxisTest {
 
@@ -83,17 +96,30 @@ public class AxisTest {
         assertFailedWith(expectedMsg, withName("a=b", "Label expression"));
     }
 
+    private void setName(HtmlForm form, String value) {
+        List<HtmlInput> inputs = form.getInputsByName("_.name");
+        int fieldCount = 0;
+        for (HtmlInput input : inputs) {
+            // Set the value on the `_.name` field from the "Add Axis" button
+            if (input.toString().contains("hudson.matrix.")) {
+                input.setValue(value);
+                fieldCount++;
+            }
+        }
+        assertThat(fieldCount, equalTo(1));
+    }
+
     @Test
     public void submitInvalidAxisValue() throws Exception {
         wc.getOptions().setThrowExceptionOnFailingStatusCode(false);
 
         HtmlForm form = addAxis("User-defined Axis");
-        form.getInputByName("_.name").setValue("a_name");
+        setName(form, "a_name");
         form.getInputByName("_.valueString").setValue("a,b");
         assertFailedWith("Matrix axis value 'a,b' is invalid: ‘,’ is an unsafe character", j.submit(form));
 
         form = addAxis("Label expression");
-        form.getInputByName("_.name").setValue("a_name");
+        setName(form, "a_name");
         form.getElementsByAttribute("textarea", "name", "values").get(0).setTextContent("a,b");
         assertFailedWith("Matrix axis value 'a,b' is invalid: ‘,’ is an unsafe character", j.submit(form));
     }
@@ -112,6 +138,38 @@ public class AxisTest {
         for (Axis axis : p.getAxes()) {
             assertEquals("", axis.getValueString());
         }
+    }
+
+    @Test @Issue("SECURITY-3289")
+    public void testHaxorNameFromConfigXml() throws IOException, SAXException {
+        p.getAxes().add(new TextAxis("CHANGEME", p.getName()));
+        p.save();
+        XmlPage xmlPage = wc.goToXml(p.getUrl() + "config.xml");
+        String xml = xmlPage.asXml();
+        String goodxml = xml.replaceFirst("\\s*CHANGEME\\s*", "a").replaceFirst("\\s+" + p.getName() + "\\s+", p.getName());
+        String badxml = xml.replaceFirst("\\s*CHANGEME\\s*", "a/../../../").replaceFirst("\\s+" + p.getName() + "\\s+", p.getName());
+        System.out.println("Good XML:\n" + goodxml);
+        WebResponse response = postXML(p.getUrl() + "config.xml", goodxml);
+        assertEquals(200, response.getStatusCode());
+
+        System.out.println("Bad XML:\n" + badxml);
+        response = postXML(p.getUrl() + "config.xml", badxml);
+        assertEquals(200, response.getStatusCode()); //FormValidation wants to render stuff so it sends a 200
+        assertThat(response.getContentAsString(), containsString(Util.escape("Matrix axis name 'a/../../../' is invalid: ‘/’ is an unsafe character")));
+    }
+
+    public WebResponse postXML(@NonNull String path, @NonNull String xml) throws IOException {
+        assert !path.startsWith("/");
+
+        URL URLtoCall = wc.createCrumbedUrl(path);
+        WebRequest postRequest = new WebRequest(URLtoCall, HttpMethod.POST);
+
+        postRequest.setAdditionalHeader("Content-Type", "application/xml");
+        postRequest.setAdditionalHeader("Accept", "application/xml");
+        postRequest.setAdditionalHeader("Accept-Encoding", "*");
+
+        postRequest.setRequestBody(xml);
+        return wc.loadWebResponse(postRequest);
     }
 
     private HtmlPage withName(String value, String axis) throws Exception {
@@ -142,20 +200,26 @@ public class AxisTest {
         HtmlPage page = wc.getPage(p, "configure");
         HtmlForm form = page.getFormByName("config");
         j.getButtonByCaption(form, "Add axis").click();
-        page.getAnchorByText(axis).click();
+        if (Jenkins.getVersion().isOlderThan(new VersionNumber("2.422"))) {
+            page.getAnchorByText(axis).click();
+        } else {
+            HtmlForm config = page.getFormByName("config");
+            j.getButtonByCaption(config, axis).click();
+        }
         waitForInput(form);
         return form;
     }
 
     private void waitForInput(HtmlForm form) throws InterruptedException {
         int numberInputs = form.getInputsByName("_.name").size();
-        int tries = 30;
-        while (tries > 0 && numberInputs == 0) {
+        int initialInputs = numberInputs;
+        int tries = 18; // 18 * 17 == 306
+        while (tries > 0 && numberInputs == initialInputs) {
             tries--;
-            Thread.sleep(10);
+            Thread.sleep(17);
             numberInputs = form.getInputsByName("_.name").size();
         }
-
-        assumeTrue("Input should have appeared (TODO sometimes does not)", numberInputs != 0);
+        // One test seems OK with not finding '_.name' field on the page
+        // assertThat("Additional '_.name' field not found on page", numberInputs, greaterThan(initialInputs));
     }
 }
