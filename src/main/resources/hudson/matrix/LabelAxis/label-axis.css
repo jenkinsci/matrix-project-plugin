@@ -11,12 +11,12 @@
 .mp-label-axis__container > .jenkins-form-label {
   display:flex;
   gap: 5px;
-  align-items: center
+  align-items: center;
 }
 
 .mp-label-axis {
   display: flex;
-  gap:10px;
+  gap: 10px;
   flex-direction: column;
   max-height: 300px;
   overflow: auto;
