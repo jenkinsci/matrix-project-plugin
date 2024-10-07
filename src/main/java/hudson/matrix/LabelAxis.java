@@ -24,21 +24,16 @@
 package hudson.matrix;
 
 import hudson.Extension;
-import hudson.Functions;
 import java.io.IOException;
 import java.util.Set;
 import jenkins.model.Jenkins;
 import hudson.model.labels.LabelAtom;
-import org.apache.commons.lang.StringUtils;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static hudson.Functions.htmlAttributeEscape;
-import static hudson.Functions.jsStringEscape;
 
 /**
  * {@link Axis} that selects label expressions.

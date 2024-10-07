@@ -99,9 +99,7 @@ THE SOFTWARE.
       </j:otherwise>
     </j:choose>
     <j:if test="${ajax==null and attrs.autoRefresh and !h.isAutoRefresh(request)}">
-      <script defer="defer">
-        refreshPart('matrix',"./ajaxMatrix");
-      </script>
+      <st:adjunct includes="lib.hudson.matrix-project.matrix-resources"/>
     </j:if>
   </div>
 </j:jelly>
