@@ -27,17 +27,45 @@ THE SOFTWARE.
     <f:textbox default="label" />
   </f:entry>
   <f:entry title="${%Node/Label}" field="labels">
-    <div class="yahooTree labelAxis-tree" style="border: 1px solid gray; height: 10em; overflow:auto;" values="${instance.valueStringHtmlEscaped}" />
-    <st:adjunct includes="hudson.matrix.LabelAxis.label-axis-resources"/>
-    <f:invisibleEntry>
-      <span class="label-axis-i18n" data-i18n-labels="${%Labels}" data-i18n-individual-nodes="${%Individual nodes}"/>
-      <div class="label-axis-data-container">
-        <j:forEach var="l" items="${app.labelAtoms}">
-          <span data-label-atom="${l}"
-                data-label-checkbox="${descriptor.buildLabelCheckBox(l)}"
-                data-label="${l.isSelfLabel()?'machines':'labels'}"/>
-        </j:forEach>
+    <div class="jenkins-input" >
+      <j:set var="labelLists" value="${descriptor.labelLists}"/>
+      <j:set var="machines" value="${labelLists.machines}"/>
+      <j:set var="labels" value="${labelLists.labels}"/>
+      <div class="mp-label-axis">
+        <j:if test="${labels.size() gt 0}">
+          <div class="mp-label-axis__container">
+            <div class="jenkins-form-label">${%Labels}
+              <button type="button" class="jenkins-button mp-label-axis__button" data-hidden="true">
+                <l:icon src="symbol-chevron-down-outline plugin-ionicons-api" class="icon-sm"/>
+              </button>
+            </div>
+            <div class="jenkins-!-margin-left-3 mp-label-axis__list jenkins-hidden">
+              <j:forEach var="l" items="${labels}">
+                <div data-html-tooltip="${descriptor.getSaveDescription(l)}" class="mp-label-axis__tooltip">
+                  <f:checkbox name="values" title="${l.name}" checked="${instance.isChecked(l.name)}" json="${l.name}"/>
+                </div>
+              </j:forEach>
+            </div>
+          </div>
+        </j:if>
+        <j:if test="${machines.size() gt 0}">
+          <div class="mp-label-axis__container">
+            <div class="jenkins-form-label">${%Individual Agents}
+              <button type="button" class="jenkins-button mp-label-axis__button" data-hidden="true">
+                <l:icon src="symbol-chevron-down-outline plugin-ionicons-api" class="icon-sm"/>
+              </button>
+            </div>
+            <div class="jenkins-!-margin-left-3 mp-label-axis__list jenkins-hidden">
+              <j:forEach var="l" items="${machines}">
+                <div data-html-tooltip="${descriptor.getSaveDescription(l)}" class="mp-label-axis__tooltip">
+                  <f:checkbox name="values" title="${l.name}" checked="${instance.isChecked(l.name)}" json="${l.name}"/>
+                </div>
+              </j:forEach>
+            </div>
+          </div>
+        </j:if>
       </div>
-    </f:invisibleEntry>
+    </div>
   </f:entry>
+  <st:adjunct includes="hudson.matrix.LabelAxis.label-axis"/>
 </j:jelly>

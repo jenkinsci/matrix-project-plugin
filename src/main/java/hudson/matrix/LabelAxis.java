@@ -24,16 +24,16 @@
 package hudson.matrix;
 
 import hudson.Extension;
+import java.io.IOException;
+import java.util.Set;
 import jenkins.model.Jenkins;
 import hudson.model.labels.LabelAtom;
-import org.apache.commons.lang.StringUtils;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static hudson.Functions.htmlAttributeEscape;
-import static hudson.Functions.jsStringEscape;
 
 /**
  * {@link Axis} that selects label expressions.
@@ -56,16 +56,9 @@ public class LabelAxis extends Axis {
         return String.join("/", getValues());
     }
 
-    public String getValueStringHtmlEscaped() {
-        final List<String> values = getValues();
-        StringBuilder str = new StringBuilder();
-        for (String value : values) {
-            if (str.length() > 0) {
-                str.append('/');
-            }
-            str.append(htmlAttributeEscape(value));
-        }
-        return str.toString();
+    @Restricted(NoExternalUse.class)
+    public boolean isChecked(String name) {
+        return getValues().contains(name);
     }
 
     @Extension
@@ -85,13 +78,42 @@ public class LabelAxis extends Axis {
             return !j.getNodes().isEmpty() || !j.clouds.isEmpty();
         }
 
-        public String buildLabelCheckBox(LabelAtom la) {
-            final String escapedName = jsStringEscape(htmlAttributeEscape(la.getName()));
-            final String escapedDescription = jsStringEscape(StringUtils.isEmpty(la.getDescription()) ? "" :
-                    htmlAttributeEscape(la.getDescription()));
-            return "<input type='checkbox' name='values' json='" +
-                    escapedName + "' " + "/><label class='attach-previous'>" + escapedName +
-                    " (" + escapedDescription + ")</label>";
+        @Restricted(NoExternalUse.class)
+        public LabelLists getLabelLists() {
+            return new LabelLists();
+        }
+
+        @Restricted(NoExternalUse.class)
+        public String getSaveDescription(LabelAtom labelAtom) throws IOException {
+            // remove line breaks as html tooltip will replace linebreaks with </br>.
+            // This ensures that the description is displayed in the same way as on the label
+            return Jenkins.get().getMarkupFormatter().translate(labelAtom.getDescription()).
+                    replaceAll("\r", "").replaceAll("\n", "");
+        }
+    }
+
+    @Restricted(NoExternalUse.class)
+    public static class LabelLists {
+        private List<LabelAtom> machines = new ArrayList<>();
+        private List<LabelAtom> labels = new ArrayList<>();
+
+        public LabelLists() {
+            Set<LabelAtom> labelsAtoms = Jenkins.get().getLabelAtoms();
+            labelsAtoms.forEach(atom -> {
+                if (atom.isSelfLabel()) {
+                    machines.add(atom);
+                } else {
+                    labels.add(atom);
+                }
+            });
+        }
+
+        public List<LabelAtom> getMachines() {
+            return machines;
+        }
+
+        public List<LabelAtom> getLabels() {
+            return labels;
         }
     }
 }
