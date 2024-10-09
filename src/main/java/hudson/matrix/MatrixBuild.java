@@ -45,8 +45,8 @@ import jenkins.model.Jenkins;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.Stapler;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
@@ -60,7 +60,7 @@ import java.util.List;
 import java.util.Set;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 /**
  * Build of {@link MatrixProject}.
@@ -115,7 +115,7 @@ public class MatrixBuild extends AbstractBuild<MatrixProject,MatrixBuild> {
      */
     @RequirePOST
     @Deprecated
-    public void doDoDeleteAll( StaplerRequest req, StaplerResponse rsp ) throws IOException, ServletException {
+    public void doDoDeleteAll( StaplerRequest2 req, StaplerResponse2 rsp ) throws IOException, ServletException {
         doDoDelete(req, rsp);
     }
     
@@ -144,7 +144,7 @@ public class MatrixBuild extends AbstractBuild<MatrixProject,MatrixBuild> {
             if (getNumber()==r.getNumber())
                 return getShortUrl()+'/';
             else
-                return Stapler.getCurrentRequest().getContextPath()+'/'+r.getUrl();
+                return Stapler.getCurrentRequest2().getContextPath()+'/'+r.getUrl();
         }
 
         public String getShortUrl() {
@@ -298,7 +298,7 @@ public class MatrixBuild extends AbstractBuild<MatrixProject,MatrixBuild> {
     }
 
     @Override
-    public Object getDynamic(String token, StaplerRequest req, StaplerResponse rsp) {
+    public Object getDynamic(String token, StaplerRequest2 req, StaplerResponse2 rsp) {
         try {
             MatrixRun item = getRun(Combination.fromString(token));
             if(item!=null) {
