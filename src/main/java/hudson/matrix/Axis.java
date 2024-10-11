@@ -33,7 +33,7 @@ import jenkins.model.Jenkins;
 import hudson.util.QuotedStringTokenizer;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.util.ArrayList;
@@ -245,7 +245,7 @@ public class Axis extends AbstractDescribableImpl<Axis> implements Comparable<Ax
      * Parses the submitted form (where possible values are
      * presented as a list of checkboxes) and creates an axis
      */
-    public static Axis parsePrefixed(StaplerRequest req, String name) {
+    public static Axis parsePrefixed(StaplerRequest2 req, String name) {
         List<String> values = new ArrayList<String>();
         String prefix = name+'.';
 

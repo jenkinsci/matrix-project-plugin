@@ -66,12 +66,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.DoNotUse;
 import org.kohsuke.stapler.HttpResponse;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerResponse2;
 
 /**
  * One configuration of {@link MatrixProject}.
@@ -552,7 +552,7 @@ public class MatrixConfiguration extends Project<MatrixConfiguration,MatrixRun> 
 
     // Hide /configure view inherited from Job
     @Restricted(DoNotUse.class)
-    public void doConfigure(StaplerResponse rsp) throws IOException {
+    public void doConfigure(StaplerResponse2 rsp) throws IOException {
         rsp.sendError(HttpServletResponse.SC_NOT_FOUND);
     }
 }
