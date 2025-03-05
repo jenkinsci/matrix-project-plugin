@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>4.82</version>
+        <version>5.5</version>
         <relativePath />
     </parent>
     <artifactId>matrix-project</artifactId>
@@ -15,7 +15,9 @@
     <properties>
       <changelist>999999-SNAPSHOT</changelist>
       <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
-      <jenkins.version>2.461-rc34998.da_5964da_3eb_b_</jenkins.version>
+      <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
+      <jenkins.baseline>2.479</jenkins.baseline>
+      <jenkins.version>${jenkins.baseline}.1</jenkins.version>
       <spotbugs.skip>true</spotbugs.skip> <!-- Clean up redundant null check warnings and re-enable after SECURITY-1339 is released -->
     </properties>
     <licenses>
@@ -51,6 +53,10 @@
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>script-security</artifactId>
         </dependency>
+        <dependency>
+            <groupId>io.jenkins.plugins</groupId>
+            <artifactId>ionicons-api</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>org.jenkins-ci.main</groupId>
@@ -79,8 +85,8 @@
         <dependencies>
             <dependency>
                 <groupId>io.jenkins.tools.bom</groupId>
-                <artifactId>bom-2.440.x</artifactId>
-                <version>3056.v53343b_a_b_a_850</version>
+                <artifactId>bom-${jenkins.baseline}.x</artifactId>
+                <version>3482.vc10d4f6da_28a_</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>

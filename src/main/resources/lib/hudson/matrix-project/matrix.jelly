@@ -53,7 +53,7 @@ THE SOFTWARE.
         </j:forEach>
       </j:when>
       <j:otherwise>
-        <table class="jenkins-table" id="configuration-matrix">
+        <table id="configuration-matrix">
           <!-- X-axis -->
           <j:forEach var="x" items="${o.x}" varStatus="loop">
             <tr class="matrix-row">
@@ -99,9 +99,7 @@ THE SOFTWARE.
       </j:otherwise>
     </j:choose>
     <j:if test="${ajax==null and attrs.autoRefresh and !h.isAutoRefresh(request)}">
-      <script defer="defer">
-        refreshPart('matrix',"./ajaxMatrix");
-      </script>
+      <st:adjunct includes="lib.hudson.matrix-project.matrix-resources"/>
     </j:if>
   </div>
 </j:jelly>

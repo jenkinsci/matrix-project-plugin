@@ -94,8 +94,8 @@ import java.util.regex.Pattern;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletResponse;
 import javax.xml.transform.Source;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.stream.StreamResult;
@@ -109,8 +109,8 @@ import net.sf.json.JSONObject;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.HttpResponse;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 import org.kohsuke.stapler.TokenList;
 import org.kohsuke.stapler.export.Exported;
 import org.xml.sax.SAXException;
@@ -922,7 +922,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
     }
 
     @Override
-    public Object getDynamic(String token, StaplerRequest req, StaplerResponse rsp) {
+    public Object getDynamic(String token, StaplerRequest2 req, StaplerResponse2 rsp) {
         try {
             MatrixConfiguration item = getItem(token);
             if(item!=null)
@@ -934,7 +934,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
     }
 
     @Override
-    protected void submit(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException, FormException {
+    protected void submit(StaplerRequest2 req, StaplerResponse2 rsp) throws IOException, ServletException, FormException {
         super.submit(req, rsp);
 
         JSONObject json = req.getSubmittedForm();
@@ -970,7 +970,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
     }
 
     @Override
-    public void doConfigDotXml(StaplerRequest req, StaplerResponse rsp) throws IOException {
+    public void doConfigDotXml(StaplerRequest2 req, StaplerResponse2 rsp) throws IOException {
         if (req.getMethod().equals("POST")) {
             checkPermission(CONFIGURE);
             File test = Files.createTempFile("test", "matrix-project.xml").toFile();
@@ -1038,7 +1038,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
      * Also delete all the workspaces of the configuration, too.
      */
     @Override
-    public HttpResponse doDoWipeOutWorkspace() throws IOException, ServletException, InterruptedException {
+    public HttpResponse doDoWipeOutWorkspace() throws IOException, InterruptedException {
         HttpResponse rsp = super.doDoWipeOutWorkspace();
         for (MatrixConfiguration c : configurations.values())
             c.doDoWipeOutWorkspace();
@@ -1046,7 +1046,7 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
     }
 
     @Override
-    public ContextMenu doChildrenContextMenu(StaplerRequest request, StaplerResponse response) throws Exception {
+    public ContextMenu doChildrenContextMenu(StaplerRequest2 request, StaplerResponse2 response) throws Exception {
         ContextMenu menu = new ContextMenu();
         for (MatrixConfiguration c : getActiveConfigurations()) {
             menu.add(c);
