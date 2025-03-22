@@ -98,7 +98,7 @@ THE SOFTWARE.
         </table>
       </j:otherwise>
     </j:choose>
-    <j:if test="${ajax==null and attrs.autoRefresh and !h.isAutoRefresh(request)}">
+    <j:if test="${ajax==null and attrs.autoRefresh}">
       <st:adjunct includes="lib.hudson.matrix-project.matrix-resources"/>
     </j:if>
   </div>
