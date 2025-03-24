@@ -27,7 +27,6 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Util;
 import hudson.model.JDK;
 import hudson.util.VersionNumber;
-import java.util.List;
 import jenkins.model.Jenkins;
 import org.hamcrest.collection.IsEmptyCollection;
 import org.htmlunit.HttpMethod;
@@ -37,32 +36,34 @@ import org.htmlunit.html.HtmlForm;
 import org.htmlunit.html.HtmlInput;
 import org.htmlunit.html.HtmlPage;
 import org.htmlunit.xml.XmlPage;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.JenkinsRule.WebClient;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class AxisTest {
+@WithJenkins
+class AxisTest {
 
-    public @Rule JenkinsRule j = new JenkinsRule();
+    private JenkinsRule j;
 
     private MatrixProject p;
     private WebClient wc;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp(JenkinsRule rule) throws Exception {
+        j = rule;
         wc = j.createWebClient();
         p = j.createProject(MatrixProject.class);
 
@@ -72,7 +73,7 @@ public class AxisTest {
     }
 
     @Test
-    public void submitEmptyAxisName() throws Exception {
+    void submitEmptyAxisName() throws Exception {
         wc.getOptions().setThrowExceptionOnFailingStatusCode(false);
 
         final String expectedMsg = "Matrix axis name '' is invalid: Axis name can not be empty";
@@ -82,7 +83,7 @@ public class AxisTest {
     }
 
     @Test
-    public void submitInvalidAxisName() throws Exception {
+    void submitInvalidAxisName() throws Exception {
         wc.getOptions().setThrowExceptionOnFailingStatusCode(false);
 
         String expectedMsg = "Matrix axis name 'a,b' is invalid: ‘,’ is an unsafe character";
@@ -110,7 +111,7 @@ public class AxisTest {
     }
 
     @Test
-    public void submitInvalidAxisValue() throws Exception {
+    void submitInvalidAxisValue() throws Exception {
         wc.getOptions().setThrowExceptionOnFailingStatusCode(false);
 
         HtmlForm form = addAxis("User-defined Axis");
@@ -125,23 +126,24 @@ public class AxisTest {
     }
 
     @Test
-    public void emptyAxisValueListResultInNoConfigurations() throws Exception {
+    void emptyAxisValueListResultInNoConfigurations() throws Exception {
         emptyValue("User-defined Axis");
         emptyValue("Agents");
         emptyValue("Label expression");
         emptyValue("JDK");
 
         MatrixBuild build = j.buildAndAssertSuccess(p);
-        assertThat(build.getRuns(), new IsEmptyCollection<MatrixRun>());
-        assertThat(p.getItems(), new IsEmptyCollection<MatrixConfiguration>());
+        assertThat(build.getRuns(), new IsEmptyCollection<>());
+        assertThat(p.getItems(), new IsEmptyCollection<>());
 
         for (Axis axis : p.getAxes()) {
             assertEquals("", axis.getValueString());
         }
     }
 
-    @Test @Issue("SECURITY-3289")
-    public void testHaxorNameFromConfigXml() throws IOException, SAXException {
+    @Test
+    @Issue("SECURITY-3289")
+    void testHaxorNameFromConfigXml() throws IOException, SAXException {
         p.getAxes().add(new TextAxis("CHANGEME", p.getName()));
         p.save();
         XmlPage xmlPage = wc.goToXml(p.getUrl() + "config.xml");
@@ -189,7 +191,7 @@ public class AxisTest {
         return ret;
     }
 
-    private void assertFailedWith(String expected, HtmlPage res) {
+    private static void assertFailedWith(String expected, HtmlPage res) {
         String actual = res.getWebResponse().getContentAsString();
 
         assertThat(actual, res.getWebResponse().getStatusCode(), equalTo(400));
@@ -210,7 +212,7 @@ public class AxisTest {
         return form;
     }
 
-    private void waitForInput(HtmlForm form) throws InterruptedException {
+    private static void waitForInput(HtmlForm form) throws InterruptedException {
         int numberInputs = form.getInputsByName("_.name").size();
         int initialInputs = numberInputs;
         int tries = 18; // 18 * 17 == 306
