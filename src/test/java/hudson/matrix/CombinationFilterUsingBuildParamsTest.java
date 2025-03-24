@@ -23,13 +23,6 @@
  */
 package hudson.matrix;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import hudson.ExtensionList;
 import hudson.matrix.MatrixBuild.MatrixBuildExecution;
 import hudson.matrix.listeners.MatrixBuildListener;
@@ -39,54 +32,64 @@ import hudson.model.ParametersAction;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.StringParameterValue;
+import org.apache.commons.io.output.ByteArrayOutputStream;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.Whitelist;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.BlanketWhitelist;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.jvnet.hudson.test.Issue;
+import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.verification.VerificationMode;
 
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.io.output.ByteArrayOutputStream;
-import org.jenkinsci.plugins.scriptsecurity.sandbox.Whitelist;
-import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.BlanketWhitelist;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.jvnet.hudson.test.Issue;
-import org.mockito.Mock;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.verification.VerificationMode;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Make sure that the combination filter schedules correct builds in correct order
  *
  * @author ogondza
  */
-@Ignore("TODO ScriptApproval.get fails with NPE in ExtensionList.lookup(RootAction.class).get(ScriptApproval.class)")
-public class CombinationFilterUsingBuildParamsTest {
+@Disabled("TODO ScriptApproval.get fails with NPE in ExtensionList.lookup(RootAction.class).get(ScriptApproval.class)")
+@ExtendWith(MockitoExtension.class)
+class CombinationFilterUsingBuildParamsTest {
 
     /**
      * Execute releases: experimental, stable, beta, devel
-     *
-     *     x s b d
+     * <p>
+     * x s b d
      * 0.1
      * 0.9 * * * *
-     *   1   * * *
-     *   2     * *
-     *   3       *
+     * 1   * * *
+     * 2     * *
+     * 3       *
      */
     private static final String filter =
             String.format(
-            "(%s) || (%s) || (%s)",
-            "RELEASE == 'stable' && VERSION == '1'",
-            "RELEASE == 'beta'   && VERSION >= '1' && VERSION <= '2'",
-            "RELEASE == 'devel'  && VERSION >= '1' && VERSION <= '3'"
-    );
+                    "(%s) || (%s) || (%s)",
+                    "RELEASE == 'stable' && VERSION == '1'",
+                    "RELEASE == 'beta'   && VERSION >= '1' && VERSION <= '2'",
+                    "RELEASE == 'devel'  && VERSION >= '1' && VERSION <= '3'"
+            );
 
     private static final String touchstoneFilter = "VERSION == '0.9'";
 
@@ -94,24 +97,26 @@ public class CombinationFilterUsingBuildParamsTest {
             "stable", "beta", "devel", "experimental"
     );
 
-    private final Map<String, MatrixConfiguration> confs = new HashMap<String, MatrixConfiguration>();
-    private final MatrixExecutionStrategy strategy = new DefaultMatrixExecutionStrategyImpl (
+    private final Map<String, MatrixConfiguration> confs = new HashMap<>();
+    private final MatrixExecutionStrategy strategy = new DefaultMatrixExecutionStrategyImpl(
             true, touchstoneFilter, Result.SUCCESS, new NoopMatrixConfigurationSorter()
     );
 
     private MatrixProject project;
-    @Mock private MatrixBuildExecution execution;
-    @Mock private MatrixBuild build;
-    @Mock private MatrixRun run;
-    @Mock private BuildListener listener;
+    @Mock
+    private MatrixBuildExecution execution;
+    @Mock
+    private MatrixBuild build;
+    @Mock
+    private MatrixRun run;
+    @Mock
+    private BuildListener listener;
 
-    @Mock private ExtensionList<MatrixBuildListener> extensions;
+    @Mock
+    private ExtensionList<MatrixBuildListener> extensions;
 
-    @Before
-    public void setUp() throws Exception {
-
-        MockitoAnnotations.openMocks(this);
-
+    @BeforeEach
+    void setUp() {
         usingDummyJenkins();
         usingNoListeners();
         usingDummyProject();
@@ -120,8 +125,7 @@ public class CombinationFilterUsingBuildParamsTest {
     }
 
     @Test
-    public void testCombinationFilterV01() throws InterruptedException, IOException {
-
+    void testCombinationFilterV01() throws InterruptedException, IOException {
         givenTheVersionIs("0.1");
 
         strategy.run(execution);
@@ -133,8 +137,7 @@ public class CombinationFilterUsingBuildParamsTest {
     }
 
     @Test
-    public void testCombinationFilterV09() throws InterruptedException, IOException {
-
+    void testCombinationFilterV09() throws InterruptedException, IOException {
         givenTheVersionIs("0.9");
 
         strategy.run(execution);
@@ -146,8 +149,7 @@ public class CombinationFilterUsingBuildParamsTest {
     }
 
     @Test
-    public void testCombinationFilterV1() throws InterruptedException, IOException {
-
+    void testCombinationFilterV1() throws InterruptedException, IOException {
         givenTheVersionIs("1");
 
         strategy.run(execution);
@@ -159,8 +161,7 @@ public class CombinationFilterUsingBuildParamsTest {
     }
 
     @Test
-    public void testCombinationFilterV2() throws InterruptedException, IOException {
-
+    void testCombinationFilterV2() throws InterruptedException, IOException {
         givenTheVersionIs("2");
 
         strategy.run(execution);
@@ -172,8 +173,7 @@ public class CombinationFilterUsingBuildParamsTest {
     }
 
     @Test
-    public void testCombinationFilterV3() throws InterruptedException, IOException {
-
+    void testCombinationFilterV3() throws InterruptedException, IOException {
         givenTheVersionIs("3");
 
         strategy.run(execution);
@@ -186,12 +186,11 @@ public class CombinationFilterUsingBuildParamsTest {
 
     @Test
     @Issue("JENKINS-7285")
-    public void reproduceTouchstoneRegression () throws InterruptedException, IOException {
-
+    void reproduceTouchstoneRegression() throws InterruptedException, IOException {
         givenTheVersionIs("3");
 
         // No touchstone
-        MatrixExecutionStrategy myStrategy = new DefaultMatrixExecutionStrategyImpl (
+        MatrixExecutionStrategy myStrategy = new DefaultMatrixExecutionStrategyImpl(
                 true, null, Result.SUCCESS, new NoopMatrixConfigurationSorter()
         );
 
@@ -204,7 +203,6 @@ public class CombinationFilterUsingBuildParamsTest {
     }
 
     private void usingDummyProject() {
-
         project = Mockito.mock(MatrixProject.class);
 
         Mockito.when(build.getParent()).thenReturn(project);
@@ -216,7 +214,6 @@ public class CombinationFilterUsingBuildParamsTest {
     }
 
     private void usingDummyExecution() {
-
         when(execution.getProject()).thenReturn(project);
         when(execution.getBuild()).thenReturn(build);
         when(execution.getListener()).thenReturn(listener);
@@ -237,8 +234,8 @@ public class CombinationFilterUsingBuildParamsTest {
         }
     }
 
-    private void usingNoListeners() throws Exception {
-        when(extensions.iterator()).thenReturn(new ArrayList<MatrixBuildListener>().iterator());
+    private void usingNoListeners() {
+        when(extensions.iterator()).thenReturn(Collections.emptyIterator());
         try (MockedStatic<MatrixBuildListener> mocked = Mockito.mockStatic(MatrixBuildListener.class)) {
             mocked.when(MatrixBuildListener::all).thenReturn(extensions);
             when(MatrixBuildListener.buildConfiguration(any(MatrixBuild.class), any(MatrixConfiguration.class))).thenCallRealMethod();
@@ -246,19 +243,16 @@ public class CombinationFilterUsingBuildParamsTest {
     }
 
     private void withReleaseAxis(final List<String> releases) {
-
-        for(final String release: releases) {
-
-          confs.put(release, getConfiguration("RELEASE=" + release));
+        for (final String release : releases) {
+            confs.put(release, getConfiguration("RELEASE=" + release));
         }
 
         when(execution.getActiveConfigurations()).thenReturn(
-                new HashSet<MatrixConfiguration>(confs.values())
+                new HashSet<>(confs.values())
         );
     }
 
-    private MatrixConfiguration getConfiguration (final String axis) {
-
+    private MatrixConfiguration getConfiguration(final String axis) {
         final MatrixConfiguration conf = mock(MatrixConfiguration.class);
         when(conf.getParent()).thenReturn(project);
         when(conf.getCombination()).thenReturn(Combination.fromString(axis));
@@ -270,23 +264,20 @@ public class CombinationFilterUsingBuildParamsTest {
     }
 
     private void givenTheVersionIs(final String version) {
-
         final ParametersAction parametersAction = new ParametersAction(
                 new StringParameterValue("VERSION", version)
         );
 
         when(build.getAction(ParametersAction.class))
-            .thenReturn(parametersAction)
+                .thenReturn(parametersAction)
         ;
     }
 
     private void wasBuilt(final MatrixConfiguration conf) {
-
         wasBuildTimes(conf, times(1));
     }
 
     private void wasNotBuilt(final MatrixConfiguration conf) {
-
         wasBuildTimes(conf, never());
     }
 
