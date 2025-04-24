@@ -93,7 +93,10 @@ import java.util.Map;
 import java.util.Set;
 import jenkins.model.Jenkins;
 
+import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeFalse;
 import org.junit.Ignore;
@@ -668,8 +671,8 @@ public class MatrixProjectTest {
 
         MatrixConfiguration c = p.getItem("AXIS=VALUE");
 
-        assertEquals("parent builds are discarded", 1, p.getBuilds().size());
-        assertEquals("child builds are discarded", 1, c.getBuilds().size());
+        await("parent builds are discarded").until(p::getBuilds, hasSize(1));
+        await("child builds are discarded").until(c::getBuilds, hasSize(1));
     }
 
     @Test
@@ -693,8 +696,8 @@ public class MatrixProjectTest {
         p.scheduleBuild2(0).get();
         MatrixRun last = p.getItem("AXIS=VALUE").getLastBuild();
 
-        assertTrue("Artifacts are discarded", rotated.getArtifacts().isEmpty());
-        assertEquals(1, last.getArtifacts().size());
+        await("Artifacts are discarded").until(rotated::getArtifacts, empty());
+        await().until(last::getArtifacts, hasSize(1));
     }
 
     @Test @Issue("JENKINS-13554")
