@@ -23,106 +23,113 @@
  */
 package hudson.matrix;
 
-import org.htmlunit.html.HtmlPage;
+import hudson.FilePath;
+import hudson.Functions;
+import hudson.Launcher;
 import hudson.cli.CLICommandInvoker;
 import hudson.cli.DeleteBuildsCommand;
+import hudson.model.AbstractBuild;
+import hudson.model.BuildListener;
 import hudson.model.Cause;
+import hudson.model.FileParameterDefinition;
+import hudson.model.FileParameterValue;
+import hudson.model.JDK;
+import hudson.model.ParameterDefinition;
+import hudson.model.ParameterValue;
+import hudson.model.ParametersAction;
+import hudson.model.ParametersDefinitionProperty;
 import hudson.model.Result;
+import hudson.model.Slave;
+import hudson.model.StringParameterDefinition;
+import hudson.model.StringParameterValue;
+import hudson.model.queue.QueueTaskFuture;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.RetentionStrategy;
 import hudson.tasks.Ant;
 import hudson.tasks.ArtifactArchiver;
+import hudson.tasks.BatchFile;
 import hudson.tasks.Fingerprinter;
 import hudson.tasks.LogRotator;
 import hudson.tasks.Maven;
 import hudson.tasks.Shell;
-import hudson.tasks.BatchFile;
-
-import org.jvnet.hudson.test.Email;
-import org.jvnet.hudson.test.SingleFileSCM;
-import org.jvnet.hudson.test.ToolInstallations;
-import org.jvnet.hudson.test.UnstableBuilder;
-import org.jvnet.hudson.test.recipes.LocalData;
-
+import hudson.util.OneShotEvent;
+import jenkins.model.Jenkins;
+import org.htmlunit.html.HtmlPage;
 import org.htmlunit.html.HtmlTable;
 import org.htmlunit.html.HtmlTableCell;
 import org.htmlunit.html.HtmlTableRow;
-import hudson.FilePath;
-
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.junit.rules.TemporaryFolder;
+import org.jvnet.hudson.test.Email;
 import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.SingleFileSCM;
 import org.jvnet.hudson.test.TestBuilder;
+import org.jvnet.hudson.test.ToolInstallations;
+import org.jvnet.hudson.test.UnstableBuilder;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
+import org.jvnet.hudson.test.recipes.LocalData;
 
-import hudson.model.AbstractBuild;
-import hudson.Launcher;
-import hudson.model.BuildListener;
-import hudson.util.OneShotEvent;
-
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
-import hudson.model.JDK;
-import hudson.model.Slave;
-import hudson.Functions;
-import hudson.model.ParametersDefinitionProperty;
-import hudson.model.FileParameterDefinition;
-import hudson.model.ParametersAction;
-import hudson.model.FileParameterValue;
-import hudson.model.StringParameterDefinition;
-import hudson.model.StringParameterValue;
-
-import java.util.List;
-import java.util.ArrayList;
-
-
-import java.util.concurrent.CountDownLatch;
-
-import static hudson.model.Node.Mode.EXCLUSIVE;
-import hudson.model.ParameterDefinition;
-import hudson.model.ParameterValue;
-import hudson.model.queue.QueueTaskFuture;
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Method;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import jenkins.model.Jenkins;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
+import static hudson.model.Node.Mode.EXCLUSIVE;
 import static org.awaitility.Awaitility.await;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeFalse;
-import org.junit.Ignore;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.jvnet.hudson.test.JenkinsRule;
-import org.junit.rules.TemporaryFolder;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 /**
- *
- *
  * @author Kohsuke Kawaguchi
  */
-public class MatrixProjectTest {
+@WithJenkins
+class MatrixProjectTest {
 
-    @Rule public JenkinsRule j = new JenkinsRule();
-    @Rule public TemporaryFolder tmp = new TemporaryFolder();
+    private JenkinsRule j;
+
+    @TempDir
+    private File tmp;
+
+    @BeforeEach
+    void setUp(JenkinsRule rule) {
+        j = rule;
+    }
 
     /**
      * Tests that axes are available as build variables in the Ant builds.
      */
     @Test
-    public void testBuildAxisInAnt() throws Exception {
+    void testBuildAxisInAnt() throws Exception {
         MatrixProject p = createMatrixProject();
-        Ant.AntInstallation ant = ToolInstallations.configureDefaultAnt(tmp);
+        TemporaryFolder folder = new TemporaryFolder(tmp);
+        folder.create();
+        Ant.AntInstallation ant = ToolInstallations.configureDefaultAnt(folder);
         p.getBuildersList().add(new Ant("-Dprop=${db} test", ant.getName(), null, null, null));
 
         // we need a dummy build script that echos back our property
@@ -130,37 +137,37 @@ public class MatrixProjectTest {
 
         MatrixBuild build = p.scheduleBuild2(0, new Cause.UserIdCause()).get();
         List<MatrixRun> runs = build.getRuns();
-        assertEquals(4,runs.size());
+        assertEquals(4, runs.size());
         for (MatrixRun run : runs) {
             j.assertBuildStatus(Result.SUCCESS, run);
             String expectedDb = run.getParent().getCombination().get("db");
-            j.assertLogContains("assertion "+expectedDb+"="+expectedDb, run);
+            j.assertLogContains("assertion " + expectedDb + "=" + expectedDb, run);
         }
     }
 
     /**
      * Tests that axes are available as build variables in the Maven builds.
      */
-    @Ignore("TODO failing on CI: http://repo1.maven.org/maven2")
+    @Disabled("TODO failing on CI: http://repo1.maven.org/maven2")
     @Test
-    public void testBuildAxisInMaven() throws Exception {
-        assumeFalse("TODO seems to have problems with variable substitution", Functions.isWindows());
+    void testBuildAxisInMaven() throws Exception {
+        assumeFalse(Functions.isWindows(), "TODO seems to have problems with variable substitution");
         MatrixProject p = createMatrixProject();
         Maven.MavenInstallation maven = ToolInstallations.configureDefaultMaven();
         p.getBuildersList().add(new Maven("-Dprop=${db} validate", maven.getName()));
 
         // we need a dummy build script that echos back our property
-        p.setScm(new SingleFileSCM("pom.xml",getClass().getResource("echo-property.pom")));
+        p.setScm(new SingleFileSCM("pom.xml", getClass().getResource("echo-property.pom")));
 
         MatrixBuild build = p.scheduleBuild2(0).get();
         List<MatrixRun> runs = build.getRuns();
-        assertEquals(4,runs.size());
+        assertEquals(4, runs.size());
         for (MatrixRun run : runs) {
             j.assertBuildStatus(Result.SUCCESS, run);
             String expectedDb = run.getParent().getCombination().get("db");
             String log = run.getLog();
             System.out.println(log);
-            j.assertLogContains("assertion "+expectedDb+"="+expectedDb, run);
+            j.assertLogContains("assertion " + expectedDb + "=" + expectedDb, run);
             // also make sure that the variables are expanded at the command line level.
             assertFalse(log.contains("-Dprop=${db}"));
         }
@@ -170,7 +177,7 @@ public class MatrixProjectTest {
      * Test that configuration filters work
      */
     @Test
-    public void testConfigurationFilter() throws Exception {
+    void testConfigurationFilter() throws Exception {
         MatrixProject p = createMatrixProject();
         p.setCombinationFilter("db==\"mysql\"");
         MatrixBuild build = p.scheduleBuild2(0).get();
@@ -181,7 +188,7 @@ public class MatrixProjectTest {
      * Test that touch stone builds  work
      */
     @Test
-    public void testTouchStone() throws Exception {
+    void testTouchStone() throws Exception {
         MatrixProject p = createMatrixProject();
         p.setTouchStoneCombinationFilter("db==\"mysql\"");
         p.setTouchStoneResultCondition(Result.SUCCESS);
@@ -193,13 +200,13 @@ public class MatrixProjectTest {
         assertEquals(2, build.getExactRuns().size());
     }
 
-    protected MatrixProject createMatrixProject() throws IOException {
+    private MatrixProject createMatrixProject() throws IOException {
         MatrixProject p = j.createProject(MatrixProject.class);
 
         // set up 2x2 matrix
         AxisList axes = new AxisList();
-        axes.add(new TextAxis("db","mysql","oracle"));
-        axes.add(new TextAxis("direction","north","south"));
+        axes.add(new TextAxis("db", "mysql", "oracle"));
+        axes.add(new TextAxis("direction", "north", "south"));
         p.setAxes(axes);
 
         return p;
@@ -210,24 +217,24 @@ public class MatrixProjectTest {
      */
     @Email("http://www.nabble.com/1.286-version-and-fingerprints-option-broken-.-td22236618.html")
     @Test
-    public void testFingerprinting() throws Exception {
+    void testFingerprinting() throws Exception {
         MatrixProject p = createMatrixProject();
-        if (Functions.isWindows()) 
-           p.getBuildersList().add(new BatchFile("echo \"\" > p"));
-        else 
-           p.getBuildersList().add(new Shell("touch p"));
-        
+        if (Functions.isWindows()) {
+            p.getBuildersList().add(new BatchFile("echo \"\" > p"));
+        } else {
+            p.getBuildersList().add(new Shell("touch p"));
+        }
         p.getPublishersList().add(new ArtifactArchiver("p"));
         p.getPublishersList().add(new Fingerprinter(""));
         j.buildAndAssertSuccess(p);
     }
 
-    void assertRectangleTable(MatrixProject p) throws Exception {
+    private void assertRectangleTable(MatrixProject p) throws Exception {
         HtmlPage html = j.createWebClient().getPage(p);
         HtmlTable table = html.getFirstByXPath("id('matrix')/table");
 
         // remember cells that are extended from rows above.
-        Map<Integer,Integer> rowSpans = new HashMap<Integer,Integer>();
+        Map<Integer, Integer> rowSpans = new HashMap<>();
         Integer masterWidth = null;
         for (HtmlTableRow r : table.getRows()) {
             int width = 0;
@@ -245,12 +252,11 @@ public class MatrixProjectTest {
 
             for (HtmlTableCell c : r.getCells()) {
                 int rowSpan = c.getRowSpan();
-                Integer val = rowSpans.get(rowSpan);
-                rowSpans.put(rowSpan, (val != null ? val : 0) + c.getColumnSpan());
+                rowSpans.compute(rowSpan, (k, val) -> (val != null ? val : 0) + c.getColumnSpan());
             }
             // shift rowSpans by one
-            Map<Integer,Integer> nrs = new HashMap<Integer,Integer>();
-            for (Map.Entry<Integer,Integer> entry : rowSpans.entrySet()) {
+            Map<Integer, Integer> nrs = new HashMap<>();
+            for (Map.Entry<Integer, Integer> entry : rowSpans.entrySet()) {
                 if (entry.getKey() > 1) {
                     nrs.put(entry.getKey() - 1, entry.getValue());
                 }
@@ -261,11 +267,11 @@ public class MatrixProjectTest {
 
     @Issue("JENKINS-4245")
     @Test
-    public void testLayout1() throws Exception {
+    void testLayout1() throws Exception {
         // 5*5*5*5*5 matrix
         MatrixProject p = createMatrixProject();
-        List<Axis> axes = new ArrayList<Axis>();
-        for (String name : new String[] {"a", "b", "c", "d", "e"}) {
+        List<Axis> axes = new ArrayList<>();
+        for (String name : new String[]{"a", "b", "c", "d", "e"}) {
             axes.add(new TextAxis(name, "1", "2", "3", "4"));
         }
         p.setAxes(new AxisList(axes));
@@ -274,12 +280,12 @@ public class MatrixProjectTest {
 
     @Issue("JENKINS-4245")
     @Test
-    public void testLayout2() throws Exception {
+    void testLayout2() throws Exception {
         // 2*3*4*5*6 matrix
         MatrixProject p = createMatrixProject();
-        List<Axis> axes = new ArrayList<Axis>();
+        List<Axis> axes = new ArrayList<>();
         for (int i = 2; i <= 6; i++) {
-            List<String> vals = new ArrayList<String>();
+            List<String> vals = new ArrayList<>();
             for (int j = 1; j <= i; j++) {
                 vals.add(Integer.toString(j));
             }
@@ -293,23 +299,23 @@ public class MatrixProjectTest {
      * Makes sure that the configuration correctly roundtrips.
      */
     @Test
-    public void testConfigRoundtrip() throws Exception {
+    void testConfigRoundtrip() throws Exception {
         j.jenkins.getJDKs().addAll(Arrays.asList(
-                new JDK("jdk1.7","somewhere"),
-                new JDK("jdk1.6","here"),
-                new JDK("jdk1.5","there")));
+                new JDK("jdk1.7", "somewhere"),
+                new JDK("jdk1.6", "here"),
+                new JDK("jdk1.5", "there")));
 
         Slave[] slaves = {j.createSlave(), j.createSlave(), j.createSlave()};
 
         MatrixProject p = createMatrixProject();
         p.getAxes().add(new JDKAxis(Arrays.asList("jdk1.6", "jdk1.5")));
         p.getAxes().add(new LabelAxis("label1", Arrays.asList(slaves[0].getNodeName(), slaves[1].getNodeName())));
-        p.getAxes().add(new LabelAxis("label2", Arrays.asList(slaves[2].getNodeName()))); // make sure single value handling works OK
+        p.getAxes().add(new LabelAxis("label2", List.of(slaves[2].getNodeName()))); // make sure single value handling works OK
         AxisList o = new AxisList(p.getAxes());
         j.configRoundtrip(p);
         AxisList n = p.getAxes();
 
-        assertEquals(o.size(),n.size());
+        assertEquals(o.size(), n.size());
         for (int i = 0; i < o.size(); i++) {
             Axis oi = o.get(i);
             Axis ni = n.get(i);
@@ -317,7 +323,6 @@ public class MatrixProjectTest {
             assertEquals(oi.getName(), ni.getName());
             assertEquals(oi.getValues(), ni.getValues());
         }
-
 
         DefaultMatrixExecutionStrategyImpl before = new DefaultMatrixExecutionStrategyImpl(true, "foo", Result.UNSTABLE, null);
         p.setExecutionStrategy(before);
@@ -331,7 +336,7 @@ public class MatrixProjectTest {
     }
 
     @Test
-    public void testLabelAxes() throws Exception {
+    void testLabelAxes() throws Exception {
         MatrixProject p = createMatrixProject();
 
         Slave[] slaves = {j.createSlave(), j.createSlave(), j.createSlave(), j.createSlave()};
@@ -352,16 +357,17 @@ public class MatrixProjectTest {
      */
     @Issue("JENKINS-4873")
     @Test
-    public void testQuietDownDeadlock() throws Exception {
+    void testQuietDownDeadlock() throws Exception {
         MatrixProject p = createMatrixProject();
-        p.setAxes(new AxisList(new TextAxis("foo","1","2")));
+        p.setAxes(new AxisList(new TextAxis("foo", "1", "2")));
         p.setRunSequentially(true); // so that we can put the 2nd one in the queue
 
         final OneShotEvent firstStarted = new OneShotEvent();
         final OneShotEvent buildCanProceed = new OneShotEvent();
 
         p.getBuildersList().add(new TestBuilder() {
-            @Override public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+            @Override
+            public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException {
                 firstStarted.signal();
                 buildCanProceed.block();
                 return true;
@@ -376,22 +382,22 @@ public class MatrixProjectTest {
         buildCanProceed.signal();
 
         // make sure foo=2 still completes. use time out to avoid hang
-        j.assertBuildStatusSuccess(f.get(10,TimeUnit.SECONDS));
+        j.assertBuildStatusSuccess(f.get(10, TimeUnit.SECONDS));
 
         // MatrixProject scheduled after the quiet down shouldn't start
         try {
             Future<MatrixBuild> g = p.scheduleBuild2(0);
-            g.get(3,TimeUnit.SECONDS);
+            g.get(3, TimeUnit.SECONDS);
             fail();
         } catch (TimeoutException e) {
             // expected
-        }        
+        }
     }
 
     @Issue("JENKINS-9009")
     @Test
-    public void testTrickyNodeName() throws Exception {
-        List<String> names = new ArrayList<String>();
+    void testTrickyNodeName() throws Exception {
+        List<String> names = new ArrayList<>();
         names.add(j.createSlave("Sean's Workstation", null).getNodeName());
         names.add(j.createSlave("John\"s Workstation", null).getNodeName());
         MatrixProject p = createMatrixProject();
@@ -399,43 +405,43 @@ public class MatrixProjectTest {
         j.configRoundtrip(p);
 
         LabelAxis a = (LabelAxis) p.getAxes().find("label");
-        assertEquals(new HashSet<String>(a.getValues()), new HashSet<String>(names));
+        assertEquals(new HashSet<>(a.getValues()), new HashSet<>(names));
     }
 
     @Issue("JENKINS-10108")
     @Test
-    public void testTwoFileParams() throws Exception {
+    void testTwoFileParams() throws Exception {
         MatrixProject p = createMatrixProject();
-        p.setAxes(new AxisList(new TextAxis("foo","1","2","3","4")));
+        p.setAxes(new AxisList(new TextAxis("foo", "1", "2", "3", "4")));
         p.addProperty(new ParametersDefinitionProperty(
-            new FileParameterDefinition("a.txt",""),
-            new FileParameterDefinition("b.txt","")
+                new FileParameterDefinition("a.txt", ""),
+                new FileParameterDefinition("b.txt", "")
         ));
 
-        File dir = tmp.getRoot();
-        List<ParameterValue> params = new ArrayList<ParameterValue>();
-        for (final String n : new String[] {"aaa", "bbb"}) {
+        File dir = tmp;
+        List<ParameterValue> params = new ArrayList<>();
+        for (final String n : new String[]{"aaa", "bbb"}) {
             params.add(new FileParameterValue(n + ".txt", File.createTempFile(n, "", dir), n));
         }
-        QueueTaskFuture<MatrixBuild> f = p.scheduleBuild2(0,new Cause.UserIdCause(),new ParametersAction(params));
-        
-        j.assertBuildStatusSuccess(f.get(10,TimeUnit.SECONDS));
+        QueueTaskFuture<MatrixBuild> f = p.scheduleBuild2(0, new Cause.UserIdCause(), new ParametersAction(params));
+
+        j.assertBuildStatusSuccess(f.get(10, TimeUnit.SECONDS));
     }
 
     @Issue("JENKINS-34758")
     @Test
-    public void testParametersAsEnvOnChildren() throws Exception {
+    void testParametersAsEnvOnChildren() throws Exception {
         assumeFalse(Functions.isWindows());
 
         MatrixProject p = createMatrixProject();
-        p.setAxes(new AxisList(new TextAxis("foo","1")));
+        p.setAxes(new AxisList(new TextAxis("foo", "1")));
         p.addProperty(new ParametersDefinitionProperty(
-            new StringParameterDefinition("MY_PARAM","")
+                new StringParameterDefinition("MY_PARAM", "")
         ));
         // must fail if $MY_PARAM or $foo are not defined in children
         p.getBuildersList().add(new Shell("set -eux; echo $MY_PARAM; echo $foo"));
 
-        List<ParameterValue> params = new ArrayList<ParameterValue>();
+        List<ParameterValue> params = new ArrayList<>();
         params.add(new StringParameterValue("MY_PARAM", "value1"));
 
         QueueTaskFuture<MatrixBuild> f = p.scheduleBuild2(0, new Cause.UserIdCause(), new ParametersAction(params));
@@ -447,27 +453,28 @@ public class MatrixProjectTest {
      * that each gets its own unique workspace.
      */
     @Test
-    public void testConcurrentBuild() throws Exception {
+    void testConcurrentBuild() throws Exception {
         j.jenkins.setNumExecutors(10);
         Method m = Jenkins.class.getDeclaredMethod("updateComputerList"); // TODO is this really necessary?
         m.setAccessible(true);
         m.invoke(j.jenkins);
 
         MatrixProject p = createMatrixProject();
-        p.setAxes(new AxisList(new TextAxis("foo","1","2")));
+        p.setAxes(new AxisList(new TextAxis("foo", "1", "2")));
         p.setConcurrentBuild(true);
         final CountDownLatch latch = new CountDownLatch(4);
-        final Set<String> dirs = Collections.synchronizedSet(new HashSet<String>());
-        
+        final Set<String> dirs = Collections.synchronizedSet(new HashSet<>());
+
         p.getBuildersList().add(new TestBuilder() {
-            @Override public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
+            @Override
+            public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
                 dirs.add(build.getWorkspace().getRemote());
                 FilePath marker = build.getWorkspace().child("file");
                 String name = build.getFullDisplayName();
                 marker.write(name, Charset.defaultCharset().name());
                 latch.countDown();
                 latch.await();
-                assertEquals(name,marker.readToString());
+                assertEquals(name, marker.readToString());
                 return true;
             }
         });
@@ -493,31 +500,30 @@ public class MatrixProjectTest {
         assertEquals(4, dirs.size());
     }
 
-
     /**
      * Test that Actions are passed to configurations
      */
     @Test
-    public void testParameterActions() throws Exception {
+    void testParameterActions() throws Exception {
         MatrixProject p = createMatrixProject();
 
         ParametersDefinitionProperty pdp = new ParametersDefinitionProperty(
-            new StringParameterDefinition("PARAM_A","default_a"),
-            new StringParameterDefinition("PARAM_B","default_b")
+                new StringParameterDefinition("PARAM_A", "default_a"),
+                new StringParameterDefinition("PARAM_B", "default_b")
         );
 
         p.addProperty(pdp);
-        List<ParameterValue> values = new ArrayList<ParameterValue>();
+        List<ParameterValue> values = new ArrayList<>();
         for (ParameterDefinition def : pdp.getParameterDefinitions()) {
             values.add(def.getDefaultParameterValue());
         }
         ParametersAction pa = new ParametersAction(values);
 
-        MatrixBuild build = p.scheduleBuild2(0,new Cause.UserIdCause(), pa).get();
+        MatrixBuild build = p.scheduleBuild2(0, new Cause.UserIdCause(), pa).get();
 
         assertEquals(4, build.getRuns().size());
 
-        for(MatrixRun run : build.getRuns()) {
+        for (MatrixRun run : build.getRuns()) {
             ParametersAction pa1 = run.getAction(ParametersAction.class);
             assertNotNull(pa1);
             assertNotNull(pa1.getParameter("PARAM_A"));
@@ -528,7 +534,7 @@ public class MatrixProjectTest {
     @Issue("JENKINS-15271")
     @LocalData
     @Test
-    public void testUpgrade() throws Exception {
+    void testUpgrade() {
         MatrixProject p = j.jenkins.getItemByFullName("x", MatrixProject.class);
         assertNotNull(p);
         MatrixExecutionStrategy executionStrategy = p.getExecutionStrategy();
@@ -541,7 +547,8 @@ public class MatrixProjectTest {
     }
 
     @Issue("JENKINS-17337")
-    @Test public void reload() throws Exception {
+    @Test
+    void reload() throws Exception {
         MatrixProject p = j.createProject(MatrixProject.class);
         AxisList axes = new AxisList();
         axes.add(new TextAxis("p", "only"));
@@ -559,14 +566,14 @@ public class MatrixProjectTest {
     /**
      * Given a small controller and a big exclusive agent, the fair scheduling would prefer running the flyweight job
      * in the agent. But if the scheduler honors the EXCLUSIVE flag, then we should see it built on the controller.
-     *
+     * <p>
      * Since there's a chance that the fair scheduling just so happens to pick up the controller by chance,
      * we try multiple jobs to reduce the chance of that happening.
      */
     @Issue("JENKINS-5076")
     @Test
-    public void dontRunOnExclusiveSlave() throws Exception {
-        List<MatrixProject> projects = new ArrayList<MatrixProject>();
+    void dontRunOnExclusiveSlave() throws Exception {
+        List<MatrixProject> projects = new ArrayList<>();
         for (int i = 0; i <= 10; i++) {
             MatrixProject m = j.createProject(MatrixProject.class);
             AxisList axes = new AxisList();
@@ -574,19 +581,17 @@ public class MatrixProjectTest {
             m.setAxes(axes);
             projects.add(m);
         }
-
-        tmp.create();
         DumbSlave s = new DumbSlave(
                 "big",
                 "this is a big slave",
-                tmp.getRoot().getPath(),
+                tmp.getPath(),
                 "20",
                 EXCLUSIVE,
                 "",
                 j.createComputerLauncher(null),
                 RetentionStrategy.NOOP,
-                new ArrayList());
-		j.jenkins.addNode(s);
+                new ArrayList<>());
+        j.jenkins.addNode(s);
 
         s.toComputer().connect(false).get(); // connect this guy
 
@@ -596,8 +601,9 @@ public class MatrixProjectTest {
         }
     }
 
-    @Test @Issue("JENKINS-13554")
-    public void deletedLockedParentBuild() throws Exception {
+    @Test
+    @Issue("JENKINS-13554")
+    void deletedLockedParentBuild() throws Exception {
         MatrixProject p = j.jenkins.createProject(MatrixProject.class, "project");
         p.setAxes(new AxisList(new TextAxis("AXIS", "1", "2")));
         MatrixBuild codeDelete = p.scheduleBuild2(0).get();
@@ -623,8 +629,9 @@ public class MatrixProjectTest {
         assertEquals(1, p.getBuilds().size());
     }
 
-    @Test @Issue("JENKINS-13554")
-    public void deletedLockedChildrenBuild() throws Exception {
+    @Test
+    @Issue("JENKINS-13554")
+    void deletedLockedChildrenBuild() throws Exception {
         MatrixProject p = j.jenkins.createProject(MatrixProject.class, "project");
         p.setAxes(new AxisList(new TextAxis("AXIS", "1", "2")));
         p.scheduleBuild2(0).get();
@@ -638,11 +645,11 @@ public class MatrixProjectTest {
         assertEquals(3, p.getBuilds().size());
         assertEquals(2, c.getBuilds().size());
 
-        assertNull("build #1 should not be locked", p.getBuildByNumber(2).getWhyKeepLog());
-        assertNotNull("build #1 should have delete message", p.getBuildByNumber(2).getDeleteMessage());
+        assertNull(p.getBuildByNumber(2).getWhyKeepLog(), "build #1 should not be locked");
+        assertNotNull(p.getBuildByNumber(2).getDeleteMessage(), "build #1 should have delete message");
 
-        assertNull("configuration run #1 should not be locked", c.getBuildByNumber(2).getWhyKeepLog());
-        assertNotNull("configuration run #1 should have delete message", c.getBuildByNumber(2).getDeleteMessage());
+        assertNull(c.getBuildByNumber(2).getWhyKeepLog(), "configuration run #1 should not be locked");
+        assertNotNull(c.getBuildByNumber(2).getDeleteMessage(), "configuration run #1 should have delete message");
 
         // UI delete
         JenkinsRule.WebClient wc = j.createWebClient();
@@ -658,8 +665,9 @@ public class MatrixProjectTest {
         assertEquals(0, c.getBuilds().size());
     }
 
-    @Test @Issue("JENKINS-13554")
-    public void discardBuilds() throws Exception {
+    @Test
+    @Issue("JENKINS-13554")
+    void discardBuilds() throws Exception {
         MatrixProject p = j.jenkins.createProject(MatrixProject.class, "discarder");
         p.setAxes(new AxisList(new TextAxis("AXIS", "VALUE")));
 
@@ -676,7 +684,7 @@ public class MatrixProjectTest {
     }
 
     @Test
-    public void discardArtifacts() throws Exception {
+    void discardArtifacts() throws Exception {
         MatrixProject p = j.jenkins.createProject(MatrixProject.class, "discarder");
         p.setAxes(new AxisList(new TextAxis("AXIS", "VALUE")));
 
@@ -684,7 +692,8 @@ public class MatrixProjectTest {
         p.setBuildDiscarder(new LogRotator("", "", "", "1"));
 
         p.getBuildersList().add(new TestBuilder() {
-            @Override public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+            @Override
+            public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
                 build.getWorkspace().child("artifact.zip").write("content", "UTF-8");
                 return true;
             }
@@ -700,8 +709,9 @@ public class MatrixProjectTest {
         await().until(last::getArtifacts, hasSize(1));
     }
 
-    @Test @Issue("JENKINS-13554")
-    public void deleteBuildWithChildrenOverCLI() throws Exception {
+    @Test
+    @Issue("JENKINS-13554")
+    void deleteBuildWithChildrenOverCLI() throws Exception {
         MatrixProject p = j.jenkins.createProject(MatrixProject.class, "project");
         p.setAxes(new AxisList(new TextAxis("AXIS", "VALUE")));
         p.scheduleBuild2(0).get();

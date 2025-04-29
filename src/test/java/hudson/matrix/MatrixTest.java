@@ -1,18 +1,18 @@
 /*
  * The MIT License
- * 
+ *
  * Copyright (c) 2010-2011, Alan Harder
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -23,62 +23,57 @@
  */
 package hudson.matrix;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertArrayEquals;
-
+import hudson.Functions;
 import hudson.matrix.helper.DynamicTestAxis;
-
 import hudson.model.Item;
 import hudson.model.queue.QueueTaskFuture;
 import hudson.security.AuthorizationMatrixProperty;
 import hudson.security.ProjectMatrixAuthorizationStrategy;
-
-import java.util.Arrays;
-import java.util.Collections;
-
 import org.acegisecurity.context.SecurityContextHolder;
-
-import org.htmlunit.xml.XmlPage;
-
-import hudson.Functions;
-
-import java.io.IOException;
-import java.util.Set;
-
 import org.apache.commons.lang.reflect.FieldUtils;
+import org.htmlunit.xml.XmlPage;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.RejectedAccessException;
 import org.jenkinsci.plugins.scriptsecurity.scripts.ScriptApproval;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Alan Harder
  */
-public class MatrixTest {
-
-    @Rule public JenkinsRule j = new JenkinsRule();
+@WithJenkins
+class MatrixTest {
 
     /**
      * Test that spaces are encoded as %20 for project name, axis name and axis value.
      */
-    @Test public void spaceInUrl() {
+    @Test
+    void spaceInUrl(JenkinsRule j) {
         MatrixProject mp = new MatrixProject("matrix test");
         MatrixConfiguration mc = new MatrixConfiguration(mp, Combination.fromString("foo bar=baz bat"));
         assertEquals("job/matrix%20test/", mp.getUrl());
         assertEquals("job/matrix%20test/foo%20bar=baz%20bat/", mc.getUrl());
     }
-    
+
     /**
      * Test that project level permissions apply to child configurations as well.
      */
     @Issue("JENKINS-9293")
-    @Test public void configurationACL() throws Exception {
+    @Test
+    void configurationACL(JenkinsRule j) throws Exception {
         j.jenkins.setAuthorizationStrategy(new ProjectMatrixAuthorizationStrategy());
         MatrixProject mp = j.createProject(MatrixProject.class);
         mp.setAxes(new AxisList(new Axis("foo", "a", "b")));
@@ -92,7 +87,8 @@ public class MatrixTest {
         assertTrue(mc.getACL().hasPermission(Item.READ));
     }
 
-    @Test public void api() throws Exception {
+    @Test
+    void api(JenkinsRule j) throws Exception {
         MatrixProject project = j.createProject(MatrixProject.class);
         project.setAxes(new AxisList(
                 new Axis("FOO", "abc", "def"),
@@ -102,7 +98,8 @@ public class MatrixTest {
     }
 
     @Issue("JENKINS-27162")
-    @Test public void completedLogging() throws Exception {
+    @Test
+    void completedLogging(JenkinsRule j) throws Exception {
         MatrixProject project = j.createProject(MatrixProject.class);
         project.setAxes(new AxisList(
                 new Axis("axis", "a", "b")
@@ -117,7 +114,8 @@ public class MatrixTest {
     }
 
     @Issue("SECURITY-125")
-    @Test public void combinationFilterSecurity() throws Exception {
+    @Test
+    void combinationFilterSecurity(JenkinsRule j) throws Exception {
         MatrixProject project = j.createProject(MatrixProject.class);
         String combinationFilter = "jenkins.model.Jenkins.getInstance().setSystemMessage('hacked')";
         expectRejection(project, combinationFilter, "staticMethod jenkins.model.Jenkins getInstance");
@@ -125,15 +123,16 @@ public class MatrixTest {
         expectRejection(project, combinationFilter, "method jenkins.model.Jenkins setSystemMessage java.lang.String");
         assertNull(j.jenkins.getSystemMessage());
         project.setCombinationFilter(combinationFilter);
-        assertEquals("you asked for it", "hacked", j.jenkins.getSystemMessage());
+        assertEquals("hacked", j.jenkins.getSystemMessage(), "you asked for it");
     }
+
     private static void expectRejection(MatrixProject project, String combinationFilter, String signature) throws IOException {
         ScriptApproval scriptApproval = ScriptApproval.get();
         assertEquals(Collections.emptySet(), scriptApproval.getPendingSignatures());
         try {
             project.setCombinationFilter(combinationFilter);
         } catch (RejectedAccessException x) {
-            assertEquals(Functions.printThrowable(x), signature, x.getSignature());
+            assertEquals(signature, x.getSignature(), Functions.printThrowable(x));
         }
         Set<ScriptApproval.PendingSignature> pendingSignatures = scriptApproval.getPendingSignatures();
         assertEquals(1, pendingSignatures.size());
@@ -142,9 +141,9 @@ public class MatrixTest {
         assertEquals(Collections.emptySet(), scriptApproval.getPendingSignatures());
     }
 
-
     @Issue("JENKINS-34389")
-    @Test public void axisValuesChanged() throws Exception {
+    @Test
+    void axisValuesChanged(JenkinsRule j) throws Exception {
         // create project with dynamic axis
         MatrixProject project = j.createProject(MatrixProject.class);
         project.setAxes(new AxisList(
