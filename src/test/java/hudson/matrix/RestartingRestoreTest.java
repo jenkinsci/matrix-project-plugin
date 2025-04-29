@@ -26,14 +26,12 @@ package hudson.matrix;
 import hudson.matrix.MatrixConfiguration.ParentBuildAction;
 import hudson.model.Label;
 import hudson.model.ParametersDefinitionProperty;
-import hudson.model.Queue;
 import hudson.model.Result;
 import hudson.model.StringParameterDefinition;
 import org.hamcrest.Matchers;
 import org.hamcrest.core.AnyOf;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runners.model.Statement;
 import org.jvnet.hudson.test.JenkinsSessionRule;
 
 import java.util.Arrays;
@@ -104,7 +102,7 @@ public class RestartingRestoreTest {
                 assertTrue(parent.isBuilding());
                 Thread.sleep(1000);
 
-                assertThat(j.jenkins.getQueue().getItems(), Matchers.<Queue.Item>arrayWithSize(4));
+                assertThat(j.jenkins.getQueue().getItems(), Matchers.arrayWithSize(4));
         });
         sessions.then(j -> {
                 Thread.sleep(10000); // If the jobs is loaded too soon, its builds are never loaded.
@@ -120,11 +118,11 @@ public class RestartingRestoreTest {
                 j.createOnlineSlave(Label.get("bar"));
                 j.waitUntilNoActivity();
 
-                assertThat(p1.getExactRuns(), Matchers.<MatrixRun>iterableWithSize(2));
+                assertThat(p1.getExactRuns(), Matchers.iterableWithSize(2));
                 for (MatrixRun run : p1.getExactRuns()) {
                     j.assertBuildStatus(Result.SUCCESS, run);
                 }
-                assertThat(p2.getExactRuns(), Matchers.<MatrixRun>iterableWithSize(2));
+                assertThat(p2.getExactRuns(), Matchers.iterableWithSize(2));
                 for (MatrixRun run : p2.getExactRuns()) {
                     j.assertBuildStatus(Result.SUCCESS, run);
                 }
