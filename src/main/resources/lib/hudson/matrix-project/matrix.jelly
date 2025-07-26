@@ -43,6 +43,7 @@ THE SOFTWARE.
 
   <j:set var="o" value="${it.layouter}"/>
   <div id='matrix'>
+    <st:adjunct includes="lib.hudson.matrix-project.matrix-styles"/>
     <j:choose>
       <!-- Optimized case when there's only one dimension to the axis (or zero dimension) -->
       <j:when test="${empty(o.x) and empty(o.y)}">
@@ -53,48 +54,50 @@ THE SOFTWARE.
         </j:forEach>
       </j:when>
       <j:otherwise>
-        <table id="configuration-matrix">
+        <table class="mp-table jenkins-table jenkins-table--small jenkins-table--auto-width">
           <!-- X-axis -->
+          <thead>
           <j:forEach var="x" items="${o.x}" varStatus="loop">
-            <tr class="matrix-row">
+            <tr>
               <!-- space for Y-axis -->
-              <j:if test="${!empty(o.y)}">
-                <th id="matrix-title" colspan="${size(o.y)}">${%Configuration Matrix}</th>
+              <j:if test="${!empty(o.y) and loop.first}">
+                <th rowspan="${o.x.size()}" colspan="${size(o.y)}">${%Configuration Matrix}</th>
               </j:if>
               <j:forEach begin="1" end="${o.repeatX(loop.index)}">
-                <j:forEach var="v" items="${x.values}">
-                  <th class="matrix-header" colspan="${o.width(loop.index)}">
+                <j:forEach var="v" items="${x.values}" varStatus="innerLoop">
+                  <td class="mp-header ${loop.first and innerLoop.last?'mp-header-right':''} ${innerLoop.first and loop.first?'mp-header-left':''}" colspan="${o.width(loop.index)}">
                     <span tooltip="${h.xmlEscape(x.name)}">${v}</span>
-                  </th>
+                  </td>
                 </j:forEach>
               </j:forEach>
             </tr>
           </j:forEach>
+          </thead>
 
+          <tbody>
           <!-- Y-axis -->
           <j:forEach var="r" items="${o.rows}">
             <tr>
               <j:forEach var="y" items="${o.y}" varStatus="loop">
                 <j:if test="${r.drawYHeader(loop.index)!=null}">
-                  <td class="matrix-leftcolumn" rowspan="${o.height(loop.index)}">
+                  <td class="${loop.first?'mp-first-column':''} mp-leftcolumn" rowspan="${o.height(loop.index)}">
                     <span tooltip="${h.xmlEscape(y.name)}">${r.drawYHeader(loop.index)}</span>
                   </td>
                 </j:if>
               </j:forEach>
 
               <j:forEach var="c" items="${r}">
-                <td class="matrix-cell">
+                <td class="mp-cell">
                   <j:choose>
                     <j:forEach var="p" items="${c}">
-                      <div>
-                        <d:invokeBody />
-                      </div>
+                      <d:invokeBody />
                     </j:forEach>
                   </j:choose>
                 </td>
               </j:forEach>
             </tr>
           </j:forEach>
+          </tbody>
         </table>
       </j:otherwise>
     </j:choose>
