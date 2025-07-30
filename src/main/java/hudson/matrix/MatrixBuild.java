@@ -24,6 +24,7 @@
  */
 package hudson.matrix;
 
+import com.google.common.annotations.VisibleForTesting;
 import hudson.AbortException;
 import hudson.ExtensionList;
 import hudson.Functions;
@@ -43,6 +44,7 @@ import hudson.tasks.test.TestResultAggregator;
 import hudson.util.HttpResponses;
 import jenkins.model.Jenkins;
 import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.DoNotUse;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest2;
@@ -92,6 +94,12 @@ public class MatrixBuild extends AbstractBuild<MatrixProject,MatrixBuild> {
         if (axes==null)
             axes = getParent().getAxes();
         return this;
+    }
+
+    @VisibleForTesting
+    @Restricted(DoNotUse.class)
+    AxisList getAxes() {
+        return axes;
     }
 
     /**
