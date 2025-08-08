@@ -41,17 +41,20 @@ THE SOFTWARE.
     </st:attribute>
   </st:documentation>
 
-  <j:set var="o" value="${it.layouter}"/>
+  <j:set var="o" value="${layouter?:it.layouter}"/>
   <div id='matrix'>
     <st:adjunct includes="lib.hudson.matrix-project.matrix-styles"/>
     <j:choose>
       <!-- Optimized case when there's only one dimension to the axis (or zero dimension) -->
       <j:when test="${empty(o.x) and empty(o.y)}">
-        <h2>${%Configurations}</h2>
-        <j:forEach var="p" items="${o.rows[0][0]}">
-          <d:invokeBody />
-          <st:nbsp />
-        </j:forEach>
+        <j:if test="${!noTitle}">
+          <h2>${%Configurations}</h2>
+        </j:if>
+        <div class="mp-single-axis">
+          <j:forEach var="p" items="${o.rows[0][0]}">
+            <d:invokeBody />
+          </j:forEach>
+        </div>
       </j:when>
       <j:otherwise>
         <table class="mp-table jenkins-table jenkins-table--small jenkins-table--auto-width">
@@ -88,11 +91,9 @@ THE SOFTWARE.
 
               <j:forEach var="c" items="${r}">
                 <td class="mp-cell">
-                  <j:choose>
-                    <j:forEach var="p" items="${c}">
-                      <d:invokeBody />
-                    </j:forEach>
-                  </j:choose>
+                  <j:forEach var="p" items="${c}">
+                    <d:invokeBody />
+                  </j:forEach>
                 </td>
               </j:forEach>
             </tr>

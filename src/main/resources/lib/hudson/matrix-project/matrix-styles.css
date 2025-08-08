@@ -35,7 +35,13 @@
 }
 
 .mp-cell {
-  padding-left: 0.8rem!important;
+  padding: var(--table-padding) 0.8rem!important;
+}
+
+.mp-single-axis {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
 }
 
 .mp-cell:last-of-type {
