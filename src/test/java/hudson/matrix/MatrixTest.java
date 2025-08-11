@@ -49,7 +49,6 @@ import hudson.Functions;
 import java.io.IOException;
 import java.util.Set;
 
-import org.apache.commons.lang.reflect.FieldUtils;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.RejectedAccessException;
 import org.jenkinsci.plugins.scriptsecurity.scripts.ScriptApproval;
 import org.junit.Rule;
@@ -162,8 +161,8 @@ public class MatrixTest {
         MatrixBuild build2 = matrixBuildQueue2.get();
 
         // get axes from build
-        AxisList axes = (AxisList) FieldUtils.readField(build, "axes", true);
-        AxisList axes2 = (AxisList) FieldUtils.readField(build2, "axes", true);
+        AxisList axes = build.getAxes();
+        AxisList axes2 = build2.getAxes();
 
         // check if axes are valid
         assertArrayEquals(axes.get(0).getValues().toArray(), Arrays.asList("1", "10").toArray());
