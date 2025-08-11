@@ -30,7 +30,6 @@ import hudson.model.queue.QueueTaskFuture;
 import hudson.security.AuthorizationMatrixProperty;
 import hudson.security.ProjectMatrixAuthorizationStrategy;
 import org.acegisecurity.context.SecurityContextHolder;
-import org.apache.commons.lang.reflect.FieldUtils;
 import org.htmlunit.xml.XmlPage;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.RejectedAccessException;
 import org.jenkinsci.plugins.scriptsecurity.scripts.ScriptApproval;
@@ -161,8 +160,8 @@ class MatrixTest {
         MatrixBuild build2 = matrixBuildQueue2.get();
 
         // get axes from build
-        AxisList axes = (AxisList) FieldUtils.readField(build, "axes", true);
-        AxisList axes2 = (AxisList) FieldUtils.readField(build2, "axes", true);
+        AxisList axes = build.getAxes();
+        AxisList axes2 = build2.getAxes();
 
         // check if axes are valid
         assertArrayEquals(axes.get(0).getValues().toArray(), Arrays.asList("1", "10").toArray());
