@@ -16,8 +16,8 @@
       <changelist>999999-SNAPSHOT</changelist>
       <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
       <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
-      <jenkins.baseline>2.479</jenkins.baseline>
-      <jenkins.version>${jenkins.baseline}.1</jenkins.version>
+      <jenkins.baseline>2.492</jenkins.baseline>
+      <jenkins.version>${jenkins.baseline}.3</jenkins.version>
       <spotbugs.skip>true</spotbugs.skip> <!-- Clean up redundant null check warnings and re-enable after SECURITY-1339 is released -->
     </properties>
     <licenses>
@@ -91,8 +91,8 @@
         <dependencies>
             <dependency>
                 <groupId>io.jenkins.tools.bom</groupId>
-                <artifactId>bom-${jenkins.baseline}.x</artifactId>
-                <version>3482.vc10d4f6da_28a_</version>
+                <artifactId>bom-2.492.x</artifactId>
+                <version>5085.v05cc65a_936d3</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
