@@ -1097,6 +1097,11 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
             return Messages.MatrixProject_Description();
         }
 
+        @Override
+        public String getIconClassName() {
+            return "symbol-matrixproject plugin-matrix-project";
+        }
+
         /**
          * Needed if it wants Matrix projects are categorized in Jenkins 2.x.
          *

@@ -1,0 +1,54 @@
+.mp-table {
+  border-spacing: var(--card-border-width) !important;
+}
+
+.mp-header, .mp-leftcolumn {
+  background-color: oklch(from var(--background) 0.5 0.005 h / 0.1)!important;
+}
+
+.mp-header {
+  border-top-right-radius:  var(--table-row-border-radius);
+  border-top-left-radius:  var(--table-row-border-radius);
+  text-align: center;
+}
+
+.mp-header-right {
+  border-top-right-radius: var(--table-border-radius);
+}
+
+.mp-header-left {
+  border-top-left-radius: var(--table-border-radius);
+}
+
+.mp-leftcolumn {
+  text-align: right;
+  padding-right: 8px!important;
+  border-radius: var(--table-row-border-radius) 0 0 var(--table-row-border-radius);
+}
+
+.mp-table > tbody > tr:nth-last-child(1 of tr:has(td.mp-first-column)) td.mp-first-column {
+  border-bottom-left-radius: var(--table-border-radius);
+}
+
+.mp-table tr:last-of-type td.mp-leftcolumn:not(.mp-first-column) {
+  border-bottom-left-radius: var(--table-row-border-radius);
+}
+
+.mp-cell {
+  padding: var(--table-padding) 0.8rem!important;
+}
+
+.mp-single-axis {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.mp-cell:last-of-type {
+  border-top-right-radius: unset!important;
+}
+
+tr:not(:last-of-type) td.mp-cell:last-of-type {
+  border-bottom-right-radius: unset!important;
+}
