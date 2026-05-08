@@ -5,10 +5,14 @@ import hudson.model.Result;
 
 def f = namespace(lib.FormTagLib)
 
+// Execution order applies to both parallel and sequential scheduling (see DefaultMatrixExecutionStrategyImpl.run()).
+// Keeping the sorter inside the sequential optional block hid it when parallel mode was selected and could drop the
+// sorter on save when sequential was unchecked.
+if (MatrixConfigurationSorterDescriptor.all().size()>1) {
+    f.dropdownDescriptorSelector(title:_("Execution order of builds"), field:"sorter")
+}
+
 f.optionalBlock (field:"runSequentially", title:_("Run each configuration sequentially"), inline:true) {
-    if (MatrixConfigurationSorterDescriptor.all().size()>1) {
-        f.dropdownDescriptorSelector(title:_("Execution order of builds"), field:"sorter")
-    }
 }
 
 f.optionalBlock (field:"hasTouchStoneCombinationFilter", title:_("Execute touchstone builds first"), inline:true) {
