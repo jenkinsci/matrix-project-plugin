@@ -12,7 +12,8 @@ if (MatrixConfigurationSorterDescriptor.all().size()>1) {
     f.dropdownDescriptorSelector(title:_("Execution order of builds"), field:"sorter")
 }
 
-f.optionalBlock (field:"runSequentially", title:_("Run each configuration sequentially"), inline:true) {
+f.entry(title:_("Run each configuration sequentially"), field:"runSequentially") {
+    f.checkbox()
 }
 
 f.optionalBlock (field:"hasTouchStoneCombinationFilter", title:_("Execute touchstone builds first"), inline:true) {
