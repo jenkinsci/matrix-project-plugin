@@ -28,6 +28,7 @@ import hudson.model.Descriptor;
 import hudson.model.Failure;
 import jenkins.model.Jenkins;
 import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
 
 import org.kohsuke.stapler.QueryParameter;
 
@@ -93,5 +94,16 @@ public abstract class AxisDescriptor extends Descriptor<Axis> {
 
     private FormValidation unsafeChar(char chr) {
         return FormValidation.error("‘" + chr + "’ is an unsafe character");
+    }
+
+    /**
+     * Populates the orientation dropdown shown in the axis configuration UI.
+     */
+    public ListBoxModel doFillOrientationItems() {
+        ListBoxModel items = new ListBoxModel();
+        items.add(Messages.Axis_Orientation_Auto(), Axis.Orientation.AUTO.name());
+        items.add(Messages.Axis_Orientation_Horizontal(), Axis.Orientation.HORIZONTAL.name());
+        items.add(Messages.Axis_Orientation_Vertical(), Axis.Orientation.VERTICAL.name());
+        return items;
     }
 }

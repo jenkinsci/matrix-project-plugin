@@ -29,4 +29,7 @@ THE SOFTWARE.
 	<f:entry title="${%Label Expressions}" field="labelExpr">
 		<f:textarea name="values" value="${instance.getValuesString()}"/>
 	</f:entry>
+	<f:entry title="${%Orientation}" field="orientation">
+		<f:select default="AUTO"/>
+	</f:entry>
 </j:jelly>

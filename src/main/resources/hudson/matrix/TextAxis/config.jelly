@@ -29,4 +29,7 @@ THE SOFTWARE.
   <f:entry title="${%Values}" field="valueString">
     <f:expandableTextbox />
   </f:entry>
+  <f:entry title="${%Orientation}" field="orientation">
+    <f:select default="AUTO"/>
+  </f:entry>
 </j:jelly>  
