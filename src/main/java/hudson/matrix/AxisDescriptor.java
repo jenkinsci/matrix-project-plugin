@@ -26,11 +26,14 @@ package hudson.matrix;
 import hudson.Util;
 import hudson.model.Descriptor;
 import hudson.model.Failure;
+import hudson.model.Item;
 import jenkins.model.Jenkins;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.verb.POST;
 
 /**
  * {@link Descriptor} for {@link Axis}
@@ -98,9 +101,21 @@ public abstract class AxisDescriptor extends Descriptor<Axis> {
 
     /**
      * Populates the orientation dropdown shown in the axis configuration UI.
+     *
+     * <p>
+     * Requires POST and a context-appropriate permission so the endpoint is not exposed
+     * to unauthorized users (see the Jenkins Security Scan findings for {@code doFill*} methods).
      */
-    public ListBoxModel doFillOrientationItems() {
+    @POST
+    public ListBoxModel doFillOrientationItems(@AncestorInPath Item item) {
         ListBoxModel items = new ListBoxModel();
+        if (item == null) {
+            if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
+                return items;
+            }
+        } else if (!item.hasPermission(Item.CONFIGURE)) {
+            return items;
+        }
         items.add(Messages.Axis_Orientation_Auto(), Axis.Orientation.AUTO.name());
         items.add(Messages.Axis_Orientation_Horizontal(), Axis.Orientation.HORIZONTAL.name());
         items.add(Messages.Axis_Orientation_Vertical(), Axis.Orientation.VERTICAL.name());
