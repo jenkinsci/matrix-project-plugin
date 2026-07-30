@@ -333,6 +333,13 @@ class MatrixProjectTest {
         p.setExecutionStrategy(before);
         j.configRoundtrip(p);
         j.assertEqualDataBoundBeans(p.getExecutionStrategy(), before);
+
+        before = new DefaultMatrixExecutionStrategyImpl(false, null, null, null);
+        before.setHasScheduleDelayBetweenChildBuilds(true);
+        before.setScheduleDelayMillis(150);
+        p.setExecutionStrategy(before);
+        j.configRoundtrip(p);
+        j.assertEqualDataBoundBeans(p.getExecutionStrategy(), before);
     }
 
     @Test

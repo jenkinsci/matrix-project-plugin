@@ -36,7 +36,6 @@ import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.Whitelist;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.BlanketWhitelist;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.jvnet.hudson.test.Issue;
@@ -69,7 +68,6 @@ import static org.mockito.Mockito.when;
  *
  * @author ogondza
  */
-@Disabled("TODO ScriptApproval.get fails with NPE in ExtensionList.lookup(RootAction.class).get(ScriptApproval.class)")
 @ExtendWith(MockitoExtension.class)
 class CombinationFilterUsingBuildParamsTest {
 
@@ -257,6 +255,7 @@ class CombinationFilterUsingBuildParamsTest {
         when(conf.getParent()).thenReturn(project);
         when(conf.getCombination()).thenReturn(Combination.fromString(axis));
         when(conf.getDisplayName()).thenReturn(axis);
+        when(conf.getFullDisplayName()).thenReturn(axis);
         when(conf.getUrl()).thenReturn(axis);
         when(conf.getBuildByNumber(anyInt())).thenReturn(run);
 

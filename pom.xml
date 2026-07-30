@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>5.26</version>
+        <version>6.2211.v27f680c93c53</version>
         <relativePath />
     </parent>
     <artifactId>matrix-project</artifactId>
@@ -64,7 +64,7 @@
             <scope>test</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>org.jenkins-ci.plugisn</groupId>
+                    <groupId>org.jenkins-ci.plugins</groupId>
                     <artifactId>gradle</artifactId>
                 </exclusion>
             </exclusions>
@@ -97,7 +97,7 @@
             <dependency>
                 <groupId>io.jenkins.tools.bom</groupId>
                 <artifactId>bom-2.492.x</artifactId>
-                <version>5085.v05cc65a_936d3</version>
+                <version>5473.vb_9533d9e5d88</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
