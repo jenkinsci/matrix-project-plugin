@@ -52,8 +52,8 @@ import java.util.Map;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.Whitelist;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.BlanketWhitelist;
+import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.mockito.Mock;
@@ -67,7 +67,6 @@ import org.mockito.verification.VerificationMode;
  *
  * @author ogondza
  */
-@Ignore("TODO ScriptApproval.get fails with NPE in ExtensionList.lookup(RootAction.class).get(ScriptApproval.class)")
 public class CombinationFilterUsingBuildParamsTest {
 
     /**
@@ -107,16 +106,27 @@ public class CombinationFilterUsingBuildParamsTest {
 
     @Mock private ExtensionList<MatrixBuildListener> extensions;
 
+    private AutoCloseable mocks;
+    private MockedStatic<Whitelist> whitelistMock;
+    private MockedStatic<MatrixBuildListener> matrixBuildListenerMock;
+
     @Before
     public void setUp() throws Exception {
 
-        MockitoAnnotations.openMocks(this);
+        mocks = MockitoAnnotations.openMocks(this);
 
         usingDummyJenkins();
         usingNoListeners();
         usingDummyProject();
         usingDummyExecution();
         withReleaseAxis(releases);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        if (matrixBuildListenerMock != null) matrixBuildListenerMock.close();
+        if (whitelistMock != null) whitelistMock.close();
+        if (mocks != null) mocks.close();
     }
 
     @Test
@@ -232,17 +242,15 @@ public class CombinationFilterUsingBuildParamsTest {
     }
 
     private void usingDummyJenkins() {
-        try (MockedStatic<Whitelist> mocked = Mockito.mockStatic(Whitelist.class)) {
-            mocked.when(Whitelist::all).thenReturn(new BlanketWhitelist());
-        }
+        whitelistMock = Mockito.mockStatic(Whitelist.class);
+        whitelistMock.when(Whitelist::all).thenReturn(new BlanketWhitelist());
     }
 
     private void usingNoListeners() throws Exception {
         when(extensions.iterator()).thenReturn(new ArrayList<MatrixBuildListener>().iterator());
-        try (MockedStatic<MatrixBuildListener> mocked = Mockito.mockStatic(MatrixBuildListener.class)) {
-            mocked.when(MatrixBuildListener::all).thenReturn(extensions);
-            when(MatrixBuildListener.buildConfiguration(any(MatrixBuild.class), any(MatrixConfiguration.class))).thenCallRealMethod();
-        }
+        matrixBuildListenerMock = Mockito.mockStatic(MatrixBuildListener.class);
+        matrixBuildListenerMock.when(MatrixBuildListener::all).thenReturn(extensions);
+        matrixBuildListenerMock.when(() -> MatrixBuildListener.buildConfiguration(any(MatrixBuild.class), any(MatrixConfiguration.class))).thenCallRealMethod();
     }
 
     private void withReleaseAxis(final List<String> releases) {
@@ -263,6 +271,7 @@ public class CombinationFilterUsingBuildParamsTest {
         when(conf.getParent()).thenReturn(project);
         when(conf.getCombination()).thenReturn(Combination.fromString(axis));
         when(conf.getDisplayName()).thenReturn(axis);
+        when(conf.getFullDisplayName()).thenReturn(axis);
         when(conf.getUrl()).thenReturn(axis);
         when(conf.getBuildByNumber(anyInt())).thenReturn(run);
 

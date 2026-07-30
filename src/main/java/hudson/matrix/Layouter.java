@@ -80,23 +80,41 @@ public abstract class Layouter<T> {
                 trivial.add(a);
         }
 
-        switch(nonTrivialAxes.size()) {
+        // Request to be a column (X) or a row (Y).
+        List<Axis> autoAxes = new ArrayList<Axis>();
+        for (Axis a : nonTrivialAxes) {
+            switch (a.getOrientation()) {
+            case HORIZONTAL:
+                x.add(a);
+                break;
+            case VERTICAL:
+                y.add(a);
+                break;
+            default:
+                autoAxes.add(a);
+            }
+        }
+
+        switch(autoAxes.size()) {
         case 0:
             break;
         case 1:
-            z.add(nonTrivialAxes.get(0));
+            if (x.isEmpty() && y.isEmpty())
+                z.add(autoAxes.get(0));
+            else
+                (x.size() <= y.size() ? x : y).add(autoAxes.get(0));
             break;
         case 2:
             // use the longer axis in Y
-            Axis a = nonTrivialAxes.get(0);
-            Axis b = nonTrivialAxes.get(1);
+            Axis a = autoAxes.get(0);
+            Axis b = autoAxes.get(1);
             x.add(a.size() > b.size() ? b : a);
             y.add(a.size() > b.size() ? a : b);
             break;
         default:
             // for size > 3, use x and y, and try to pack y more
-            for( int i=0; i<nonTrivialAxes.size(); i++ )
-                (i%3==1?x:y).add(nonTrivialAxes.get(i));
+            for( int i=0; i<autoAxes.size(); i++ )
+                (i%3==1?x:y).add(autoAxes.get(i));
         }
         init();
     }

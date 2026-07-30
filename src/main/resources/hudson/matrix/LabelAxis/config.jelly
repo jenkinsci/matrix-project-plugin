@@ -67,5 +67,8 @@ THE SOFTWARE.
       </div>
     </div>
   </f:entry>
+  <f:entry title="${%Orientation}" field="orientation">
+    <f:select default="AUTO"/>
+  </f:entry>
   <st:adjunct includes="hudson.matrix.LabelAxis.label-axis"/>
 </j:jelly>
