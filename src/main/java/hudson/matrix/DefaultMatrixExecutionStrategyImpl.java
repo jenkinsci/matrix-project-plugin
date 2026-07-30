@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.TreeSet;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 /**
  * {@link MatrixExecutionStrategy} that captures historical behavior.
@@ -54,23 +55,54 @@ public class DefaultMatrixExecutionStrategyImpl extends MatrixExecutionStrategy 
 
     private volatile MatrixConfigurationSorter sorter;
 
+    /**
+     * When {@link #isRunSequentially()} is false, sleep this many milliseconds before enqueueing each configuration
+     * after the first (including between the last touchstone and the first remaining configuration). Zero disables.
+     */
+    private volatile int scheduleDelayMillis;
+
     @DataBoundConstructor
     public DefaultMatrixExecutionStrategyImpl(Boolean runSequentially, boolean hasTouchStoneCombinationFilter, String touchStoneCombinationFilter, Result touchStoneResultCondition, MatrixConfigurationSorter sorter) {
         this(runSequentially!=null ? runSequentially : false,
             hasTouchStoneCombinationFilter ? touchStoneCombinationFilter : null,
             hasTouchStoneCombinationFilter ? touchStoneResultCondition : null,
+            0,
             sorter);
     }
 
     public DefaultMatrixExecutionStrategyImpl(boolean runSequentially, String touchStoneCombinationFilter, Result touchStoneResultCondition, MatrixConfigurationSorter sorter) {
+        this(runSequentially, touchStoneCombinationFilter, touchStoneResultCondition, 0, sorter);
+    }
+
+    public DefaultMatrixExecutionStrategyImpl(boolean runSequentially, String touchStoneCombinationFilter, Result touchStoneResultCondition, int scheduleDelayMillis, MatrixConfigurationSorter sorter) {
         this.runSequentially = runSequentially;
         this.touchStoneCombinationFilter = touchStoneCombinationFilter;
         this.touchStoneResultCondition = touchStoneResultCondition;
+        this.scheduleDelayMillis = Math.max(0, scheduleDelayMillis);
         this.sorter = sorter;
     }
 
     public DefaultMatrixExecutionStrategyImpl() {
-        this(false,false,null,null,null);
+        this(false, false, null, null, null);
+    }
+
+    /**
+     * Optional delay is not part of {@link DataBoundConstructor} so Stapler/XStream stay compatible
+     * with the historical 5-argument constructor shape (avoids subtle test/plugin loading issues).
+     */
+    @DataBoundSetter
+    public void setHasScheduleDelayBetweenChildBuilds(boolean has) {
+        if (!has) {
+            scheduleDelayMillis = 0;
+        }
+    }
+
+    @DataBoundSetter
+    public void setScheduleDelayMillis(Integer scheduleDelayMillis) {
+        if (scheduleDelayMillis == null) {
+            return;
+        }
+        this.scheduleDelayMillis = Math.max(0, scheduleDelayMillis);
     }
 
     public boolean getHasTouchStoneCombinationFilter() {
@@ -114,6 +146,18 @@ public class DefaultMatrixExecutionStrategyImpl extends MatrixExecutionStrategy 
         this.sorter = sorter;
     }
 
+    public int getScheduleDelayMillis() {
+        return scheduleDelayMillis;
+    }
+
+    public void setScheduleDelayMillis(int scheduleDelayMillis) {
+        this.scheduleDelayMillis = Math.max(0, scheduleDelayMillis);
+    }
+
+    public boolean getHasScheduleDelayBetweenChildBuilds() {
+        return scheduleDelayMillis > 0;
+    }
+
     @Override
     public Result run(MatrixBuildExecution execution) throws InterruptedException, IOException {
 
@@ -133,9 +177,10 @@ public class DefaultMatrixExecutionStrategyImpl extends MatrixExecutionStrategy 
             delayedConfigurations    = createTreeSet(delayedConfigurations, sorter);
         }
 
-        if(!runSequentially)
-            for(MatrixConfiguration c : touchStoneConfigurations)
-                scheduleConfigurationBuild(execution, c);
+        boolean parallelEnqueueStarted = false;
+        if (!runSequentially) {
+            parallelEnqueueStarted = scheduleConfigurationsInParallel(execution, touchStoneConfigurations, parallelEnqueueStarted);
+        }
 
         PrintStream logger = execution.getListener().getLogger();
 
@@ -154,9 +199,9 @@ public class DefaultMatrixExecutionStrategyImpl extends MatrixExecutionStrategy 
             return r;
         }
 
-        if(!runSequentially)
-            for(MatrixConfiguration c : delayedConfigurations)
-                scheduleConfigurationBuild(execution, c);
+        if (!runSequentially) {
+            scheduleConfigurationsInParallel(execution, delayedConfigurations, parallelEnqueueStarted);
+        }
 
         for (MatrixConfiguration c : delayedConfigurations) {
             if(runSequentially)
@@ -227,6 +272,26 @@ public class DefaultMatrixExecutionStrategyImpl extends MatrixExecutionStrategy 
         TreeSet<T> r = new TreeSet<T>(sorter);
         r.addAll(items);
         return r;
+    }
+
+    /**
+     * Enqueue configurations for parallel mode, optionally pausing between each {@link #scheduleConfigurationBuild}.
+     *
+     * @param afterPrevious {@code true} if at least one configuration was already enqueued in this matrix build
+     * @return {@code true} once any configuration from {@code configurations} was enqueued
+     */
+    private boolean scheduleConfigurationsInParallel(
+            MatrixBuildExecution execution,
+            Iterable<MatrixConfiguration> configurations,
+            boolean afterPrevious) throws InterruptedException {
+        for (MatrixConfiguration c : configurations) {
+            if (afterPrevious && scheduleDelayMillis > 0) {
+                Thread.sleep(scheduleDelayMillis);
+            }
+            scheduleConfigurationBuild(execution, c);
+            afterPrevious = true;
+        }
+        return afterPrevious;
     }
 
     /** Function to start schedule a single configuration
