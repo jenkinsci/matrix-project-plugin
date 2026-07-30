@@ -62,7 +62,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.Email;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -127,7 +126,7 @@ class MatrixProjectTest {
     @Test
     void testBuildAxisInAnt() throws Exception {
         MatrixProject p = createMatrixProject();
-        TemporaryFolder folder = new TemporaryFolder(tmp);
+        org.junit.rules.TemporaryFolder folder = new org.junit.rules.TemporaryFolder(tmp);
         folder.create();
         Ant.AntInstallation ant = ToolInstallations.configureDefaultAnt(folder);
         p.getBuildersList().add(new Ant("-Dprop=${db} test", ant.getName(), null, null, null));

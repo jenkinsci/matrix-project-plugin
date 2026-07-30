@@ -35,6 +35,7 @@ import hudson.model.StringParameterValue;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.Whitelist;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.BlanketWhitelist;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -43,6 +44,8 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.mockito.verification.VerificationMode;
 
 import java.io.IOException;
@@ -69,6 +72,7 @@ import static org.mockito.Mockito.when;
  * @author ogondza
  */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class CombinationFilterUsingBuildParamsTest {
 
     /**
@@ -113,6 +117,9 @@ class CombinationFilterUsingBuildParamsTest {
     @Mock
     private ExtensionList<MatrixBuildListener> extensions;
 
+    private MockedStatic<Whitelist> whitelistMock;
+    private MockedStatic<MatrixBuildListener> matrixBuildListenerMock;
+
     @BeforeEach
     void setUp() {
         usingDummyJenkins();
@@ -120,6 +127,12 @@ class CombinationFilterUsingBuildParamsTest {
         usingDummyProject();
         usingDummyExecution();
         withReleaseAxis(releases);
+    }
+
+    @AfterEach
+    void tearDown() {
+        if (matrixBuildListenerMock != null) matrixBuildListenerMock.close();
+        if (whitelistMock != null) whitelistMock.close();
     }
 
     @Test
@@ -201,11 +214,11 @@ class CombinationFilterUsingBuildParamsTest {
     }
 
     private void usingDummyProject() {
-        project = Mockito.mock(MatrixProject.class);
+        project = mock(MatrixProject.class);
 
-        Mockito.when(build.getParent()).thenReturn(project);
-        Mockito.when(project.getUrl()).thenReturn("/my/project/");
-        Mockito.when(project.getFullDisplayName()).thenReturn("My Project");
+        when(build.getParent()).thenReturn(project);
+        when(project.getUrl()).thenReturn("/my/project/");
+        when(project.getFullDisplayName()).thenReturn("My Project");
 
         when(project.getAxes()).thenReturn(new AxisList(new Axis("RELEASE", releases)));
         when(project.getCombinationFilter()).thenReturn(filter);
@@ -227,17 +240,15 @@ class CombinationFilterUsingBuildParamsTest {
     }
 
     private void usingDummyJenkins() {
-        try (MockedStatic<Whitelist> mocked = Mockito.mockStatic(Whitelist.class)) {
-            mocked.when(Whitelist::all).thenReturn(new BlanketWhitelist());
-        }
+        whitelistMock = Mockito.mockStatic(Whitelist.class);
+        whitelistMock.when(Whitelist::all).thenReturn(new BlanketWhitelist());
     }
 
     private void usingNoListeners() {
         when(extensions.iterator()).thenReturn(Collections.emptyIterator());
-        try (MockedStatic<MatrixBuildListener> mocked = Mockito.mockStatic(MatrixBuildListener.class)) {
-            mocked.when(MatrixBuildListener::all).thenReturn(extensions);
-            when(MatrixBuildListener.buildConfiguration(any(MatrixBuild.class), any(MatrixConfiguration.class))).thenCallRealMethod();
-        }
+        matrixBuildListenerMock = Mockito.mockStatic(MatrixBuildListener.class);
+        matrixBuildListenerMock.when(MatrixBuildListener::all).thenReturn(extensions);
+        matrixBuildListenerMock.when(() -> MatrixBuildListener.buildConfiguration(any(MatrixBuild.class), any(MatrixConfiguration.class))).thenCallRealMethod();
     }
 
     private void withReleaseAxis(final List<String> releases) {
@@ -283,7 +294,6 @@ class CombinationFilterUsingBuildParamsTest {
     private void wasBuildTimes(
             final MatrixConfiguration conf, final VerificationMode mode
     ) {
-
         verify(conf, mode).scheduleBuild(
                 new ArrayList<MatrixChildAction>(),
                 new Cause.UpstreamCause((Run<?, ?>) build)

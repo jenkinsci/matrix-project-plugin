@@ -30,28 +30,30 @@ import hudson.model.Result;
 import hudson.model.StringParameterDefinition;
 import org.hamcrest.Matchers;
 import org.hamcrest.core.AnyOf;
-import org.junit.Rule;
-import org.junit.Test;
-import org.jvnet.hudson.test.JenkinsSessionRule;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.util.Arrays;
+import org.jvnet.hudson.test.junit.jupiter.JenkinsSessionExtension;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class RestartingRestoreTest {
+class RestartingRestoreTest {
 
-    @Rule public JenkinsSessionRule sessions = new JenkinsSessionRule();
+    @RegisterExtension
+    private final JenkinsSessionExtension sessions = new JenkinsSessionExtension();
 
     private String matrixBuildId;
 
     /**
      * Makes sure that the parent of a MatrixRun survives a restart.
      */
-    @Test public void persistenceOfParentInMatrixRun() throws Throwable {
+    @Test
+    void persistenceOfParentInMatrixRun() throws Throwable {
         sessions.then(j -> {
                 MatrixProject p = j.createProject(MatrixProject.class, "project");
                 p.setAxes(new AxisList(new TextAxis("AXIS", "VALUE")));
@@ -74,7 +76,8 @@ public class RestartingRestoreTest {
         });
     }
 
-    @Test public void resumeAllCombinations() throws Throwable {
+    @Test
+    void resumeAllCombinations() throws Throwable {
         sessions.then(j -> {
                 MatrixProject project = j.createProject(MatrixProject.class, "p");
                 project.setConcurrentBuild(true);
@@ -83,7 +86,8 @@ public class RestartingRestoreTest {
         resumeBuildAfterRestart();
     }
 
-    @Test public void resumeAllCombinationsWithParameters() throws Throwable {
+    @Test
+    void resumeAllCombinationsWithParameters() throws Throwable {
         sessions.then(j -> {
                 MatrixProject project = j.createProject(MatrixProject.class, "p");
                 project.setConcurrentBuild(true);

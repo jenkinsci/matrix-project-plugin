@@ -21,7 +21,7 @@
  */
 package hudson.matrix;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,10 +34,10 @@ import static org.hamcrest.Matchers.empty;
  * Unit tests for {@link Layouter}, in particular the per-axis
  * {@link Axis.Orientation} support used to lay out the configuration matrix.
  */
-public class LayouterTest {
+class LayouterTest {
 
     @Test
-    public void twoAutoAxesUseLongerAsRows() {
+    void twoAutoAxesUseLongerAsRows() {
         Axis shortAxis = axis("os", 2, Axis.Orientation.AUTO);
         Axis longAxis = axis("file", 4, Axis.Orientation.AUTO);
 
@@ -50,7 +50,7 @@ public class LayouterTest {
     }
 
     @Test
-    public void explicitOrientationOverridesAutoHeuristic() {
+    void explicitOrientationOverridesAutoHeuristic() {
         // The longer axis is forced to be columns, the shorter one to be rows: the opposite of the default.
         Axis rows = axis("os", 2, Axis.Orientation.VERTICAL);
         Axis columns = axis("file", 4, Axis.Orientation.HORIZONTAL);
@@ -63,7 +63,7 @@ public class LayouterTest {
     }
 
     @Test
-    public void singleAutoAxisBecomesBulletItems() {
+    void singleAutoAxisBecomesBulletItems() {
         Axis only = axis("file", 4, Axis.Orientation.AUTO);
 
         Layouter<?> l = layouter(new AxisList(only));
@@ -74,7 +74,7 @@ public class LayouterTest {
     }
 
     @Test
-    public void singleHorizontalAxisBecomesColumn() {
+    void singleHorizontalAxisBecomesColumn() {
         Axis only = axis("file", 4, Axis.Orientation.HORIZONTAL);
 
         Layouter<?> l = layouter(new AxisList(only));
@@ -85,7 +85,7 @@ public class LayouterTest {
     }
 
     @Test
-    public void axesWithSameForcedOrientationStackOnOneSide() {
+    void axesWithSameForcedOrientationStackOnOneSide() {
         Axis a = axis("a", 2, Axis.Orientation.VERTICAL);
         Axis b = axis("b", 3, Axis.Orientation.VERTICAL);
 
@@ -97,7 +97,7 @@ public class LayouterTest {
     }
 
     @Test
-    public void mixedExplicitAndAutoAxes() {
+    void mixedExplicitAndAutoAxes() {
         Axis forced = axis("os", 5, Axis.Orientation.HORIZONTAL);
         Axis auto = axis("file", 3, Axis.Orientation.AUTO);
 
