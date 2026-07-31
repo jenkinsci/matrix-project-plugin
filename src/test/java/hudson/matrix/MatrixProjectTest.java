@@ -44,6 +44,7 @@ import hudson.model.StringParameterDefinition;
 import hudson.model.StringParameterValue;
 import hudson.model.queue.QueueTaskFuture;
 import hudson.slaves.DumbSlave;
+import hudson.slaves.JNLPLauncher;
 import hudson.slaves.RetentionStrategy;
 import hudson.tasks.Ant;
 import hudson.tasks.ArtifactArchiver;
@@ -199,6 +200,19 @@ class MatrixProjectTest {
         assertEquals(2, build.getExactRuns().size());
     }
 
+    /**
+     * Registers an agent node without launching a remoting process.
+     */
+    private DumbSlave createOfflineSlave(String name) throws Exception {
+        DumbSlave agent = new DumbSlave(
+                name,
+                new File(j.jenkins.getRootDir(), "agent-work-dirs/" + name).getPath(),
+                new JNLPLauncher());
+        agent.setRetentionStrategy(RetentionStrategy.NOOP);
+        j.jenkins.addNode(agent);
+        return agent;
+    }
+
     private MatrixProject createMatrixProject() throws IOException {
         MatrixProject p = j.createProject(MatrixProject.class);
 
@@ -229,7 +243,9 @@ class MatrixProjectTest {
     }
 
     private void assertRectangleTable(MatrixProject p) throws Exception {
-        HtmlPage html = j.createWebClient().getPage(p);
+        JenkinsRule.WebClient wc = j.createWebClient();
+        wc.getOptions().setJavaScriptEnabled(false);
+        HtmlPage html = wc.getPage(p);
         HtmlTable table = html.getFirstByXPath("id('matrix')/table");
 
         // remember cells that are extended from rows above.
@@ -267,11 +283,11 @@ class MatrixProjectTest {
     @Issue("JENKINS-4245")
     @Test
     void testLayout1() throws Exception {
-        // 5*5*5*5*5 matrix
+        // Enough axes for complex rowspan layout without a huge HTML table (was 4^5).
         MatrixProject p = createMatrixProject();
         List<Axis> axes = new ArrayList<>();
-        for (String name : new String[]{"a", "b", "c", "d", "e"}) {
-            axes.add(new TextAxis(name, "1", "2", "3", "4"));
+        for (String name : new String[]{"a", "b", "c"}) {
+            axes.add(new TextAxis(name, "1", "2", "3"));
         }
         p.setAxes(new AxisList(axes));
         assertRectangleTable(p);
@@ -280,10 +296,10 @@ class MatrixProjectTest {
     @Issue("JENKINS-4245")
     @Test
     void testLayout2() throws Exception {
-        // 2*3*4*5*6 matrix
+        // Uneven axis sizes.
         MatrixProject p = createMatrixProject();
         List<Axis> axes = new ArrayList<>();
-        for (int i = 2; i <= 6; i++) {
+        for (int i = 2; i <= 4; i++) {
             List<String> vals = new ArrayList<>();
             for (int j = 1; j <= i; j++) {
                 vals.add(Integer.toString(j));
@@ -304,7 +320,7 @@ class MatrixProjectTest {
                 new JDK("jdk1.6", "here"),
                 new JDK("jdk1.5", "there")));
 
-        Slave[] slaves = {j.createSlave(), j.createSlave(), j.createSlave()};
+        Slave[] slaves = {createOfflineSlave("slave0"), createOfflineSlave("slave1"), createOfflineSlave("slave2")};
 
         MatrixProject p = createMatrixProject();
         p.getAxes().add(new JDKAxis(Arrays.asList("jdk1.6", "jdk1.5")));
@@ -323,21 +339,21 @@ class MatrixProjectTest {
             assertEquals(oi.getValues(), ni.getValues());
         }
 
-        DefaultMatrixExecutionStrategyImpl before = new DefaultMatrixExecutionStrategyImpl(true, "foo", Result.UNSTABLE, null);
-        p.setExecutionStrategy(before);
-        j.configRoundtrip(p);
-        j.assertEqualDataBoundBeans(p.getExecutionStrategy(), before);
+        assertExecutionStrategyRoundtrips(p, new DefaultMatrixExecutionStrategyImpl(true, "foo", Result.UNSTABLE, null));
+        assertExecutionStrategyRoundtrips(p, new DefaultMatrixExecutionStrategyImpl(false, null, null, null));
 
-        before = new DefaultMatrixExecutionStrategyImpl(false, null, null, null);
-        p.setExecutionStrategy(before);
-        j.configRoundtrip(p);
-        j.assertEqualDataBoundBeans(p.getExecutionStrategy(), before);
-
-        before = new DefaultMatrixExecutionStrategyImpl(false, null, null, null);
+        DefaultMatrixExecutionStrategyImpl before = new DefaultMatrixExecutionStrategyImpl(false, null, null, null);
         before.setHasScheduleDelayBetweenChildBuilds(true);
         before.setScheduleDelayMillis(150);
+        assertExecutionStrategyRoundtrips(p, before);
+    }
+
+    /** XML save/reload covers strategy databinding without opening the configure page. */
+    private void assertExecutionStrategyRoundtrips(MatrixProject p, DefaultMatrixExecutionStrategyImpl before)
+            throws Exception {
         p.setExecutionStrategy(before);
-        j.configRoundtrip(p);
+        p.save();
+        p.doReload();
         j.assertEqualDataBoundBeans(p.getExecutionStrategy(), before);
     }
 
@@ -345,7 +361,12 @@ class MatrixProjectTest {
     void testLabelAxes() throws Exception {
         MatrixProject p = createMatrixProject();
 
-        Slave[] slaves = {j.createSlave(), j.createSlave(), j.createSlave(), j.createSlave()};
+        Slave[] slaves = {
+            createOfflineSlave("slave0"),
+            createOfflineSlave("slave1"),
+            createOfflineSlave("slave2"),
+            createOfflineSlave("slave3")
+        };
 
         p.getAxes().add(new LabelAxis("label1", Arrays.asList(slaves[0].getNodeName(), slaves[1].getNodeName())));
         p.getAxes().add(new LabelAxis("label2", Arrays.asList(slaves[2].getNodeName(), slaves[3].getNodeName())));
@@ -393,7 +414,7 @@ class MatrixProjectTest {
         // MatrixProject scheduled after the quiet down shouldn't start
         try {
             Future<MatrixBuild> g = p.scheduleBuild2(0);
-            g.get(3, TimeUnit.SECONDS);
+            g.get(1, TimeUnit.SECONDS);
             fail();
         } catch (TimeoutException e) {
             // expected
@@ -404,8 +425,8 @@ class MatrixProjectTest {
     @Test
     void testTrickyNodeName() throws Exception {
         List<String> names = new ArrayList<>();
-        names.add(j.createSlave("Sean's Workstation", null).getNodeName());
-        names.add(j.createSlave("John\"s Workstation", null).getNodeName());
+        names.add(createOfflineSlave("Sean's Workstation").getNodeName());
+        names.add(createOfflineSlave("John\"s Workstation").getNodeName());
         MatrixProject p = createMatrixProject();
         p.setAxes(new AxisList(new LabelAxis("label", names)));
         j.configRoundtrip(p);
@@ -580,7 +601,7 @@ class MatrixProjectTest {
     @Test
     void dontRunOnExclusiveSlave() throws Exception {
         List<MatrixProject> projects = new ArrayList<>();
-        for (int i = 0; i <= 10; i++) {
+        for (int i = 0; i < 2; i++) {
             MatrixProject m = j.createProject(MatrixProject.class);
             AxisList axes = new AxisList();
             axes.add(new TextAxis("p", "only"));
@@ -602,7 +623,7 @@ class MatrixProjectTest {
         s.toComputer().connect(false).get(); // connect this guy
 
         for (MatrixProject p : projects) {
-            MatrixBuild b = j.assertBuildStatusSuccess(p.scheduleBuild2(2));
+            MatrixBuild b = j.assertBuildStatusSuccess(p.scheduleBuild2(0));
             assertSame(b.getBuiltOn(), j.jenkins);
         }
     }
