@@ -23,17 +23,17 @@
  */
 package hudson.matrix;
 
-import static org.junit.Assert.*;
 import hudson.util.FormValidation;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class AxisDescriptorTest {
+class AxisDescriptorTest {
 
-    TextAxis.DescriptorImpl descriptor = new TextAxis.DescriptorImpl();
+    private final TextAxis.DescriptorImpl descriptor = new TextAxis.DescriptorImpl();
 
     @Test
-    public void combinationNameSpecialChars() {
+    void combinationNameSpecialChars() {
         assertEquals(
                 FormValidation.Kind.ERROR,
                 descriptor.doCheckName("a=b").kind
@@ -51,7 +51,7 @@ public class AxisDescriptorTest {
     }
 
     @Test
-    public void combinationValueSpecialChars() {
+    void combinationValueSpecialChars() {
         assertEquals(
                 FormValidation.Kind.OK,
                 descriptor.checkValue("a=b").kind

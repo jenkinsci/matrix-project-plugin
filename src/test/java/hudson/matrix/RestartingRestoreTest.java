@@ -26,34 +26,34 @@ package hudson.matrix;
 import hudson.matrix.MatrixConfiguration.ParentBuildAction;
 import hudson.model.Label;
 import hudson.model.ParametersDefinitionProperty;
-import hudson.model.Queue;
 import hudson.model.Result;
 import hudson.model.StringParameterDefinition;
 import org.hamcrest.Matchers;
 import org.hamcrest.core.AnyOf;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runners.model.Statement;
-import org.jvnet.hudson.test.JenkinsSessionRule;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.util.Arrays;
+import org.jvnet.hudson.test.junit.jupiter.JenkinsSessionExtension;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class RestartingRestoreTest {
+class RestartingRestoreTest {
 
-    @Rule public JenkinsSessionRule sessions = new JenkinsSessionRule();
+    @RegisterExtension
+    private final JenkinsSessionExtension sessions = new JenkinsSessionExtension();
 
     private String matrixBuildId;
 
     /**
      * Makes sure that the parent of a MatrixRun survives a restart.
      */
-    @Test public void persistenceOfParentInMatrixRun() throws Throwable {
+    @Test
+    void persistenceOfParentInMatrixRun() throws Throwable {
         sessions.then(j -> {
                 MatrixProject p = j.createProject(MatrixProject.class, "project");
                 p.setAxes(new AxisList(new TextAxis("AXIS", "VALUE")));
@@ -76,7 +76,8 @@ public class RestartingRestoreTest {
         });
     }
 
-    @Test public void resumeAllCombinations() throws Throwable {
+    @Test
+    void resumeAllCombinations() throws Throwable {
         sessions.then(j -> {
                 MatrixProject project = j.createProject(MatrixProject.class, "p");
                 project.setConcurrentBuild(true);
@@ -85,7 +86,8 @@ public class RestartingRestoreTest {
         resumeBuildAfterRestart();
     }
 
-    @Test public void resumeAllCombinationsWithParameters() throws Throwable {
+    @Test
+    void resumeAllCombinationsWithParameters() throws Throwable {
         sessions.then(j -> {
                 MatrixProject project = j.createProject(MatrixProject.class, "p");
                 project.setConcurrentBuild(true);
@@ -104,7 +106,7 @@ public class RestartingRestoreTest {
                 assertTrue(parent.isBuilding());
                 Thread.sleep(1000);
 
-                assertThat(j.jenkins.getQueue().getItems(), Matchers.<Queue.Item>arrayWithSize(4));
+                assertThat(j.jenkins.getQueue().getItems(), Matchers.arrayWithSize(4));
         });
         sessions.then(j -> {
                 Thread.sleep(10000); // If the jobs is loaded too soon, its builds are never loaded.
@@ -120,11 +122,11 @@ public class RestartingRestoreTest {
                 j.createOnlineSlave(Label.get("bar"));
                 j.waitUntilNoActivity();
 
-                assertThat(p1.getExactRuns(), Matchers.<MatrixRun>iterableWithSize(2));
+                assertThat(p1.getExactRuns(), Matchers.iterableWithSize(2));
                 for (MatrixRun run : p1.getExactRuns()) {
                     j.assertBuildStatus(Result.SUCCESS, run);
                 }
-                assertThat(p2.getExactRuns(), Matchers.<MatrixRun>iterableWithSize(2));
+                assertThat(p2.getExactRuns(), Matchers.iterableWithSize(2));
                 for (MatrixRun run : p2.getExactRuns()) {
                     j.assertBuildStatus(Result.SUCCESS, run);
                 }
