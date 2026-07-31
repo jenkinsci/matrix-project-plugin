@@ -203,9 +203,10 @@ class MatrixProjectTest {
      * Registers an agent node without launching a remoting process.
      */
     private DumbSlave createOfflineSlave(String name) throws Exception {
+        String safeDir = name.replaceAll("[\\\\/:*?\"<>|]", "_");
         DumbSlave agent = new DumbSlave(
                 name,
-                new File(j.jenkins.getRootDir(), "agent-work-dirs/" + name).getPath(),
+                new File(j.jenkins.getRootDir(), "agent-work-dirs/" + safeDir).getPath(),
                 new JNLPLauncher());
         agent.setRetentionStrategy(RetentionStrategy.NOOP);
         j.jenkins.addNode(agent);
@@ -427,7 +428,12 @@ class MatrixProjectTest {
     void testTrickyNodeName() throws Exception {
         List<String> names = new ArrayList<>();
         names.add(createOfflineSlave("Sean's Workstation").getNodeName());
-        names.add(createOfflineSlave("John\"s Workstation").getNodeName());
+        // '"' is illegal in Windows node dirs (nodes/<name>/)
+        String withDoubleQuote = "John\"s Workstation";
+        if (!Functions.isWindows()) {
+            createOfflineSlave(withDoubleQuote);
+        }
+        names.add(withDoubleQuote);
         MatrixProject p = createMatrixProject();
         p.setAxes(new AxisList(new LabelAxis("label", names)));
         p.save();
