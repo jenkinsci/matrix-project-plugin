@@ -26,6 +26,9 @@ package hudson.matrix;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Util;
 import hudson.model.JDK;
+import hudson.slaves.DumbSlave;
+import hudson.slaves.JNLPLauncher;
+import hudson.slaves.RetentionStrategy;
 import hudson.util.VersionNumber;
 import jenkins.model.Jenkins;
 import org.hamcrest.collection.IsEmptyCollection;
@@ -38,15 +41,18 @@ import org.htmlunit.html.HtmlPage;
 import org.htmlunit.xml.XmlPage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.JenkinsRule.WebClient;
 import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.xml.sax.SAXException;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -54,6 +60,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @WithJenkins
+@Timeout(value = 2, unit = TimeUnit.MINUTES)
 class AxisTest {
 
     private JenkinsRule j;
@@ -69,7 +76,12 @@ class AxisTest {
 
         // Setup to make all axes available
         j.jenkins.getJDKs().add(new JDK("jdk1.7", "/fake/home"));
-        j.createSlave();
+        DumbSlave agent = new DumbSlave(
+                "agent",
+                new File(j.jenkins.getRootDir(), "agent").getPath(),
+                new JNLPLauncher());
+        agent.setRetentionStrategy(RetentionStrategy.NOOP);
+        j.jenkins.addNode(agent);
     }
 
     @Test
