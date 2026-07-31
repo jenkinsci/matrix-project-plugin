@@ -300,14 +300,14 @@ class MatrixProjectTest {
     @Test
     void testConfigRoundtrip() throws Exception {
         j.jenkins.getJDKs().addAll(Arrays.asList(
-                new JDK("jdk21", "somewhere"),
-                new JDK("jdk17", "here"),
-                new JDK("jdk11", "there")));
+                new JDK("jdk1.7", "somewhere"),
+                new JDK("jdk1.6", "here"),
+                new JDK("jdk1.5", "there")));
 
         Slave[] slaves = {j.createSlave(), j.createSlave(), j.createSlave()};
 
         MatrixProject p = createMatrixProject();
-        p.getAxes().add(new JDKAxis(Arrays.asList("jdk17", "jdk11")));
+        p.getAxes().add(new JDKAxis(Arrays.asList("jdk1.6", "jdk1.5")));
         p.getAxes().add(new LabelAxis("label1", Arrays.asList(slaves[0].getNodeName(), slaves[1].getNodeName())));
         p.getAxes().add(new LabelAxis("label2", List.of(slaves[2].getNodeName()))); // make sure single value handling works OK
         AxisList o = new AxisList(p.getAxes());
