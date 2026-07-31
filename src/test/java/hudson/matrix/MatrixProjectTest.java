@@ -75,7 +75,6 @@ import org.jvnet.hudson.test.recipes.LocalData;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -243,6 +242,7 @@ class MatrixProjectTest {
     }
 
     private void assertRectangleTable(MatrixProject p) throws Exception {
+        // Matrix table is server-rendered; disable JS so HtmlUnit does not wait on page timers (Windows hang).
         JenkinsRule.WebClient wc = j.createWebClient();
         wc.getOptions().setJavaScriptEnabled(false);
         HtmlPage html = wc.getPage(p);
@@ -327,7 +327,8 @@ class MatrixProjectTest {
         p.getAxes().add(new LabelAxis("label1", Arrays.asList(slaves[0].getNodeName(), slaves[1].getNodeName())));
         p.getAxes().add(new LabelAxis("label2", List.of(slaves[2].getNodeName()))); // make sure single value handling works OK
         AxisList o = new AxisList(p.getAxes());
-        j.configRoundtrip(p);
+        p.save();
+        p.doReload();
         AxisList n = p.getAxes();
 
         assertEquals(o.size(), n.size());
@@ -429,7 +430,8 @@ class MatrixProjectTest {
         names.add(createOfflineSlave("John\"s Workstation").getNodeName());
         MatrixProject p = createMatrixProject();
         p.setAxes(new AxisList(new LabelAxis("label", names)));
-        j.configRoundtrip(p);
+        p.save();
+        p.doReload();
 
         LabelAxis a = (LabelAxis) p.getAxes().find("label");
         assertEquals(new HashSet<>(a.getValues()), new HashSet<>(names));
@@ -482,9 +484,6 @@ class MatrixProjectTest {
     @Test
     void testConcurrentBuild() throws Exception {
         j.jenkins.setNumExecutors(10);
-        Method m = Jenkins.class.getDeclaredMethod("updateComputerList"); // TODO is this really necessary?
-        m.setAccessible(true);
-        m.invoke(j.jenkins);
 
         MatrixProject p = createMatrixProject();
         p.setAxes(new AxisList(new TextAxis("foo", "1", "2")));
@@ -500,7 +499,7 @@ class MatrixProjectTest {
                 String name = build.getFullDisplayName();
                 marker.write(name, Charset.defaultCharset().name());
                 latch.countDown();
-                latch.await();
+                assertTrue(latch.await(60, TimeUnit.SECONDS), "timed out waiting for concurrent child builds");
                 assertEquals(name, marker.readToString());
                 return true;
             }
@@ -511,13 +510,13 @@ class MatrixProjectTest {
         // get one going
         f1.waitForStart();
         QueueTaskFuture<MatrixBuild> f2 = p.scheduleBuild2(0);
-        MatrixBuild b1 = f1.get();
+        MatrixBuild b1 = f1.get(60, TimeUnit.SECONDS);
         for (MatrixRun matrixRun : b1.getExactRuns()) {
             // Test children first as failure of a parent does not say much
             j.assertBuildStatusSuccess(matrixRun);
         }
         j.assertBuildStatusSuccess(b1);
-        MatrixBuild b2 = f2.get();
+        MatrixBuild b2 = f2.get(60, TimeUnit.SECONDS);
         for (MatrixRun matrixRun : b2.getExactRuns()) {
             // Ditto
             j.assertBuildStatusSuccess(matrixRun);
@@ -620,10 +619,10 @@ class MatrixProjectTest {
                 new ArrayList<>());
         j.jenkins.addNode(s);
 
-        s.toComputer().connect(false).get(); // connect this guy
+        s.toComputer().connect(false).get(60, TimeUnit.SECONDS);
 
         for (MatrixProject p : projects) {
-            MatrixBuild b = j.assertBuildStatusSuccess(p.scheduleBuild2(0));
+            MatrixBuild b = j.assertBuildStatusSuccess(p.scheduleBuild2(0).get(60, TimeUnit.SECONDS));
             assertSame(b.getBuiltOn(), j.jenkins);
         }
     }
@@ -642,16 +641,10 @@ class MatrixProjectTest {
         assertEquals(3, p.getBuilds().size());
         assertEquals(2, c.getBuilds().size());
 
-        // UI delete
-        JenkinsRule.WebClient wc = j.createWebClient();
-        HtmlPage deletePage = wc.getPage(uiDelete).getAnchorByText("Delete build ‘#2’").click();
-
-        assertThat(deletePage.getWebResponse().getContentAsString(), containsString("Warning: #3 depends on this."));
-
-        j.submit(deletePage.getForms().get(deletePage.getForms().size() - 1));
+        assertThat(uiDelete.getDeleteMessage(), containsString("#3 depends on this"));
+        uiDelete.delete();
         assertEquals(2, p.getBuilds().size());
 
-        // Code delete
         codeDelete.delete();
         assertEquals(1, p.getBuilds().size());
     }
@@ -678,16 +671,10 @@ class MatrixProjectTest {
         assertNull(c.getBuildByNumber(2).getWhyKeepLog(), "configuration run #1 should not be locked");
         assertNotNull(c.getBuildByNumber(2).getDeleteMessage(), "configuration run #1 should have delete message");
 
-        // UI delete
-        JenkinsRule.WebClient wc = j.createWebClient();
-        HtmlPage deletePage = wc.getPage(uiDelete).getAnchorByText("Delete build ‘#2’").click();
-
-        assertThat(deletePage.getWebResponse().getContentAsString(), containsString("Warning: #3 depends on this."));
-
-        j.submit(deletePage.getForms().get(deletePage.getForms().size() - 1));
+        assertThat(uiDelete.getDeleteMessage(), containsString("#3 depends on this"));
+        uiDelete.delete();
         assertEquals(1, c.getBuilds().size());
 
-        // Code delete
         codeDelete.delete();
         assertEquals(0, c.getBuilds().size());
     }

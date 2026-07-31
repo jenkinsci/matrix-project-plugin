@@ -5,7 +5,6 @@ import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.queue.QueueTaskFuture;
-import jenkins.model.Jenkins;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -14,15 +13,16 @@ import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests the custom workspace support in {@link MatrixProject}.
@@ -46,8 +46,9 @@ class MatrixProjectCustomWorkspaceTest {
         File dir = newFolder(tmp, "junit");
         p.setCustomWorkspace(dir.getPath());
         p.setChildCustomWorkspace("xyz");
+        p.save();
+        p.doReload();
 
-        j.configRoundtrip(p);
         configureCustomWorkspaceConcurrentBuild(j, p);
 
         // all concurrent builds should build on the same one workspace
@@ -65,8 +66,9 @@ class MatrixProjectCustomWorkspaceTest {
         File dir = newFolder(tmp, "junit");
         p.setCustomWorkspace(dir.getPath());
         p.setChildCustomWorkspace(null);
+        p.save();
+        p.doReload();
 
-        j.configRoundtrip(p);
         configureCustomWorkspaceConcurrentBuild(j, p);
 
         List<MatrixBuild> bs = runTwoConcurrentBuilds(j, p);
@@ -90,8 +92,9 @@ class MatrixProjectCustomWorkspaceTest {
         MatrixProject p = j.createProject(MatrixProject.class);
         p.setCustomWorkspace(null);
         p.setChildCustomWorkspace(".");
+        p.save();
+        p.doReload();
 
-        j.configRoundtrip(p);
         configureCustomWorkspaceConcurrentBuild(j, p);
 
         List<MatrixBuild> bs = runTwoConcurrentBuilds(j, p);
@@ -114,8 +117,9 @@ class MatrixProjectCustomWorkspaceTest {
         MatrixProject p = j.createProject(MatrixProject.class);
         p.setCustomWorkspace(null);
         p.setChildCustomWorkspace(null);
+        p.save();
+        p.doReload();
 
-        j.configRoundtrip(p);
         configureCustomWorkspaceConcurrentBuild(j, p);
 
         List<MatrixBuild> bs = runTwoConcurrentBuilds(j, p);
@@ -138,11 +142,8 @@ class MatrixProjectCustomWorkspaceTest {
      * Configures MatrixProject such that two builds run concurrently.
      */
     private void configureCustomWorkspaceConcurrentBuild(JenkinsRule j, MatrixProject p) throws Exception {
-        // needs sufficient parallel execution capability
+        // Needs 4 concurrent child builds for the latch below; setNumExecutors updates computers itself.
         j.jenkins.setNumExecutors(10);
-        Method m = Jenkins.class.getDeclaredMethod("updateComputerList"); // TODO is this really necessary?
-        m.setAccessible(true);
-        m.invoke(j.jenkins);
 
         p.setAxes(new AxisList(new TextAxis("foo", "1", "2")));
         p.setConcurrentBuild(true);
@@ -150,12 +151,10 @@ class MatrixProjectCustomWorkspaceTest {
 
         p.getBuildersList().add(new TestBuilder() {
             @Override
-            public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
+            public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
+                    throws InterruptedException {
                 latch.countDown();
-                try {
-                    latch.await();
-                } catch (InterruptedException ignoreOnTeardown) {
-                }
+                assertTrue(latch.await(60, TimeUnit.SECONDS), "timed out waiting for concurrent child builds");
                 return true;
             }
         });
@@ -171,8 +170,8 @@ class MatrixProjectCustomWorkspaceTest {
         QueueTaskFuture<MatrixBuild> f2 = p.scheduleBuild2(0);
 
         List<MatrixBuild> bs = new ArrayList<>();
-        bs.add(j.assertBuildStatusSuccess(f1.get()));
-        bs.add(j.assertBuildStatusSuccess(f2.get()));
+        bs.add(j.assertBuildStatusSuccess(f1.get(60, TimeUnit.SECONDS)));
+        bs.add(j.assertBuildStatusSuccess(f2.get(60, TimeUnit.SECONDS)));
         return bs;
     }
 
@@ -181,7 +180,7 @@ class MatrixProjectCustomWorkspaceTest {
         MatrixProject p = j.jenkins.createProject(MatrixProject.class, "defaultName");
         p.setAxes(new AxisList(new TextAxis("AXIS", "VALUE")));
 
-        p.scheduleBuild2(0).get();
+        p.scheduleBuild2(0).get(60, TimeUnit.SECONDS);
         MatrixRun build = p.getItem("AXIS=VALUE").getLastBuild();
 
         assertThat(build.getWorkspace().getRemote(), containsString(S + "workspace" + S + "defaultName" + S + "AXIS" + S + "VALUE"));
@@ -194,14 +193,14 @@ class MatrixProjectCustomWorkspaceTest {
         MatrixProject p = j.jenkins.createProject(MatrixProject.class, "shortName");
         p.setAxes(new AxisList(new TextAxis("AXIS", "VALUE")));
 
-        p.scheduleBuild2(0).get();
+        p.scheduleBuild2(0).get(60, TimeUnit.SECONDS);
         MatrixRun build = p.getItem("AXIS=VALUE").getLastBuild();
 
         assertThat(build.getWorkspace().getRemote(), containsString(S + "workspace" + S + "shortName" + S + build.getParent().getDigestName()));
 
         p.setChildCustomWorkspace("${COMBINATION}"); // Override global value
 
-        p.scheduleBuild2(0).get();
+        p.scheduleBuild2(0).get(60, TimeUnit.SECONDS);
         build = p.getItem("AXIS=VALUE").getLastBuild();
 
         assertThat(build.getWorkspace().getRemote(), containsString(S + "workspace" + S + "shortName" + S + "AXIS" + S + "VALUE"));
@@ -212,14 +211,14 @@ class MatrixProjectCustomWorkspaceTest {
         MatrixProject p = j.jenkins.createProject(MatrixProject.class, "shortName");
         p.setAxes(new AxisList(new TextAxis("AXIS", "VALUE")));
 
-        p.scheduleBuild2(0).get();
+        p.scheduleBuild2(0).get(60, TimeUnit.SECONDS);
         MatrixRun build = p.getItem("AXIS=VALUE").getLastBuild();
 
         assertThat(build.getWorkspace().getRemote(), containsString(S + "workspace" + S + "shortName" + S + "AXIS" + S + "VALUE"));
 
         p.setChildCustomWorkspace("${SHORT_COMBINATION}");
 
-        p.scheduleBuild2(0).get();
+        p.scheduleBuild2(0).get(60, TimeUnit.SECONDS);
         build = p.getItem("AXIS=VALUE").getLastBuild();
 
         assertThat(build.getWorkspace().getRemote(), containsString(S + "workspace" + S + "shortName" + S + build.getParent().getDigestName()));

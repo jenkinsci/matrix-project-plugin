@@ -24,13 +24,13 @@
 package hudson.matrix;
 
 import org.hamcrest.Matchers;
-import org.htmlunit.html.HtmlPage;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.JenkinsRule.WebClient;
 import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -70,12 +70,11 @@ class MatrixConfigurationTest {
         MatrixProject p = r.createProject(MatrixProject.class);
         p.setAxes(new AxisList(new Axis("a", "b")));
 
-        WebClient wc = r.createWebClient();
-        wc.getOptions().setThrowExceptionOnFailingStatusCode(false);
-        wc.getOptions().setPrintContentOnFailingStatusCode(false);
-
-        HtmlPage page = wc.getPage(p.getItem("a=b"), "configure");
-        assertEquals(404, page.getWebResponse().getStatusCode(), "Page should not exist");
+        URL url = new URL(r.getURL(), p.getItem("a=b").getUrl() + "configure");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setInstanceFollowRedirects(false);
+        conn.connect();
+        assertEquals(404, conn.getResponseCode(), "Page should not exist");
     }
 
     @Test

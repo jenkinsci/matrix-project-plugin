@@ -59,6 +59,7 @@ class AxisTest {
     void setUp(JenkinsRule rule) throws Exception {
         j = rule;
         wc = j.createWebClient();
+        wc.getOptions().setJavaScriptEnabled(false);
         p = j.createProject(MatrixProject.class);
     }
 

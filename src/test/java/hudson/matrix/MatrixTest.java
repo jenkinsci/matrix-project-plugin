@@ -42,6 +42,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -92,7 +93,9 @@ class MatrixTest {
         project.setAxes(new AxisList(
                 new Axis("FOO", "abc", "def"),
                 new Axis("BAR", "uvw", "xyz")));
-        XmlPage xml = j.createWebClient().goToXml(project.getUrl() + "api/xml");
+        var wc = j.createWebClient();
+        wc.getOptions().setJavaScriptEnabled(false);
+        XmlPage xml = wc.goToXml(project.getUrl() + "api/xml");
         assertEquals(4, xml.getByXPath("//matrixProject/activeConfiguration").size());
     }
 
@@ -107,7 +110,7 @@ class MatrixTest {
                 .setTouchStoneCombinationFilter("axis == 'a'")
         ;
 
-        MatrixBuild build = project.scheduleBuild2(0).get();
+        MatrixBuild build = project.scheduleBuild2(0).get(60, TimeUnit.SECONDS);
         j.assertLogContains("test0 » a completed with result SUCCESS", build);
         j.assertLogContains("test0 » b completed with result SUCCESS", build);
     }
@@ -156,8 +159,8 @@ class MatrixTest {
 
         QueueTaskFuture<MatrixBuild> matrixBuildQueue2 = project.scheduleBuild2(0);
 
-        MatrixBuild build = matrixBuildQueue.get();
-        MatrixBuild build2 = matrixBuildQueue2.get();
+        MatrixBuild build = matrixBuildQueue.get(60, TimeUnit.SECONDS);
+        MatrixBuild build2 = matrixBuildQueue2.get(60, TimeUnit.SECONDS);
 
         // get axes from build
         AxisList axes = build.getAxes();
