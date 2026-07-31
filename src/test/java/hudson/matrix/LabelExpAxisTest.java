@@ -23,23 +23,22 @@
  */
 package hudson.matrix;
 
-import static org.junit.Assert.*;
 import hudson.matrix.LabelExpAxis.DescriptorImpl;
 import hudson.util.FormValidation;
-
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-public class LabelExpAxisTest {
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-    @Rule public JenkinsRule j = new JenkinsRule();
+@WithJenkins
+class LabelExpAxisTest {
 
     @Test
-    public void test() throws Exception {
+    void test(JenkinsRule j) throws Exception {
         j.jenkins.setLabelString("aaaa bbbb");
 
-        MatrixProject project = j.createProject(MatrixProject.class,"project");
+        MatrixProject project = j.createProject(MatrixProject.class, "project");
         DescriptorImpl descriptor = new LabelExpAxis.DescriptorImpl();
 
         assertEquals(FormValidation.Kind.ERROR, descriptor.doCheckLabelExpr(project, "").kind);

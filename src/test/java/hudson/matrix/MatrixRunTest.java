@@ -26,23 +26,25 @@ package hudson.matrix;
 
 import jenkins.model.CauseOfInterruption;
 import jenkins.model.InterruptedBuildAction;
-import static org.junit.Assert.*;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.jvnet.hudson.test.recipes.LocalData;
 
-public class MatrixRunTest {
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-    @Rule public JenkinsRule r = new JenkinsRule();
+@WithJenkins
+class MatrixRunTest {
 
     /**
      * Unmarshall a matrix build.xml result.
      */
     @LocalData
     @Issue("JENKINS-10903")
-    @Test public void unmarshalRunMatrix() {
+    @Test
+    void unmarshalRunMatrix(JenkinsRule r) {
         MatrixRun result = r.jenkins.getItemByFullName("p/x=1", MatrixConfiguration.class).getBuildByNumber(1);
         assertNotNull(result);
         InterruptedBuildAction action = result.getAction(InterruptedBuildAction.class);
@@ -50,8 +52,7 @@ public class MatrixRunTest {
         assertNotNull(action.getCauses());
         assertEquals(1, action.getCauses().size());
         CauseOfInterruption.UserInterruption cause =
-            (CauseOfInterruption.UserInterruption) action.getCauses().get(0);
+                (CauseOfInterruption.UserInterruption) action.getCauses().get(0);
         assertNotNull(cause);
     }
-
 }
