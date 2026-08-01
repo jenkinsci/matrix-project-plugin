@@ -31,9 +31,11 @@ import hudson.model.StringParameterDefinition;
 import org.hamcrest.Matchers;
 import org.hamcrest.core.AnyOf;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 import org.jvnet.hudson.test.junit.jupiter.JenkinsSessionExtension;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -42,6 +44,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Timeout(value = 3, unit = TimeUnit.MINUTES, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
 class RestartingRestoreTest {
 
     @RegisterExtension
@@ -59,7 +62,7 @@ class RestartingRestoreTest {
                 p.setAxes(new AxisList(new TextAxis("AXIS", "VALUE")));
 
                 // Schedule and wait for build to finish
-                p.scheduleBuild2(0).get();
+                p.scheduleBuild2(0).get(60, TimeUnit.SECONDS);
 
                 MatrixRun run = p.getItem("AXIS=VALUE").getLastBuild();
                 ParentBuildAction a = run.getAction(ParentBuildAction.class);

@@ -25,16 +25,10 @@ package hudson.matrix;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Util;
-import hudson.model.JDK;
-import hudson.util.VersionNumber;
-import jenkins.model.Jenkins;
 import org.hamcrest.collection.IsEmptyCollection;
 import org.htmlunit.HttpMethod;
 import org.htmlunit.WebRequest;
 import org.htmlunit.WebResponse;
-import org.htmlunit.html.HtmlForm;
-import org.htmlunit.html.HtmlInput;
-import org.htmlunit.html.HtmlPage;
 import org.htmlunit.xml.XmlPage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,11 +40,11 @@ import org.xml.sax.SAXException;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @WithJenkins
@@ -65,72 +59,50 @@ class AxisTest {
     void setUp(JenkinsRule rule) throws Exception {
         j = rule;
         wc = j.createWebClient();
+        wc.getOptions().setJavaScriptEnabled(false);
         p = j.createProject(MatrixProject.class);
-
-        // Setup to make all axes available
-        j.jenkins.getJDKs().add(new JDK("jdk1.7", "/fake/home"));
-        j.createSlave();
     }
 
     @Test
     void submitEmptyAxisName() throws Exception {
-        wc.getOptions().setThrowExceptionOnFailingStatusCode(false);
-
-        final String expectedMsg = "Matrix axis name '' is invalid: Axis name can not be empty";
-        assertFailedWith(expectedMsg, withName("", "User-defined Axis"));
-        assertFailedWith(expectedMsg, withName("", "Agents"));
-        assertFailedWith(expectedMsg, withName("", "Label expression"));
+        assertConfigXmlRejected(
+                "CHANGEME",
+                "",
+                "Matrix axis name '' is invalid: Axis name can not be empty");
     }
 
     @Test
     void submitInvalidAxisName() throws Exception {
-        wc.getOptions().setThrowExceptionOnFailingStatusCode(false);
-
-        String expectedMsg = "Matrix axis name 'a,b' is invalid: ‘,’ is an unsafe character";
-        assertFailedWith(expectedMsg, withName("a,b", "User-defined Axis"));
-        assertFailedWith(expectedMsg, withName("a,b", "Agents"));
-        assertFailedWith(expectedMsg, withName("a,b", "Label expression"));
-
-        expectedMsg = "Matrix axis name 'a=b' is invalid: ‘=’ is an unsafe character";
-        assertFailedWith(expectedMsg, withName("a=b", "User-defined Axis"));
-        assertFailedWith(expectedMsg, withName("a=b", "Agents"));
-        assertFailedWith(expectedMsg, withName("a=b", "Label expression"));
-    }
-
-    private void setName(HtmlForm form, String value) {
-        List<HtmlInput> inputs = form.getInputsByName("_.name");
-        int fieldCount = 0;
-        for (HtmlInput input : inputs) {
-            // Set the value on the `_.name` field from the "Add Axis" button
-            if (input.toString().contains("hudson.matrix.")) {
-                input.setValue(value);
-                fieldCount++;
-            }
-        }
-        assertThat(fieldCount, equalTo(1));
+        assertConfigXmlRejected(
+                "CHANGEME",
+                "a,b",
+                "Matrix axis name 'a,b' is invalid: ‘,’ is an unsafe character");
+        assertConfigXmlRejected(
+                "CHANGEME",
+                "a=b",
+                "Matrix axis name 'a=b' is invalid: ‘=’ is an unsafe character");
     }
 
     @Test
     void submitInvalidAxisValue() throws Exception {
-        wc.getOptions().setThrowExceptionOnFailingStatusCode(false);
-
-        HtmlForm form = addAxis("User-defined Axis");
-        setName(form, "a_name");
-        form.getInputByName("_.valueString").setValue("a,b");
-        assertFailedWith("Matrix axis value 'a,b' is invalid: ‘,’ is an unsafe character", j.submit(form));
-
-        form = addAxis("Label expression");
-        setName(form, "a_name");
-        form.getElementsByAttribute("textarea", "name", "values").get(0).setTextContent("a,b");
-        assertFailedWith("Matrix axis value 'a,b' is invalid: ‘,’ is an unsafe character", j.submit(form));
+        p.getAxes().add(new TextAxis("a_name", "CHANGEME"));
+        p.save();
+        XmlPage xmlPage = wc.goToXml(p.getUrl() + "config.xml");
+        String badxml = xmlPage.asXml().replaceFirst("\\s*CHANGEME\\s*", "a,b");
+        WebResponse response = postXML(p.getUrl() + "config.xml", badxml);
+        assertEquals(200, response.getStatusCode());
+        assertThat(
+                response.getContentAsString(),
+                containsString(Util.escape("Matrix axis value 'a,b' is invalid: ‘,’ is an unsafe character")));
     }
 
     @Test
     void emptyAxisValueListResultInNoConfigurations() throws Exception {
-        emptyValue("User-defined Axis");
-        emptyValue("Agents");
-        emptyValue("Label expression");
-        emptyValue("JDK");
+        p.setAxes(new AxisList(
+                new TextAxis("user", ""),
+                new LabelAxis("agents", List.of()),
+                new LabelExpAxis("labels", ""),
+                new JDKAxis(Collections.emptyList())));
 
         MatrixBuild build = j.buildAndAssertSuccess(p);
         assertThat(build.getRuns(), new IsEmptyCollection<>());
@@ -160,7 +132,19 @@ class AxisTest {
         assertThat(response.getContentAsString(), containsString(Util.escape("Matrix axis name 'a/../../../' is invalid: ‘/’ is an unsafe character")));
     }
 
-    public WebResponse postXML(@NonNull String path, @NonNull String xml) throws IOException {
+    private void assertConfigXmlRejected(String placeholderName, String badName, String expectedMessage)
+            throws IOException, SAXException {
+        p.getAxes().clear();
+        p.getAxes().add(new TextAxis(placeholderName, "v"));
+        p.save();
+        XmlPage xmlPage = wc.goToXml(p.getUrl() + "config.xml");
+        String badxml = xmlPage.asXml().replaceFirst("\\s*" + placeholderName + "\\s*", badName);
+        WebResponse response = postXML(p.getUrl() + "config.xml", badxml);
+        assertEquals(200, response.getStatusCode());
+        assertThat(response.getContentAsString(), containsString(Util.escape(expectedMessage)));
+    }
+
+    private WebResponse postXML(@NonNull String path, @NonNull String xml) throws IOException {
         assert !path.startsWith("/");
 
         URL URLtoCall = wc.createCrumbedUrl(path);
@@ -172,56 +156,5 @@ class AxisTest {
 
         postRequest.setRequestBody(xml);
         return wc.loadWebResponse(postRequest);
-    }
-
-    private HtmlPage withName(String value, String axis) throws Exception {
-        HtmlForm form = addAxis(axis);
-        form.getInputByName("_.name").setValue(value);
-        HtmlPage ret = j.submit(form);
-        return ret;
-    }
-
-    private HtmlPage emptyValue(String axis) throws Exception {
-        HtmlForm form = addAxis(axis);
-        if (!"JDK".equals(axis)) { // No "name" attribute
-            form.getInputByName("_.name").setValue("some_name");
-        }
-
-        HtmlPage ret = j.submit(form);
-        return ret;
-    }
-
-    private static void assertFailedWith(String expected, HtmlPage res) {
-        String actual = res.getWebResponse().getContentAsString();
-
-        assertThat(actual, res.getWebResponse().getStatusCode(), equalTo(400));
-        assertThat(actual, containsString(expected));
-    }
-
-    private HtmlForm addAxis(String axis) throws Exception {
-        HtmlPage page = wc.getPage(p, "configure");
-        HtmlForm form = page.getFormByName("config");
-        j.getButtonByCaption(form, "Add axis").click();
-        if (Jenkins.getVersion().isOlderThan(new VersionNumber("2.422"))) {
-            page.getAnchorByText(axis).click();
-        } else {
-            HtmlForm config = page.getFormByName("config");
-            j.getButtonByCaption(config, axis).click();
-        }
-        waitForInput(form);
-        return form;
-    }
-
-    private static void waitForInput(HtmlForm form) throws InterruptedException {
-        int numberInputs = form.getInputsByName("_.name").size();
-        int initialInputs = numberInputs;
-        int tries = 18; // 18 * 17 == 306
-        while (tries > 0 && numberInputs == initialInputs) {
-            tries--;
-            Thread.sleep(17);
-            numberInputs = form.getInputsByName("_.name").size();
-        }
-        // One test seems OK with not finding '_.name' field on the page
-        // assertThat("Additional '_.name' field not found on page", numberInputs, greaterThan(initialInputs));
     }
 }

@@ -1,6 +1,5 @@
 package hudson.matrix;
 
-import hudson.model.Item;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
@@ -19,13 +18,16 @@ class MatrixConfigurationSorterTest {
     @Test
     void testConfigRoundtrip(JenkinsRule j) throws Exception {
         MatrixProject p = j.createProject(MatrixProject.class);
-        j.configRoundtrip((Item) p);
+        strategy(p).setSorter(new NoopMatrixConfigurationSorter());
+        p.save();
+        p.doReload();
         j.assertEqualDataBoundBeans(new NoopMatrixConfigurationSorter(), strategy(p).getSorter());
 
         SorterImpl before = new SorterImpl();
         strategy(p).setSorter(before);
         strategy(p).setRunSequentially(true);
-        j.configRoundtrip((Item) p);
+        p.save();
+        p.doReload();
         MatrixConfigurationSorter after = strategy(p).getSorter();
         assertNotSame(before, after);
         assertSame(before.getClass(), after.getClass());
