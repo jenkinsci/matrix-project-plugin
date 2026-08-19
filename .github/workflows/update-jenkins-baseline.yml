@@ -1,0 +1,213 @@
+name: Update Jenkins baseline
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Resolve Jenkins versions
+        id: versions
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          latest_core="$(curl -fsSL https://updates.jenkins.io/stable/latestCore.txt)"
+          latest_core="$(printf '%s' "$latest_core" | tr -d '\r\n')"
+
+          if [[ ! "$latest_core" =~ ^([0-9]+\.[0-9]+)\.[0-9]+$ ]]; then
+            echo "Unexpected Jenkins version: $latest_core"
+            exit 1
+          fi
+
+          baseline="${BASH_REMATCH[1]}"
+
+          echo "Latest Jenkins LTS: $latest_core"
+          echo "Baseline: $baseline"
+
+          core_metadata_url="https://repo.jenkins-ci.org/public/org/jenkins-ci/main/jenkins-core/maven-metadata.xml"
+          bom_metadata_url="https://repo.jenkins-ci.org/public/io/jenkins/tools/bom/bom-${baseline}.x/maven-metadata.xml"
+
+          jenkins_version="$(
+            curl -fsSL "$core_metadata_url" |
+            python3 -c "
+          import sys
+          import xml.etree.ElementTree as ET
+
+          baseline = '${baseline}'
+          root = ET.fromstring(sys.stdin.read())
+
+          versions = [
+              v.text
+              for v in root.findall('./versioning/versions/version')
+              if v.text and v.text.startswith(baseline + '.')
+          ]
+
+          if not versions:
+              raise SystemExit(f'No Jenkins core versions found for {baseline}.x')
+
+          def version_key(version):
+              return tuple(int(part) for part in version.split('.'))
+
+          print(max(versions, key=version_key))
+          "
+          )"
+
+          bom_version="$(
+            curl -fsSL "$bom_metadata_url" |
+            python3 -c "
+          import sys
+          import xml.etree.ElementTree as ET
+
+          root = ET.fromstring(sys.stdin.read())
+          release = root.findtext('./versioning/release')
+
+          if not release:
+              raise SystemExit('Could not determine Jenkins BOM release version')
+
+          print(release)
+          "
+          )"
+
+          echo "Jenkins version: $jenkins_version"
+          echo "Jenkins baseline: $baseline"
+          echo "Jenkins BOM: $bom_version"
+
+          {
+            echo "baseline=$baseline"
+            echo "jenkins_version=$jenkins_version"
+            echo "bom_version=$bom_version"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Update pom.xml
+        env:
+          BASELINE: ${{ steps.versions.outputs.baseline }}
+          JENKINS_VERSION: ${{ steps.versions.outputs.jenkins_version }}
+          BOM_VERSION: ${{ steps.versions.outputs.bom_version }}
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import os
+          import re
+
+          path = Path("pom.xml")
+          text = path.read_text()
+
+          baseline = os.environ["BASELINE"]
+          jenkins_version = os.environ["JENKINS_VERSION"]
+          bom_version = os.environ["BOM_VERSION"]
+
+          text, count = re.subn(
+              r"(<jenkins\.baseline>)[^<]+(</jenkins\.baseline>)",
+              rf"\g<1>{baseline}\g<2>",
+              text,
+              count=1,
+          )
+          if count != 1:
+              raise SystemExit(
+                  f"Expected exactly one jenkins.baseline, found {count}"
+              )
+
+          text, count = re.subn(
+              r"(<jenkins\.version>)[^<]+(</jenkins\.version>)",
+              rf"\g<1>{jenkins_version}\g<2>",
+              text,
+              count=1,
+          )
+          if count != 1:
+              raise SystemExit(
+                  f"Expected exactly one jenkins.version, found {count}"
+              )
+
+          text, count = re.subn(
+              r"(<artifactId>bom-\$\{jenkins\.baseline\}\.x</artifactId>\s*"
+              r"<version>)[^<]+(</version>)",
+              rf"\g<1>{bom_version}\g<2>",
+              text,
+              count=1,
+          )
+          if count != 1:
+              raise SystemExit(
+                  f"Expected exactly one Jenkins BOM dependency, found {count}"
+              )
+
+          path.write_text(text)
+          PY
+
+      - name: Check for changes
+        id: changes
+        shell: bash
+        run: |
+          if git diff --quiet -- pom.xml; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No changes required."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "Changes:"
+            git diff -- pom.xml
+          fi
+
+      - name: Verify
+        if: steps.changes.outputs.changed == 'true'
+        run: mvn -B -ntp verify
+
+      - name: Create pull request
+        if: steps.changes.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASELINE: ${{ steps.versions.outputs.baseline }}
+          JENKINS_VERSION: ${{ steps.versions.outputs.jenkins_version }}
+          BOM_VERSION: ${{ steps.versions.outputs.bom_version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          branch="chore/update-jenkins-baseline-${BASELINE}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git switch -c "$branch"
+
+          git add pom.xml
+
+          git commit \
+            -m "Update Jenkins baseline to ${JENKINS_VERSION}"
+
+          git push --force-with-lease origin "$branch"
+
+          gh pr create \
+            --base "${{ github.event.repository.default_branch }}" \
+            --head "$branch" \
+            --title "Update Jenkins baseline to ${JENKINS_VERSION}" \
+            --body "$(cat <<EOF
+          Updates the Jenkins baseline.
+
+          - Jenkins baseline: \`${BASELINE}\`
+          - Jenkins version: \`${JENKINS_VERSION}\`
+          - Jenkins BOM: \`${BOM_VERSION}\`
+
+          CI was run with:
+
+          \`\`\`
+          mvn -B -ntp verify
+          \`\`\`
+          EOF
+          )"
