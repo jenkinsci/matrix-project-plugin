@@ -28,22 +28,24 @@ jobs:
         run: |
           set -euo pipefail
 
-          changelog_url="https://www.jenkins.io/changelog-stable/index.html"
+          core_metadata_url="https://repo.jenkins-ci.org/public/org/jenkins-ci/main/jenkins-core/maven-metadata.xml"
 
           jenkins_version="$(
-            curl -fsSL "$changelog_url" |
+            curl -fsSL "$core_metadata_url" |
             python3 -c '
-          import re
           import sys
+          import xml.etree.ElementTree as ET
 
-          html = sys.stdin.read()
+          root = ET.fromstring(sys.stdin.read())
 
-          versions = set(
-              re.findall(r">(\d+\.\d+\.3)</h[1-6]>", html)
-          )
+          versions = [
+              v.text
+              for v in root.findall("./versioning/versions/version")
+              if v.text and v.text.endswith(".3")
+          ]
 
           if not versions:
-              raise SystemExit("Could not find any Jenkins LTS .3 releases")
+              raise SystemExit("Could not find any Jenkins .3 releases")
 
           def version_key(version):
               return tuple(int(part) for part in version.split("."))
@@ -84,7 +86,6 @@ jobs:
             echo "baseline=$baseline"
             echo "bom_version=$bom_version"
           } >> "$GITHUB_OUTPUT"
-
       - name: Update pom.xml
         env:
           BASELINE: ${{ steps.versions.outputs.baseline }}
