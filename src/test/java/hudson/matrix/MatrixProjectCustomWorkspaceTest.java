@@ -190,20 +190,24 @@ class MatrixProjectCustomWorkspaceTest {
     void useShortWorkspaceNameGlobally(JenkinsRule j) throws Exception {
         MatrixConfiguration.useShortWorkspaceName = true;
 
-        MatrixProject p = j.jenkins.createProject(MatrixProject.class, "shortName");
-        p.setAxes(new AxisList(new TextAxis("AXIS", "VALUE")));
+        try {
+            MatrixProject p = j.jenkins.createProject(MatrixProject.class, "shortName");
+            p.setAxes(new AxisList(new TextAxis("AXIS", "VALUE")));
 
-        p.scheduleBuild2(0).get(60, TimeUnit.SECONDS);
-        MatrixRun build = p.getItem("AXIS=VALUE").getLastBuild();
+            p.scheduleBuild2(0).get(60, TimeUnit.SECONDS);
+            MatrixRun build = p.getItem("AXIS=VALUE").getLastBuild();
 
-        assertThat(build.getWorkspace().getRemote(), containsString(S + "workspace" + S + "shortName" + S + build.getParent().getDigestName()));
+            assertThat(build.getWorkspace().getRemote(), containsString(S + "workspace" + S + "shortName" + S + build.getParent().getDigestName()));
 
-        p.setChildCustomWorkspace("${COMBINATION}"); // Override global value
+            p.setChildCustomWorkspace("${COMBINATION}"); // Override global value
 
-        p.scheduleBuild2(0).get(60, TimeUnit.SECONDS);
-        build = p.getItem("AXIS=VALUE").getLastBuild();
+            p.scheduleBuild2(0).get(60, TimeUnit.SECONDS);
+            build = p.getItem("AXIS=VALUE").getLastBuild();
 
-        assertThat(build.getWorkspace().getRemote(), containsString(S + "workspace" + S + "shortName" + S + "AXIS" + S + "VALUE"));
+            assertThat(build.getWorkspace().getRemote(), containsString(S + "workspace" + S + "shortName" + S + "AXIS" + S + "VALUE"));
+        } finally {
+            MatrixConfiguration.useShortWorkspaceName = false;
+        }
     }
 
     @Test
