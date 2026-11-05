@@ -30,4 +30,7 @@ THE SOFTWARE.
       <st:nbsp/>
     </j:forEach>
   </f:entry>
+  <f:entry title="${%Orientation}" field="orientation">
+    <f:select default="AUTO"/>
+  </f:entry>
 </j:jelly>

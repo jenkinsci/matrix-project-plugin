@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>6.2138.v03274d462c13</version>
+        <version>6.2250.va_d01d559a_209</version>
         <relativePath />
     </parent>
     <artifactId>matrix-project</artifactId>
@@ -16,8 +16,9 @@
       <changelist>999999-SNAPSHOT</changelist>
       <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
       <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
-        <jenkins.baseline>2.528</jenkins.baseline>
-        <jenkins.version>2.555</jenkins.version>
+      <jenkins.baseline>2.568</jenkins.baseline>
+      <jenkins.version>${jenkins.baseline}.3</jenkins.version>
+      <ban-junit4-imports.skip>false</ban-junit4-imports.skip>
       <spotbugs.skip>true</spotbugs.skip> <!-- Clean up redundant null check warnings and re-enable after SECURITY-1339 is released -->
     </properties>
     <licenses>
@@ -82,7 +83,7 @@
 
         <dependency>
             <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
+            <artifactId>mockito-junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -97,7 +98,7 @@
             <dependency>
                 <groupId>io.jenkins.tools.bom</groupId>
                 <artifactId>bom-${jenkins.baseline}.x</artifactId>
-                <version>6166.va_a_8b_5eda_8ef5</version>
+                <version>7237.v5071b_f4589f1</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>

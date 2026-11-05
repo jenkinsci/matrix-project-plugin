@@ -5,9 +5,20 @@ import hudson.model.Result;
 
 def f = namespace(lib.FormTagLib)
 
-f.optionalBlock (field:"runSequentially", title:_("Run each configuration sequentially"), inline:true) {
-    if (MatrixConfigurationSorterDescriptor.all().size()>1) {
-        f.dropdownDescriptorSelector(title:_("Execution order of builds"), field:"sorter")
+// Execution order applies to both parallel and sequential scheduling (see DefaultMatrixExecutionStrategyImpl.run()).
+// Keeping the sorter inside the sequential optional block hid it when parallel mode was selected and could drop the
+// sorter on save when sequential was unchecked.
+if (MatrixConfigurationSorterDescriptor.all().size()>1) {
+    f.dropdownDescriptorSelector(title:_("Execution order of builds"), field:"sorter")
+}
+
+f.entry(title:_("Run each configuration sequentially"), field:"runSequentially") {
+    f.checkbox()
+}
+
+f.optionalBlock(field:"hasScheduleDelayBetweenChildBuilds", title:_("Add delay between scheduling each configuration (parallel mode only)"), inline:true) {
+    f.entry(title:_("Milliseconds between enqueueing each configuration"), field:"scheduleDelayMillis") {
+        f.textbox(default:"0")
     }
 }
 
