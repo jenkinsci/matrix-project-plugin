@@ -74,7 +74,7 @@ public abstract class Layouter<T> {
 
         List<Axis> nonTrivialAxes = new ArrayList<Axis>();
         for (Axis a : axisList) {
-            if(a.size()>1)
+            if(a.size()>=1)
                 nonTrivialAxes.add(a);
             else
                 trivial.add(a);
