@@ -23,7 +23,7 @@ THE SOFTWARE.
 -->
 
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:t="/lib/hudson" xmlns:p="/lib/hudson/project">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:p="/lib/hudson/project">
   <p:makeDisabled/>
 
   <st:include page="ajaxMatrix.jelly" />
@@ -39,4 +39,15 @@ THE SOFTWARE.
       </t:summary>
     </j:if>
   </table>
+
+  <!-- merge fragments from the actions -->
+  <j:forEach var="a" items="${it.allActions}">
+    <st:include page="jobMain.jelly" it="${a}" optional="true" />
+  </j:forEach>
+
+  <!-- the new job page shows upstream and downstream projects in its details -->
+  <l:userExperimentalFlag var="newJobPage" flagClassName="jenkins.model.experimentalflags.NewJobPageUserExperimentalFlag" />
+  <j:if test="${!newJobPage}">
+    <p:upstream-downstream />
+  </j:if>
 </j:jelly>
