@@ -75,7 +75,9 @@ import org.jvnet.hudson.test.recipes.LocalData;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -742,5 +744,23 @@ class MatrixProjectTest {
         assertThat(result, CLICommandInvoker.Matcher.succeeded());
         assertEquals(0, p.getBuilds().size());
         assertEquals(0, p.getItem("AXIS=VALUE").getBuilds().size());
+    }
+
+    @Test
+    @Issue("764")
+    void createFromXmlKeepsExecutionStrategy() throws Exception {
+        MatrixProject original = j.jenkins.createProject(MatrixProject.class, "original");
+        original.setExecutionStrategy(new DefaultMatrixExecutionStrategyImpl(true, "AXIS == 'a'", Result.UNSTABLE, null));
+
+        MatrixProject copy;
+        try (InputStream xml = Files.newInputStream(original.getConfigFile().getFile().toPath())) {
+            copy = (MatrixProject) j.jenkins.createProjectFromXML("copy", xml);
+        }
+
+        DefaultMatrixExecutionStrategyImpl strategy = (DefaultMatrixExecutionStrategyImpl) copy.getExecutionStrategy();
+        assertTrue(strategy.isRunSequentially());
+        assertTrue(strategy.getHasTouchStoneCombinationFilter());
+        assertEquals("AXIS == 'a'", strategy.getTouchStoneCombinationFilter());
+        assertEquals(Result.UNSTABLE, strategy.getTouchStoneResultCondition());
     }
 }

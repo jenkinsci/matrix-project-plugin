@@ -514,7 +514,9 @@ public class MatrixProject extends AbstractProject<MatrixProject,MatrixBuild> im
 
     @Override
     public void onCreatedFromScratch() {
-        executionStrategy = new DefaultMatrixExecutionStrategyImpl();
+        if (executionStrategy == null) {
+            executionStrategy = new DefaultMatrixExecutionStrategyImpl();
+        }
         super.onCreatedFromScratch();
     }
 
