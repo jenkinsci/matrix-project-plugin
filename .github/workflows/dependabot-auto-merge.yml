@@ -13,11 +13,13 @@ jobs:
     steps:
       - name: Fetch Dependabot metadata
         id: metadata
-        uses: dependabot/fetch-metadata@v2
+        uses: dependabot/fetch-metadata@v3
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Enable auto-merge for minor and patch updates
-        if: steps.metadata.outputs.update-type != 'version-update:semver-major'
+      - name: Enable auto-merge for minor/patch updates and BOM bumps
+        if: >-
+          steps.metadata.outputs.update-type != 'version-update:semver-major' ||
+          startsWith(steps.metadata.outputs.dependency-names, 'io.jenkins.tools.bom:bom-')
         run: gh pr merge --auto --squash "$PR_URL"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
